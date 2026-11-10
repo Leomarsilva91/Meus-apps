@@ -1,0 +1,9 @@
+name = "meus-apps-ia"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Opcional (limite por pessoa): crie um KV no painel e descomente as linhas abaixo,
+# trocando o id pelo que o Cloudflare mostrar.
+# [[kv_namespaces]]
+# binding = "LIMITES"
+# id = "COLE_O_ID_AQUI"
