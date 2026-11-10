@@ -1,2 +1,2 @@
-// Endereço do servidor de IA (Cloudflare Worker). Deixe vazio enquanto não existir.
-window.IA_URL = '';
+// Endereço do servidor de IA (Cloudflare Worker).
+window.IA_URL = 'https://meus-apps-ia.prumo91.workers.dev';
