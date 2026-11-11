@@ -335,7 +335,7 @@ ${fld('qhrs','Horas estimadas','type="text" inputmode="numeric" value="'+(Q.hrs|
 <div id="qcalc" aria-live="polite" style="margin-top:12px">${qcalcHtml()}</div></div>
 ${!(negP(q,propFor(q.id))||pgOK(q))?`<div class="card" style="border-color:var(--acc)"><b>Contato ainda bloqueado</b><p class="muted" style="margin:6px 0 0">Para evitar troca de contatos fora do app, você só vê o contato, conversa e envia proposta depois que o contratante pagar a taxa e aceitar negociar com você. Por enquanto, só dá para marcar que quer negociar.</p>${propFor(q.id)?`<p style="margin:10px 0 0"><span class="tag">Você marcou: quero negociar</span></p><p class="muted" style="margin:6px 0 0">${q.fee?'Aguardando o contratante aceitar.':'Aguardando o contratante pagar a taxa.'}</p>`:'<button class="btn" style="margin-top:10px" data-act="qint">Quero negociar</button>'}</div>`:`<div><label for="qdays">Prazo que você oferece</label><select id="qdays">${DAYS.map(d=>`<option${Q.days===d?' selected':''}>${d}</option>`).join('')}</select></div>
 <div><label for="qmsg">Mensagem ao cliente (opcional)</label><textarea id="qmsg" maxlength="500" placeholder="Ex.: posso começar amanhã e levo o material">${esc(Q.msg)}</textarea></div>
-<div class="card"><label class="chk" style="align-items:flex-start"><input type="checkbox" id="qboost" ${Q.boost?'checked':''}> <span>Destacar esta proposta <span class="muted">${boostNote()}</span></span></label><p class="muted" style="margin:4px 0 0">É opcional, para serviços que valem a pena. O destaque só põe sua proposta em evidência; as outras continuam visíveis.</p><div id="pts">${ptsHtml()}</div></div>
+<div class="card"><label class="chk" style="align-items:flex-start"><input type="checkbox" id="qboost" ${Q.boost?'checked':''}> <span>Destacar esta proposta <span class="muted">${boostNote()}</span></span></label><p class="muted" style="margin:4px 0 0">É opcional, para serviços que valem a pena. O destaque só põe sua proposta em evidência; as outras continuam visíveis.</p><div id="pts">${ptsHtml()}</div></div>${Q.boostAsk&&Q.boost?boostPayCard():''}
 <button class="btn" data-act="qsend">Enviar proposta</button>`}</main>`},
 psent:()=>{const p=S.q.last;return `${head('Proposta enviada','inbox')}<main>
 <div class="card"><h2>Proposta enviada</h2><p style="margin:8px 0 0">${esc(p.desc)}</p>
@@ -1587,12 +1587,15 @@ function qsend(){
   if(Q.mat>0&&Q.mat>=Q.price)E.qmat='O material precisa ser menor que o preço.';
   if(!(Q.hrs>0))E.qhrs='Informe as horas estimadas.';
   if(showErrors(E))return;
+  if(Q.boost&&!Q.boostOK){const r0=plRec();if(r0.plan==='free'&&!(r0.credits>0)){Q.boostAsk=true;render();setTimeout(()=>{const e=$('#boostpay');if(e)e.scrollIntoView({block:'center'})},60);return}}
   const p={id:Date.now(),reqId:q.id,email:S.user.email,name:S.user.emp?S.user.emp.razao:S.user.name,kind:S.user.emp?'emp':(S.user.kind||''),desc:q.desc,price:Q.price,mat:Q.mat,mm:Q.mm,mats:((Q.mA&&Q.mA.mats)||[]).filter(m=>m&&String(m.n).trim()).map(m=>({n:String(m.n).slice(0,80),q:m.q,u:m.u,v:m.v})),matEst:Q.mm==='exc'&&Q.mA?Q.mA.matTotal:0,hrs:Q.hrs,days:Q.days,msg:Q.msg.trim(),boost:!!Q.boost,ai:Q.viaAI?1:undefined,ver:verMe()?1:undefined,pg:q.pg?1:undefined,rev:q.pg?(q.matsRev||0):undefined,at:new Date().toISOString()};
   if(p.boost){const r=plRec();if(r.plan==='free'&&r.credits>0){r.credits--;plSave(r)}}
   const old=propFor(q.id);let l=jget('ms_proposals');if(old&&old.interest){p.id=old.id;p.neg=old.neg;l=l.map(x=>x.id===old.id?p:x)}else l=[...l,p];
   try{store.setItem('ms_proposals',JSON.stringify(l))}catch(e){}
-  Q.last=p;go('psent');
+  if(Q.boostOK&&p.boost)try{spSaveAll('ms_expenses',[...jget('ms_expenses'),{id:Date.now()+3,email:S.user.email,projId:0,reqId:q.id,desc:'Destaque de proposta',cat:'Taxa do app',amount:2.9,date:ymd(new Date()),at:new Date().toISOString(),auto:1}])}catch(e){}
+  Q.boostOK=false;Q.boostAsk=false;Q.last=p;go('psent');
 }
+function boostPayCard(){return `<div class="card" id="boostpay" style="border-color:var(--acc)"><b>Pagar o destaque</b><p class="muted" style="margin:6px 0 0">Sua proposta aparece no topo para o contratante, com a marca "Destaque". Não garante que ele escolha você.</p><div class="sum"><b>Destaque</b><b>R$ 2,90</b></div><p class="muted" style="margin:6px 0 0">Pagamento simulado: nenhum valor real é cobrado.</p><button class="btn" style="margin-top:10px" data-act="boostpay">Pagar R$ 2,90 e enviar proposta</button><button class="chip" style="margin-top:8px" data-act="boostno">Enviar sem destaque</button></div>`}
 const pgOK=q=>!!q&&!!q.pg&&!!q.fee&&!q.acc&&!q.fin;
 const pgDiff=()=>Math.max(0,PGFEE-FEE);
 function pgSaveReq(q){const R=jget('ms_requests'),i=R.findIndex(x=>x&&x.id===q.id);if(i>=0){R[i]=q;spSaveAll('ms_requests',R)}}
@@ -2515,6 +2518,8 @@ document.addEventListener('click',e=>{
   if(D.act==='vpub')return pubVideo();
   if(D.act==='addpro')return addPro();
   if(D.act==='cpfsave'){if(cpfTake())render();return}
+  if(D.act==='boostpay'){if(!S.q||!S.q.boost)return;S.q.boostOK=true;return qsend()}
+  if(D.act==='boostno'){if(!S.q)return;S.q.boost=false;S.q.boostAsk=false;return qsend()}
   if(D.act==='pgask'){S.pgq=+D.qid;return render()}
   if(D.act==='pgcancel'){S.pgq=0;return render()}
   if(D.act==='pgpay'){const q=reqOf(+D.qid);if(!q||q.email!==S.user.email||!q.fee||q.pg||q.acc||q.fin)return;const c=pgDiff();q.pg={at:new Date().toISOString(),cents:c,total:PGFEE,ref:'SIM-'+Math.random().toString(36).slice(2,8).toUpperCase(),simulated:true};pgSaveReq(q);if(c>0)spSaveAll('ms_expenses',[...jget('ms_expenses'),{id:Date.now()+2,email:S.user.email,projId:q.proj||0,reqId:q.id,desc:'Pregão Tasko (diferença): '+String(q.desc).slice(0,30),cat:'Taxa do app',amount:c/100,date:ymd(new Date()),at:new Date().toISOString(),auto:1}]);S.pgq=0;toast('Pregão aberto. Diferença paga: '+brl2(c/100)+' (simulado).');return render()}
@@ -2597,7 +2602,7 @@ document.addEventListener('input',e=>{const rt=e.target.dataset&&e.target.datase
   }
   if(S.v==='workers'&&i.id==='fq'){S.fq=i.value;$('#wlist').innerHTML=workersList()}
   if(S.v==='emerg'){if(i.id==='emwhere')S.em.where=i.value;else if(i.id==='emdesc')S.em.desc=i.value;else if(i.id==='emregion')S.em.region=i.value;else if(i.id==='emcons')S.em.ok=i.checked}
-  if(S.v==='quote'&&i.id==='qboost')S.q.boost=i.checked;
+  if(S.v==='quote'&&i.id==='qboost'){S.q.boost=i.checked;S.q.boostAsk=false;S.q.boostOK=false}
   if(S.v==='spot'&&i.id==='spvid'){spState().vid=+i.value;S.spmsg='';render()}
   if((S.v==='plans'||S.v==='settings'||S.v==='home')&&i.id==='plemerg'){const r=plRec();r.emOpt={...(r.emOpt||{}),on:i.checked,at:new Date().toISOString()};if(!i.checked)r.emOpt.h24=false;plSave(r);logC(i.checked?'emergencia_pro':'emergencia_pro_off',S.user.email);const h=$('#plh24');if(h){h.disabled=!i.checked;if(!i.checked)h.checked=false}['#plfrom','#plto'].forEach(q=>{const e=$(q);if(e)e.disabled=!i.checked||!!(plRec().emOpt||{}).h24});const pv=$('#empv');if(pv)pv.innerHTML=empvHtml(plRec());const hs=$('#hemsum');if(hs)hs.textContent=hemSum(plRec())}
   if((S.v==='plans'||S.v==='settings')&&(i.id==='plfrom'||i.id==='plto')){const r=plRec();r.emOpt={...(r.emOpt||{}),[i.id==='plfrom'?'from':'to']:i.value};plSave(r);const pv=$('#empv');if(pv)pv.innerHTML=empvHtml(plRec());return}
