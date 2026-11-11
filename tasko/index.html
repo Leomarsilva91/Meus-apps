@@ -331,7 +331,7 @@ ${qModeHtml()}
 <div class="card"><b>Calculadora de margem e tempo</b><div class="stack">
 ${fld('qprice','Preço da sua proposta (R$)','type="text" inputmode="numeric" value="'+(Q.price||'')+'"')}
 ${fld('qmat','Custo de material (R$)','type="text" inputmode="numeric" value="'+(Q.mat||'')+'"'+(Q.mm==='exc'?' disabled':''))}
-${fld('qhrs','Horas estimadas','type="text" inputmode="numeric" value="'+(Q.hrs||'')+'"')}</div>
+${fld('qhrs','Horas trabalhadas (opcional, vem do prazo do pedido)','type="text" inputmode="numeric" value="'+(Q.hrs||'')+'"')}</div>
 <div id="qcalc" aria-live="polite" style="margin-top:12px">${qcalcHtml()}</div></div>
 ${!(negP(q,propFor(q.id))||pgOK(q))?`<div class="card" style="border-color:var(--acc)"><b>Contato ainda bloqueado</b><p class="muted" style="margin:6px 0 0">Para evitar troca de contatos fora do app, você só vê o contato, conversa e envia proposta depois que o contratante pagar a taxa e aceitar negociar com você. Por enquanto, só dá para marcar que quer negociar.</p>${propFor(q.id)?`<p style="margin:10px 0 0"><span class="tag">Você marcou: quero negociar</span></p><p class="muted" style="margin:6px 0 0">${q.fee?'Aguardando o contratante aceitar.':'Aguardando o contratante pagar a taxa.'}</p>`:'<button class="btn" style="margin-top:10px" data-act="qint">Quero negociar</button>'}</div>`:`<div><label for="qdays">Prazo que você oferece</label><select id="qdays">${DAYS.map(d=>`<option${Q.days===d?' selected':''}>${d}</option>`).join('')}</select></div>
 <div><label for="qmsg">Mensagem ao cliente (opcional)</label><textarea id="qmsg" maxlength="500" placeholder="Ex.: posso começar amanhã e levo o material">${esc(Q.msg)}</textarea></div>
@@ -339,7 +339,7 @@ ${!(negP(q,propFor(q.id))||pgOK(q))?`<div class="card" style="border-color:var(-
 <button class="btn" data-act="qsend">Enviar proposta</button>`}</main>`},
 psent:()=>{const p=S.q.last;return `${head('Proposta enviada','inbox')}<main>
 <div class="card"><h2>Proposta enviada</h2><p style="margin:8px 0 0">${esc(p.desc)}</p>
-<p style="margin:8px 0 0"><b>${brl(p.price)}</b> · ${esc(p.days)} · ${p.hrs}h estimadas</p>
+<p style="margin:8px 0 0"><b>${brl(p.price)}</b> · ${esc(p.days)}${p.hrs>0?' · '+p.hrs+'h estimadas':''}</p>
 <p class="muted" style="margin:8px 0 0">${p.mm==='exc'?'Só a mão de obra · materiais por conta do contratante':'Margem estimada: '+Math.round((p.price-p.mat)/p.price*100)+'% · Material: '+brl(p.mat)}</p>${propMatHtml(p)}${p.boost?'<p style="margin:8px 0 0"><span class="tag">Proposta destacada</span></p>':''}</div>
 ${chatOK(reqOf(p.reqId),p)?`<button class="btn" data-chat="${p.id}">Conversar com o cliente</button>`:'<p class="muted" style="margin:0">A conversa com o cliente abre quando ele pagar a taxa e aceitar negociar com você.</p>'}
 <button class="btn" data-go="inbox">Ver pedidos</button>
@@ -1407,7 +1407,8 @@ ${qVis(q)?'Valor informado pelo contratante: '+visTxt(qVis(q))+'.':'O contratant
 Todo texto livre do JSON deve ser curto: no máximo 25 palavras cada. Responda APENAS com JSON, sem markdown, neste formato:
 {"resumo":"uma frase sobre o escopo","mao_de_obra":número em reais (apenas o seu trabalho),"deslocamento_imprevistos":número em reais,"etapas":[{"nome":"Preparação","horas":número},{"nome":"Execução","horas":número},{"nome":"Acabamento","horas":número}],"prazo":"um destes valores exatos: ${DAYS.join(' | ')}","equipe":[{"funcao":"tipo de profissional","quantidade":número}],"maquinario":[{"item":"máquina ou equipamento","quantidade":número}],"custo_equipamentos":número em reais (uso ou aluguel de maquinário e equipamentos; 0 se bastarem ferramentas manuais),"ferramentas":["ferramentas e equipamentos a levar"],"materiais":[{"item":"nome","quantidade":número,"unidade":"g, mL, kg, L, m, m², un, par, caixa...","valor_estimado":valor total em reais deste item}],"garantia":"prazo de garantia sugerido, ex.: 30 dias","dicas":["pontos de atenção, riscos ou perguntas a confirmar com o cliente"]}
 Use de 2 a 4 etapas, com horas realistas. Em materiais, liste de 2 a 8 itens, só o que será consumido neste serviço, na dose realmente necessária (use g, mL, kg, L, m, m², un conforme couber e quantidades fracionadas, nunca 1 kg por padrão; calcule pelas medidas da descrição: área = comprimento x largura, volume = área x profundidade). O valor de cada item é o custo proporcional ao que será usado, a preço de varejo no Brasil, e não o da embalagem fechada.`;
-function qMatInit(q){const Q=S.q;if(Q.mA)return;Q.mrev=q.matsRev||0;Q.mA={mats:(Array.isArray(q.mats)?q.mats:[]).map(m=>({n:m.n,q:m.q,u:m.u,v:m.v,p:mUnit(m)})),matTotal:0,client:!!(q.mats&&q.mats.length)};Q.mA.matTotal=Q.mA.mats.reduce((t,m)=>t+m.v,0);if(!Q.mA.mats.length)Q.mA.mats.push({n:'',q:1,u:'un',v:0,p:0});if(Q.mm==='inc'&&!Q.mat)Q.mat=Q.mA.matTotal}
+function qMatInit(q){const Q=S.q;if(Q.mA)return;Q.mrev=q.matsRev||0;Q.mA={mats:(Array.isArray(q.mats)?q.mats:[]).map(m=>({n:m.n,q:m.q,u:m.u,v:m.v,p:mUnit(m)})),matTotal:0,client:!!(q.mats&&q.mats.length)};Q.mA.matTotal=Q.mA.mats.reduce((t,m)=>t+m.v,0);if(!Q.mA.mats.length)Q.mA.mats.push({n:'',q:1,u:'un',v:0,p:0});if(Q.mm==='inc'&&!Q.mat)Q.mat=Q.mA.matTotal;if(!Q.hrsT&&!(Q.hrs>0)){const h=HRSD[q.days];if(h){Q.hrs=h;if(DAYS.includes(q.days))Q.days=q.days}}}
+const HRSD={'1 dia útil':8,'1 a 2 dias úteis':16,'2 a 3 dias úteis':24,'3 a 5 dias úteis':40,'Mais de 5 dias':48};
 function qMatsHtml(){const Q=S.q;return matsHtml(Q.mA,'q')}
 function qMatSync(){const Q=S.q,a=Q.mA;if(!a)return;if(Q.mm==='inc'){Q.mat=a.matTotal;const e=$('#qmat');if(e)e.value=Q.mat||'';const c=$('#qcalc');if(c)c.innerHTML=qcalcHtml()}}
 function qModeHtml(){const Q=S.q,q0=curReq(),by=q0&&q0.pg?q0.matBy:'';if(by==='cont')Q.mm='exc';if(by==='pro')Q.mm='inc';return `<div class="card"><b>Como você oferece o serviço?</b>${by==='cont'?'<p class="muted" style="margin:6px 0 0">O contratante escolheu comprar os materiais. Envie só o valor do serviço. Você não vê os valores que ele pagar nos materiais.</p>':by==='pro'?'<p class="muted" style="margin:6px 0 0">O contratante deixou os materiais por sua conta. O valor da proposta inclui os materiais, e ele vê só o total.</p>':''}<div class="row" style="margin-top:10px"><button class="chip" data-qmm="inc" aria-pressed="${Q.mm==='inc'}"${by==='cont'?' disabled':''}>Serviço com materiais</button><button class="chip" data-qmm="exc" aria-pressed="${Q.mm==='exc'}"${by==='pro'?' disabled':''}>Só o serviço</button></div><p class="muted" style="margin:10px 0 0">${Q.mm==='exc'?'Seu preço é só a mão de obra. Os materiais ficam por conta do contratante, e ele vê a lista com as especificações que você confirmou ou alterou.':'O preço da proposta inclui os materiais. O contratante vê a lista com as especificações que você confirmou ou alterou.'}</p></div>`}
@@ -1585,7 +1586,6 @@ function qsend(){
   if(q.pg&&q.matBy==='cont')Q.mm='exc';if(q.pg&&q.matBy==='pro')Q.mm='inc';
   if(Q.mm==='exc')Q.mat=0;
   if(Q.mat>0&&Q.mat>=Q.price)E.qmat='O material precisa ser menor que o preço.';
-  if(!(Q.hrs>0))E.qhrs='Informe as horas estimadas.';
   if(showErrors(E))return;
   if(Q.boost&&!Q.boostOK){const r0=plRec();if(r0.plan==='free'&&!(r0.credits>0)){Q.boostAsk=true;render();setTimeout(()=>{const e=$('#boostpay');if(e)e.scrollIntoView({block:'center'})},60);return}}
   const p={id:Date.now(),reqId:q.id,email:S.user.email,name:S.user.emp?S.user.emp.razao:S.user.name,kind:S.user.emp?'emp':(S.user.kind||''),desc:q.desc,price:Q.price,mat:Q.mat,mm:Q.mm,mats:((Q.mA&&Q.mA.mats)||[]).filter(m=>m&&String(m.n).trim()).map(m=>({n:String(m.n).slice(0,80),q:m.q,u:m.u,v:m.v})),matEst:Q.mm==='exc'&&Q.mA?Q.mA.matTotal:0,hrs:Q.hrs,days:Q.days,msg:Q.msg.trim(),boost:!!Q.boost,ai:Q.viaAI?1:undefined,ver:verMe()?1:undefined,pg:q.pg?1:undefined,rev:q.pg?(q.matsRev||0):undefined,at:new Date().toISOString()};
@@ -2597,7 +2597,7 @@ document.addEventListener('input',e=>{const rt=e.target.dataset&&e.target.datase
   if(S.v==='request'&&i.id==='rown'){S.req.own=i.value}
   if(S.v==='quote'&&['qprice','qmat','qhrs','qdays','qmsg'].includes(i.id)){
     const Q=S.q;
-    if(i.id==='qprice')Q.price=pn(i.value);else if(i.id==='qmat')Q.mat=pn(i.value);else if(i.id==='qhrs')Q.hrs=pn(i.value);else if(i.id==='qdays')Q.days=i.value;else Q.msg=i.value;
+    if(i.id==='qprice')Q.price=pn(i.value);else if(i.id==='qmat')Q.mat=pn(i.value);else if(i.id==='qhrs'){Q.hrs=pn(i.value);Q.hrsT=1}else if(i.id==='qdays')Q.days=i.value;else Q.msg=i.value;
     if(i.id!=='qdays'&&i.id!=='qmsg')$('#qcalc').innerHTML=qcalcHtml();
   }
   if(S.v==='workers'&&i.id==='fq'){S.fq=i.value;$('#wlist').innerHTML=workersList()}
