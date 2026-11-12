@@ -2515,6 +2515,27 @@ const sbst=document.createElement('style');sbst.textContent='.savebar{position:s
 let SVT=0;function doSave(){if(Date.now()-SVT<700)return;SVT=Date.now();const ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))ae.blur();setTimeout(()=>{try{save()}catch(_){}SAVED=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});const x=document.getElementById('sb-st');if(x)x.textContent='✓ Salvo às '+SAVED;toast(S.demo?'Salvo neste aparelho. Isto é um exemplo: toque em "Começar do zero" para criar as suas metas.':'Meta salva.')},60)}
 document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('[data-ms=savenow]');if(!b)return;e.preventDefault();doSave()},true);
 function saveBar(){return `<div class="savebar"><span id="sb-st">${SAVED?'✓ Salvo às '+SAVED:'Suas mudanças também são salvas sozinhas.'}</span><button class="btn meta" data-ms="savenow">💾 Salvar meta</button></div>`}
+
+/* ---------- relatório PDF completo da meta ---------- */
+if(typeof docSpec==='function'){const _sp=docSpec;docSpec=function(kind,id){const sp=_sp.apply(this,arguments);if(kind!=='meta'||!sp)return sp;try{
+  const g=S.goals.find(x=>x.id===id);if(!g)return sp;const bl=sp.blocks.slice(),nt=bl.length&&bl[bl.length-1].t==='note'?bl.pop():null;
+  const M=g.membros||[];
+  if(g.tipo==='viagem'&&M.length){const {G,f}=memShare(g),meses=Math.max(1,Math.ceil(daysTo(g.prazo)/30.44));
+    const R=M.map(m=>{const ci=M.filter(x=>x.t==='c').indexOf(m),fk=ci>=0?G.facs[ci]:1,pg=m.t==='c'?fk>0:m.pag!==false,v=+f(m)||0,ju=+m.guardado||0,mn=+m.mensal||0;
+      return {n:m.nome+(m.t==='c'?' ('+m.idade+(m.idade===1?' ano)':' anos)'):''),p:pg?(m.t==='c'&&fk<1?'Meia':'Sim'):'Não',pg,v,ju,fa:Math.max(0,v-ju),mn}});
+    const sv=R.reduce((a,x)=>a+x.v,0),sj=R.reduce((a,x)=>a+x.ju,0),sm=R.reduce((a,x)=>a+x.mn,0),nao=R.filter(x=>!x.pg),sim=R.filter(x=>x.pg);
+    const fal=Math.max(0,sv-sj),gt=sm>0&&fal>0?Math.ceil(fal/sm):0;
+    bl.push({t:'h',s:'Quem vai e quanto cada um paga'},{t:'table',head:['Pessoa','Paga','Parte','Juntou','Falta','Por mês'],w:[3.4,1,1.8,1.8,1.8,1.6],al:['l','l','r','r','r','r'],
+      rows:R.map(x=>[x.n,x.p,sv>0?brl(x.v):'-',brl(x.ju),sv>0?brl(x.fa):'-',x.mn>0?brl(x.mn):'-']).concat([['Total ('+R.length+' pessoas)','',sv>0?brl(sv):'-',brl(sj),sv>0?brl(fal):'-',sm>0?brl(sm):'-']])});
+    bl.push({t:'kv',rows:[['Pessoas que pagam',sim.length+(sim.length?' ('+sim.map(x=>x.n).join(', ')+')':'')],['Pessoas que não pagam',nao.length?nao.length+' ('+nao.map(x=>x.n).join(', ')+')':'Nenhuma'],['Juntado pelas pessoas',brl(sj)]].concat(sv>0?[['Falta juntar',brl(fal)]]:[['Parte de cada um','Preencha os custos da viagem no Prumo para calcular']]).concat(sm>0&&sv>0?[['Juntam por mês (soma)',brl(sm)],['Previsão para completar',fal<=0?'Completo':monthAfter(gt)+(gt>meses?' (depois do prazo)':' (dentro do prazo)')]]:[])})}
+  else if(g.tipo==='viagem'){const ps=_sp('pessoas',id);if(ps){const i=ps.blocks.findIndex(b=>b.t==='table');if(i>=0)bl.push({t:'h',s:'Valor por pessoa'},ps.blocks[i])}}
+  const A=(g.aportes||[]).slice().sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+  if(A.length){const sa=A.reduce((a,x)=>a+(+x.v||0),0);bl.push({t:'h',s:'Lançamentos de dinheiro juntado ('+A.length+')'},{t:'table',head:['Data','Quem','Valor'],w:[1.8,4,2],al:['l','l','r'],rows:A.map(x=>[x.d?fd(x.d):'-',x.qn||'Geral',brl(+x.v||0)]).concat([['Total lançado','',brl(sa)]])});
+    const por={};A.forEach(x=>{const k=x.qn||'Geral';por[k]=(por[k]||0)+(+x.v||0)});const ks=Object.keys(por);if(ks.length>1)bl.push({t:'table',head:['Total por pessoa','Valor'],w:[5,2],al:['l','r'],rows:ks.map(k=>[k,brl(por[k])])})}
+  const x=shareOf(g);if(x){const J=joinersOf(x.code),P=paysOf(x.code),st=x.st||{};
+    bl.push({t:'h',s:'Meta compartilhada'},{t:'kv',rows:[['Código',x.code],['Quem entrou',J.length?J.map(j=>j.nick||'Usuário').join(', '):'Ninguém ainda']]});
+    if(P.length)bl.push({t:'table',head:['Data','Quem avisou','Valor','Situação'],w:[1.6,3,1.8,2],al:['l','l','r','l'],rows:P.map(p=>[fd(String(p.ts).slice(0,10)),p.nick+(p.note?' · '+p.note:''),brl(p.v),st[p.id]==='ok'?'Confirmado':st[p.id]==='no'?'Não confirmado':'Aguardando'])})}
+  if(nt)bl.push(nt);return {...sp,title:'Relatório: '+g.nome,subject:'Relatório da meta: '+g.nome,fname:'relatorio-'+(typeof fnameSlug==='function'?fnameSlug(g.nome):'meta'),blocks:bl}}catch(_){return sp}}}
 /* ---------- ações ---------- */
 function ensureNick(id,er){let n=nickG();if(n)return n;const el=document.getElementById(id);n=el?el.value.trim().replace(/\s+/g,' '):'';
   if(n.length<3||n.length>20){er('Escolha um apelido de 3 a 20 letras.');return null}if(BAD.test(n.replace(/[\s.\-]/g,''))){er('O apelido não pode ter telefone, e-mail ou link.');return null}nickS(n);return n}
