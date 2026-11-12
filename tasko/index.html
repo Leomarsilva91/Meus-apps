@@ -2899,7 +2899,9 @@ function admAct(D){
   syInit();
 const em=store.getItem('ms_session'),u=em&&users().find(x=>x.email===em);
   if(u&&!u.susp){S.user=view(u,pickRole(u));S.v=needsC(u)?'accept':'home'}
-  cfgApply();render();
+  cfgApply();
+  /* desenha só depois de todos os scripts da página carregarem (o bloco de problema ou sugestão fica mais abaixo) */
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>render(),{once:true});else render();
 })();
 </script>
 <script>
