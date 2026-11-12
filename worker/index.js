@@ -10,7 +10,7 @@ const LIMITE_GERAL_DIA = 3000;                                // pedidos de todo
 
 const cors = (o) => ({
   'Access-Control-Allow-Origin': ORIGENS.includes(o) ? o : ORIGENS[0],
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Vary': 'Origin',
 });
@@ -26,10 +26,41 @@ async function contar(env, chave, limite) {
   return true;
 }
 
+// Taxas de juros oficiais do Banco Central (dados públicos, sem chave).
+// 432 = Meta Selic (% ao ano); 20749 = média de juros, pessoa física, compra de veículos (% ao ano);
+// 25471 = a mesma média em % ao mês. Guardadas em cache por 12 horas.
+const SGS = (n, q) => `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${n}/dados/ultimos/${q}?formato=json`;
+async function serie(n) {
+  const r = await fetch(SGS(n, 1), { headers: { Accept: 'application/json' }, cf: { cacheTtl: 43200 } });
+  if (!r.ok) throw new Error('bcb ' + n);
+  const a = await r.json(), x = a && a[a.length - 1];
+  const v = x && parseFloat(String(x.valor).replace(',', '.'));
+  if (!(v > 0)) throw new Error('vazio ' + n);
+  return { v, data: x.data };                                 // data no formato dd/mm/aaaa
+}
+async function taxas(req, o, ctx) {
+  const cache = caches.default, chave = new Request('https://cache.local/taxas-v1');
+  const hit = await cache.match(chave);
+  if (hit) { const j = await hit.json(); return resp(j, 200, o); }
+  const [selic, aa, am] = await Promise.allSettled([serie(432), serie(20749), serie(25471)]);
+  const out = { fonte: 'Banco Central do Brasil (SGS)', at: new Date().toISOString() };
+  if (selic.status === 'fulfilled') out.selic = selic.value;
+  if (aa.status === 'fulfilled') out.veicAno = aa.value;
+  if (am.status === 'fulfilled') out.veicMes = am.value;
+  else if (aa.status === 'fulfilled') out.veicMes = { v: Math.round((Math.pow(1 + aa.value.v / 100, 1 / 12) - 1) * 10000) / 100, data: aa.value.data, calc: true };
+  if (!out.selic && !out.veicAno) return resp({ erro: 'bcb' }, 502, o);
+  const res = new Response(JSON.stringify(out), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=43200' } });
+  ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(chave, res.clone())) : await cache.put(chave, res.clone());
+  return resp(out, 200, o);
+}
+
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const o = req.headers.get('Origin') || '';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(o) });
+    if (req.method === 'GET' && new URL(req.url).pathname === '/taxas') {
+      try { return await taxas(req, o, ctx); } catch (_) { return resp({ erro: 'bcb' }, 502, o); }
+    }
     if (req.method !== 'POST') return resp({ erro: 'metodo' }, 405, o);
     if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
     if (!env.ANTHROPIC_API_KEY) return resp({ erro: 'sem_chave' }, 500, o);
