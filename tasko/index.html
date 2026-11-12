@@ -98,6 +98,32 @@ details *,details *::before,details *::after{box-sizing:border-box}
 .hmbtn{margin-left:auto;background:none;border:0;color:#fff;min-width:48px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;border-radius:12px;font:inherit}.hmbtn span{font-size:10px;line-height:1}header.top h1{min-width:0;overflow-wrap:anywhere}
 .brandcol{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}.brandcol h1{margin:0}.sairbtn{background:none;border:1px solid rgba(255,255,255,.55);color:#fff;border-radius:99px;padding:3px 12px;min-height:30px;font-weight:600;font-size:13px;line-height:1;font-family:inherit;cursor:pointer}
 #sairdlg{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px}.sairbg{position:absolute;inset:0;background:rgba(10,18,40,.6)}.sairbox{position:relative;background:var(--card);color:var(--ink);border-radius:18px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:12px}.sairbox h2{margin:0;font-size:21px}.sairbox p{margin:0;color:var(--muted)}
+:root{--fb-acc:var(--link);--fb-line:var(--line);--fb-on:#fff}
+.fbchips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.fbchip{min-height:44px;padding:0 14px;border-radius:22px;border:1.5px solid var(--fb-line,#ccc);background:transparent;color:inherit;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.fbchip[aria-pressed=true]{background:var(--fb-acc,#333);border-color:var(--fb-acc,#333);color:var(--fb-on,#fff)}
+.fblab{display:block;font-weight:700;font-size:14px;margin:0 0 6px}
+.fbcard textarea{width:100%;box-sizing:border-box}
+.fbrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.fbbtn{position:relative;overflow:hidden;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;border:1.5px dashed var(--fb-line,#ccc);cursor:pointer;font-weight:600;font-size:14px}
+.fbsr{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.fbprev{position:relative;display:inline-block}.fbprev img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--fb-line,#ccc);display:block}
+.fbprev button{position:absolute;top:-10px;right:-10px;width:30px;height:30px;border-radius:50%;border:0;background:#B3261E;color:#fff;font-size:14px;cursor:pointer}
+.fbchk{display:flex!important;gap:10px;align-items:center;min-height:44px;font-weight:500!important;font-size:15px;margin:6px 0 0}.fbchk input{width:22px!important;height:22px;min-height:0!important;flex:none}
+.fbsend{width:100%;min-height:50px;border:0;border-radius:14px;background:var(--fb-acc,#333);color:var(--fb-on,#fff);font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.fbmsg{margin-top:8px;font-size:14px;font-weight:600}.fbmsg:empty{display:none}
+.fbmine{margin-top:12px;border-top:1px solid var(--fb-line,#ccc);padding-top:4px}.fbmine>summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+.fbit{padding:10px 0;border-top:1px solid var(--fb-line,#ccc)}.fbit:first-of-type{border-top:0}
+.fbh{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fbtag,.fbst{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid currentColor;line-height:1.5}
+.fbst-nova{color:#B26A00}.fbst-vista{color:#1C6FB0}.fbst-ok{color:#12803F}
+@media (prefers-color-scheme:dark){.fbst-nova{color:#F5B95C}.fbst-vista{color:#7CC4FF}.fbst-ok{color:#5CD98A}}
+.fbit p{margin:6px 0 0;overflow-wrap:anywhere}.fbrep{background:color-mix(in srgb,var(--fb-acc,#333) 12%,transparent);padding:8px 10px;border-radius:10px}.fbsm{font-size:12px;opacity:.8}
+.fbthumb{display:inline-block;margin-top:6px}.fbthumb img{max-width:160px;max-height:160px;border-radius:10px;border:1px solid var(--fb-line,#ccc);display:block}
+.fbadm .fbrow button{min-height:40px;padding:0 12px;border-radius:12px;border:1.5px solid var(--fb-line,#ccc);background:transparent;color:inherit;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.fbadm .fbrow button[aria-pressed=true]{background:var(--fb-acc,#333);border-color:var(--fb-acc,#333);color:var(--fb-on,#fff)}
+.fblink{display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:56px;padding:12px 14px;border-radius:16px;border:1.5px dashed var(--fb-acc,#333);background:transparent;color:inherit;font-family:inherit;font-size:15px;cursor:pointer;box-sizing:border-box}
+.fblink .fbi{font-size:24px;flex:none}.fblink .fbx2{flex:1;min-width:0}.fblink .fbar{flex:none;font-size:24px;color:var(--fb-acc,#333)}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2457d6"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
@@ -506,7 +532,7 @@ settings:()=>{const r=plRec(),pf=r.prefs||{},m=r.plan!=='free',pro=S.user.role==
 return `${head('Configurações','home')}<main>
 ${themeCard()}${hmCard()}${notifCard()}${pwCard()}
 ${S.user.emp?compCard():''}
-<div class="card"><b>Enviar problema ou sugestão</b><p class="muted" style="margin:6px 0 10px">Algo travou, ficou confuso ou você teve uma ideia? Conte aqui. A mensagem vai direto para a equipe do teste.</p><textarea id="fbtx" rows="3" maxlength="800" placeholder="Ex.: não consegui abrir o WhatsApp depois de pagar a taxa"></textarea><button class="btn" style="margin-top:10px" data-act="fbsend">Enviar</button><div id="fbmsg" class="muted" role="status" aria-live="polite" style="margin-top:6px"></div></div>
+${fbForm()}
 ${pro?`<div class="card"><b>Minha profissão</b><p class="muted" style="margin:6px 0 10px">Você pode oferecer qualquer tipo de serviço. Escreva como quer ser chamado e escolha a categoria mais próxima. Se nenhuma servir, use "Outros serviços".</p>
 ${S.user.pk==='pro'?kindSel('pkind',S.user.kind):''}
 ${fld('ptitle','Profissão ou serviço','type="text" maxlength="40" placeholder="Ex.: Marceneiro, Aulas de violão, Fotógrafo" value="'+esc(S.user.title||'')+'"')}
@@ -558,6 +584,7 @@ ${xgHtml('cs','Cursos e capacitação',m?'Incluídos no seu plano':'Exclusivo pa
 <button class="btn ghost" data-go="camps">Vantagens e campanhas</button>
 <p class="muted" style="margin:0">Veja as regras em ${dlk('payments','Pagamentos e reembolso')}.</p>
 </main>`},
+fb:()=>`${head('Problema ou sugestão','home')}<main>${fbForm()}</main>`,
 home:()=>{const pro=S.user.role==='pro',who=`<div class="card"><b>Eu sou</b><div class="row" style="margin-top:10px">${RKEYS.filter(r=>S.user.roles[r]).map(r=>`<button class="chip" data-switch="${r}" aria-pressed="${S.user.pk===r}">${ROLE[r]}${RTAG[r]?`<span class="rtg2">${RTAG[r]}</span>`:''}</button>`).join('')}</div><p class="muted" style="margin:12px 0 6px">Adicionar outro perfil</p><div class="row">${RKEYS.filter(r=>!S.user.roles[r]).map(r=>`<button class="chip" style="border-style:dashed" data-addrole="${r}" aria-label="Adicionar perfil: ${ROLE[r].toLowerCase()}">+ ${ROLE[r]}</button>`).join('')}</div></div>`,
 campB=campOn().length?' · '+campOn().length+' campanha'+(campOn().length>1?'s ativas':' ativa'):'',
  legal='<button class="btn ghost" data-go="legal">Termos, políticas e privacidade</button>',
@@ -572,7 +599,7 @@ campB=campOn().length?' · '+campOn().length+' campanha'+(campOn().length>1?'s a
 ${pro?`<p class="muted" style="margin:4px 0 0">${esc(S.user.title||S.user.area||S.user.cat)}, ${esc(S.user.city)}</p>`:''}</div>
 ${ratePendCard()}${hmOrdered(pro,nums)}
 <details class="mm"><summary class="chip fill" style="display:inline-flex;width:auto">${pro?'Ganhos, vantagens e conta':'Gastos, vantagens e conta'}</summary><div class="menu" style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${hmMenu()}</div></details>
-${hmTail}</main>`}
+${hmTail}${fbLink()}</main>`}
 };
 
 function mineV(D){const h=mineV0(D);return D?hideAct(h):h}
@@ -845,6 +872,18 @@ const cedOK=()=>!!(S.user&&S.user.pk==='cliE');
 const cedSt=()=>{const r=S.req;if(!r.ced)r.ced={on:false,rows:[{f:'',n:1}],epi:'cli',msg:'',pick:{}};return r.ced};
 const cedClean=rows=>{const m={};(rows||[]).forEach(x=>{const f=String(x&&x.f||'').replace(/[<>]/g,'').trim().slice(0,40),n=Math.max(0,Math.min(500,Math.round(Number(x&&x.n)||0)));if(f.length<2||!n)return;const k=f.toLowerCase();if(m[k])m[k].n=Math.min(500,m[k].n+n);else m[k]={f:f[0].toUpperCase()+f.slice(1),n}});return Object.values(m)};
 const cedTxt=rows=>(rows||[]).map(x=>x.n+' '+x.f.toLowerCase()+(x.n>1&&!/s$/i.test(x.f)?'(s)':'')).join(', ');
+function cedShTxt(){const c=cedSt(),ok=cedClean(c.rows);if(!ok.length)return '';const d=String(S.req.desc||'').trim().replace(/\s+/g,' ');
+  return 'Tasko – Funcionários que podemos ceder para o serviço'+(S.user&&S.user.name?' ('+S.user.name+')':'')+'\n'+(d?'Serviço: '+(d.length>120?d.slice(0,117)+'…':d)+'\n':'')+'\n'+ok.map(x=>'• '+x.f+': '+x.n).join('\n')+'\nTotal: '+cedTotal(ok)+' funcionário(s)\nEPI: '+(CED_EPI[c.epi]||'A combinar')+'\n\nOs funcionários cedidos continuam empregados da nossa empresa. Detalhes a combinar.'}
+function cedShare(k){const c=cedSt(),say=t=>{c.msg=t;const m=$('#cedmsg');if(m)m.textContent=t};const w=$('#cedwa'),m=$('#cedml');if(w)c.wa=w.value;if(m)c.ml=m.value;c.shOpen=true;
+  const t=cedShTxt();if(!t)return say('Informe pelo menos uma função e a quantidade antes de compartilhar.');const e=encodeURIComponent(t),sj=encodeURIComponent('Funcionários que podemos ceder');
+  const op=u=>{const x=window.open(u,'_blank','noopener,noreferrer');if(!x&&!/^(mailto|sms):/.test(u))say('Se não abrir, use "Copiar texto" e cole na conversa.')};
+  if(k==='wa'){const d=String(c.wa||'').replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'');if(d&&!/^\d{10,11}$/.test(d))return say('Confira o número: DDD + telefone.');op('https://wa.me/'+(d?'55'+d:'')+'?text='+e);return say('Abrindo o WhatsApp…')}
+  if(k==='mail'){const a=String(c.ml||'').trim();if(a&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a))return say('Confira o e-mail da empresa.');location.href='mailto:'+encodeURIComponent(a)+'?subject='+sj+'&body='+e;return say('Abrindo o e-mail…')}
+  if(k==='sms'){const d=String(c.wa||'').replace(/\D/g,'');location.href='sms:'+d+'?&body='+e;return say('Abrindo as mensagens…')}
+  if(k==='tg'){op('https://t.me/share/url?url='+e);return say('Abrindo o Telegram…')}
+  if(k==='native'){try{navigator.share({title:'Funcionários que podemos ceder',text:t}).then(()=>say('Lista compartilhada.'),()=>{})}catch(x){say('Use uma das opções acima.')}return}
+  const fb=()=>{try{const x=document.createElement('textarea');x.value=t;x.style.cssText='position:fixed;opacity:0';document.body.appendChild(x);x.select();const ok=document.execCommand('copy');x.remove();say(ok?'Texto copiado. Cole onde quiser enviar.':'Não consegui copiar. Use outra opção.')}catch(x){say('Não consegui copiar. Use outra opção.')}};
+  try{navigator.clipboard.writeText(t).then(()=>say('Texto copiado. Cole onde quiser enviar.'),fb)}catch(x){fb()}}
 const cedTotal=rows=>(rows||[]).reduce((t,x)=>t+(Number(x.n)||0),0);
 function cedMerge(add){const c=cedSt();const base=c.rows.filter(x=>String(x.f||'').trim());c.rows=cedClean([...base,...add]);if(!c.rows.length)c.rows=[{f:'',n:1}];c.on=true}
 function cedBox(){const c=cedSt();if(!c.on)return '';const st=staffOf(),G={};st.forEach(w=>{const k=(w.role||'').trim()||'Sem função informada';(G[k]=G[k]||[]).push(w)});
@@ -854,13 +893,18 @@ function cedBox(){const c=cedSt();if(!c.on)return '';const st=staffOf(),G={};st.
 ${st.length?`<details style="margin-top:12px"><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center"><b>Escolher dos funcionários cadastrados (${st.length})</b></summary><p class="muted" style="margin:6px 0">Marque quem pode ser cedido. O prestador vê só a função e a quantidade, nunca o nome.</p>${Object.entries(G).map(([k,L])=>`<p style="margin:8px 0 2px"><b>${esc(k)}</b></p>${L.map(w=>`<label class="chk"><input type="checkbox" data-cedpick="${w.id}" ${c.pick[w.id]?'checked':''}> ${esc(w.name)}</label>`).join('')}`).join('')}<button type="button" class="btn ghost" style="margin-top:8px" data-cedact="pick">Adicionar os marcados</button></details>`:`<p class="muted" style="margin:10px 0 0">Você ainda não tem funcionários cadastrados. Cadastre em <b>Funcionários e gastos da equipe</b> para escolher daqui.</p>`}
 <div style="margin-top:12px"><input hidden type="file" id="cedfile" accept=".xlsx,.csv,.txt,text/csv,text/plain" tabindex="-1" aria-label="Importar lista de funcionários a ceder"><button type="button" class="chip" data-cedact="file">📄 Importar lista de um arquivo</button><p class="muted" style="margin:4px 0 0;font-size:13px">Planilha .xlsx ou .csv. Aceita duas formas: <b>função e quantidade</b> (ex.: Pedreiro | 2) ou <b>nome e função</b> de cada funcionário (o app conta por função e não envia nomes).</p></div>
 <div style="margin-top:12px"><label for="cedepi">Equipamentos de segurança (EPI) dos cedidos</label><select id="cedepi">${Object.entries(CED_EPI).map(([k,l])=>`<option value="${k}"${c.epi===k?' selected':''}>${l}</option>`).join('')}</select></div>
+<details class="card" style="margin-top:12px;padding:12px" id="cedsh"${c.shOpen?' open':''}><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center"><b>📤 Compartilhar a lista com a empresa contratada</b></summary>
+<p class="muted" style="margin:6px 0 8px;font-size:13px">Envia só as funções, as quantidades e o EPI. Nomes dos funcionários não vão na mensagem.</p>
+<label for="cedwa">WhatsApp da empresa (opcional)</label><input id="cedwa" type="tel" inputmode="tel" maxlength="20" placeholder="DDD + número" value="${esc(c.wa||'')}">
+<label for="cedml" style="margin-top:8px">E-mail da empresa (opcional)</label><input id="cedml" type="email" inputmode="email" maxlength="80" placeholder="contato@empresa.com.br" value="${esc(c.ml||'')}">
+<div class="row" style="margin-top:10px">${[['wa','WhatsApp'],['mail','E-mail'],['sms','SMS'],['tg','Telegram'],['copy','Copiar texto']].map(([k,l])=>`<button type="button" class="chip" data-cedact="sh-${k}">${l}</button>`).join('')}${navigator.share?'<button type="button" class="chip" data-cedact="sh-native">Mais opções…</button>':''}</div></details>
 <div class="muted" id="cedmsg" role="status" aria-live="polite" style="margin-top:6px">${esc(c.msg||'')}</div>
 <p class="muted" style="margin:10px 0 0;font-size:13px">Os cedidos continuam sendo funcionários da sua empresa: salário, registro e acidente de trabalho seguem por sua conta. Confirme os detalhes com seu contador ou advogado.</p>`}
 function cedHtml(){if(!cedOK())return '';const c=cedSt(),ok=cedClean(c.rows),n=cedTotal(ok);
   return `<details class="card" id="cedcard"${c.on?' open':''}><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span><b>Posso ceder funcionários</b><span class="muted" style="display:block;font-size:13px">${c.on&&n?esc(cedTxt(ok)):'Opcional. Diz ao prestador quem da sua equipe pode ajudar.'}</span></span></summary>
 <label class="chk" style="margin-top:6px"><input type="checkbox" id="cedon" ${c.on?'checked':''}> Sim, posso ceder funcionários para este serviço</label>
 <div id="cedbox">${cedBox()}</div><div class="err" id="e-ced"></div></details>`}
-function cedRefresh(){const b=$('#cedbox');if(b)b.innerHTML=cedBox();const c=cedSt(),ok=cedClean(c.rows),s=document.querySelector('#cedcard summary .muted');if(s)s.textContent=c.on&&ok.length?cedTxt(ok):'Opcional. Diz ao prestador quem da sua equipe pode ajudar.'}
+function cedRefresh(){const sh=$('#cedsh');if(sh)cedSt().shOpen=sh.open;const b=$('#cedbox');if(b)b.innerHTML=cedBox();const c=cedSt(),ok=cedClean(c.rows),s=document.querySelector('#cedcard summary .muted');if(s)s.textContent=c.on&&ok.length?cedTxt(ok):'Opcional. Diz ao prestador quem da sua equipe pode ajudar.'}
 function cedRows(rows){rows=(rows||[]).map(r=>r.map(x=>String(x==null?'':x).trim())).filter(r=>r.some(Boolean));if(rows.length&&/^(fun[cç]|cargo|nome|name|profiss|colaborador)/i.test(rows[0][0]||''))rows.shift();const out=[];
   rows.slice(0,1000).forEach(r=>{const a=r[0]||'',b=r[1]||'',nb=Number(String(b).replace(',','.'));if(a&&b&&isFinite(nb)&&nb>0)out.push({f:a,n:nb});else if(a&&b)out.push({f:b,n:1});else if(a)out.push({f:a,n:1})});return cedClean(out)}
 async function cedFile(file){const c=cedSt();if(!file)return;if(file.size>2e6){c.msg='Arquivo grande demais (máximo 2 MB).';return cedRefresh()}
@@ -874,7 +918,7 @@ const CED_P={all:'Vou usar toda a equipe cedida',part:'Vou usar parte da equipe 
 function cedQHtml(q){if(!(q&&q.ced&&q.ced.rows&&q.ced.rows.length))return '';const Q=S.q;
   return `<div class="card"><b>Equipe cedida pelo contratante</b><p class="muted" style="margin:4px 0 8px">${esc(cedTxt(q.ced.rows))}</p><label for="qced">Na sua proposta</label><select id="qced"><option value="">Escolha uma opção</option>${Object.entries(CED_P).map(([k,l])=>`<option value="${k}"${Q.ced===k?' selected':''}>${l}</option>`).join('')}</select>${Q.ced==='part'?`<div style="margin-top:10px"><label for="qcedt">Quais e quantos?</label><input id="qcedt" maxlength="120" placeholder="Ex.: 1 pedreiro e 2 serventes" value="${esc(Q.cedT||'')}"></div>`:''}<p class="muted" style="margin:8px 0 0;font-size:13px">Usando a equipe cedida, sua proposta pode sair mais barata. Isso aparece para o contratante junto com o seu preço.</p></div>`}
 const cedPropTxt=p=>p&&p.ced?(CED_P[p.ced]||'')+(p.ced==='part'&&p.cedT?': '+p.cedT:''):'';
-document.addEventListener('input',e=>{if(S.v==='request'){const t=e.target;if(t.dataset.cedf!==undefined){const c=cedSt(),r=c.rows[+t.dataset.cedf];if(r)r.f=t.value;return}if(t.dataset.cedn!==undefined){const c=cedSt(),r=c.rows[+t.dataset.cedn];if(r)r.n=t.value;return}}
+document.addEventListener('input',e=>{if(S.v==='request'){const t=e.target;if(t.id==='cedwa'){cedSt().wa=t.value.slice(0,20);return}if(t.id==='cedml'){cedSt().ml=t.value.slice(0,80);return}if(t.dataset.cedf!==undefined){const c=cedSt(),r=c.rows[+t.dataset.cedf];if(r)r.f=t.value;return}if(t.dataset.cedn!==undefined){const c=cedSt(),r=c.rows[+t.dataset.cedn];if(r)r.n=t.value;return}}
   if(S.v==='quote'&&e.target.id==='qcedt'){S.q.cedT=e.target.value.slice(0,120)}});
 document.addEventListener('change',e=>{const t=e.target;if(S.v==='request'){
   if(t.id==='cedon'){const c=cedSt();c.on=t.checked;cedRefresh();const s=document.querySelector('#cedcard summary .muted');return}
@@ -887,6 +931,7 @@ document.addEventListener('click',e=>{if(S.v!=='request')return;const b=e.target
   if(b.dataset.cedrm!==undefined){c.rows.splice(+b.dataset.cedrm,1);if(!c.rows.length)c.rows=[{f:'',n:1}];cedRefresh();return}
   const a=b.dataset.cedact;
   if(a==='add'){c.rows.push({f:'',n:1});cedRefresh();const i=$('#cedf'+(c.rows.length-1));if(i)i.focus();return}
+  if(a.startsWith('sh-'))return cedShare(a.slice(3));
   if(a==='file'){const f=$('#cedfile');if(f)f.click();return}
   if(a==='pick'){const st=staffOf().filter(w=>c.pick[w.id]);if(!st.length){c.msg='Marque pelo menos um funcionário.';return cedRefresh()}const m={};st.forEach(w=>{const k=(w.role||'').trim()||'Ajudante geral';m[k]=(m[k]||0)+1});const add=Object.entries(m).map(([f,n])=>({f,n}));cedMerge(add);c.pick={};c.msg=st.length+' funcionário(s) adicionado(s), contados por função.';cedRefresh();return}
 },true);
@@ -2571,7 +2616,6 @@ document.addEventListener('click',e=>{
   if(D.rc)return rcAct(D.rc);
   if(D.act==='hemtog'){S.hemOpen=!S.hemOpen;const y=scrollY;render();scrollTo(0,y);return}
   if(D.copy){const n=D.copy,lk=n.startsWith('http'),ok=()=>{t.textContent=lk?'Link copiado':'Número copiado'};try{navigator.clipboard.writeText(n).then(ok,()=>{t.textContent=(lk?'Copie: ':'Número: ')+n})}catch(e){t.textContent=(lk?'Copie: ':'Número: ')+n}return}
-  if(D.act==='fbsend'){const x=($('#fbtx')||{}).value||'',m=$('#fbmsg');if(x.trim().length<3){m.textContent='Escreva o que aconteceu.';return}spSaveAll('ms_fb',[...jget('ms_fb'),{id:Date.now(),email:S.user.email,name:S.user.name,pk:S.user.pk,v:S.v,text:x.trim().slice(0,800),at:new Date().toISOString()}]);$('#fbtx').value='';m.textContent='Enviado. Obrigado por ajudar!';return}
   if(D.spd){spState().days=+D.spd;S.spmsg='';const y=scrollY;render();scrollTo(0,y);return}
   if(D.spp){spState().pay=D.spp;const y=scrollY;render();scrollTo(0,y);return}
   if(D.act==='spgo'){spBuy();const y=scrollY;render();scrollTo(0,y);return}
@@ -2761,8 +2805,7 @@ function admMod(){
     return `<div class="card"><div class="sum" style="margin:0"><b>${esc(x.kind==='request'?'Pedido denunciado':'Vídeo denunciado')}</b>${x.done?'<span class="tag">Resolvida</span>':'<span class="tag" style="background:var(--acc);color:#14213D;font-weight:700">Aberta</span>'}</div><p style="margin:4px 0">${q?esc(String(q.desc).slice(0,140)):'<span class="muted">Conteúdo não encontrado neste aparelho ou já removido.</span>'}</p><p class="muted" style="margin:0">${esc(x.reason||'')}${x.text?': '+esc(x.text):''} · por ${esc(x.email)} · ${dd(new Date(x.at))}</p>
 <div class="row" style="margin-top:8px">${q&&!x.done?admBtn('x'+x.id,'admrepdel','data-id="'+x.id+'"','Remover conteúdo'):''}${x.done?'':`<button class="chip" data-act="admrepok" data-id="${x.id}">Dispensar denúncia</button>`}</div></div>`}).join(''):'<div class="card"><b>Nenhuma denúncia</b></div>';
   const rat=RT.length?RT.slice(0,40).map(x=>`<div class="card"><div class="sum" style="margin:0"><b>${'★'.repeat(x.per||0)}${'☆'.repeat(5-(x.per||0))}</b><span class="tag">${x.toSide==='pro'?'Para prestador':'Para contratante'}</span></div><p style="margin:4px 0">${esc(x.txt||'(sem comentário)')}</p><p class="muted" style="margin:0">de ${esc(x.by)} para ${esc(x.to)}</p><div style="margin-top:8px">${admBtn('t'+x.id,'admratedel','data-id="'+esc(x.id)+'"','Remover avaliação')}</div></div>`).join(''):'<div class="card"><b>Nenhuma avaliação</b></div>';
-  const fb=FB.length?FB.slice(0,30).map(x=>`<div class="card"><b>${esc(x.name||x.email||'')}</b><p style="margin:4px 0">${esc(String(x.text||x.tx||'').slice(0,400))}</p><p class="muted" style="margin:0">${esc(x.email||'')}</p></div>`).join(''):'<div class="card"><b>Nenhuma mensagem</b></div>';
-  return `<h2 style="font-size:18px;margin:0">Denúncias</h2>${rep}<h2 style="font-size:18px;margin:8px 0 0">Avaliações</h2>${rat}<h2 style="font-size:18px;margin:8px 0 0">Mensagens dos usuários</h2>${fb}`}
+  return `<h2 style="font-size:18px;margin:0">Denúncias</h2>${rep}<h2 style="font-size:18px;margin:8px 0 0">Avaliações</h2>${rat}<h2 style="font-size:18px;margin:8px 0 0">Problemas e sugestões</h2>${fbAdmin()}`}
 function admCfg(){const c=cfg();return `<div class="card"><b>Taxa da plataforma</b><p class="muted" style="margin:4px 0 8px">Valor cobrado do contratante para liberar a negociação.</p><label for="admfee">Valor em reais</label><input id="admfee" inputmode="decimal" value="${esc((FEE/100).toFixed(2).replace('.',','))}"><label for="admpgfee" style="margin-top:10px;display:block">Taxa do pregão (reais, já inclui a taxa normal)</label><input id="admpgfee" inputmode="decimal" value="${esc((PGFEE/100).toFixed(2).replace('.',','))}"><p class="muted" style="margin:6px 0 0">O contratante paga só a diferença para a taxa normal ao abrir o pregão.</p></div>
 <div class="card"><b>E-mails de teste</b><p class="muted" style="margin:4px 0 8px">Nesses e-mails o prestador pode negociar com os próprios pedidos. Um por linha. O seu e-mail já vale sempre.</p><textarea id="admtest" rows="3">${esc((c.testers||[]).join('\n'))}</textarea></div>
 <div class="card"><b>Programa de pontos</b><p class="muted" style="margin:4px 0 8px">Data em que o programa passa a valer. Só serviços, vídeos e projetos feitos a partir dela rendem pontos, para contratantes e profissionais. Sem data, ninguém ganha pontos novos.</p><label for="admptsfrom">Data de início</label><input id="admptsfrom" type="date" value="${esc(ptsFrom())}"><p class="muted" style="margin:6px 0 0">${ptsFrom()?(ldate(new Date())>=ptsFrom()?'Valendo desde '+ptsFmt()+'.':'Começa em '+ptsFmt()+'.'):'Nenhuma data definida.'} Para parar o programa, apague a data e salve.</p></div>
@@ -2880,6 +2923,51 @@ var h=document.querySelector('header.top');
 if(h&&h.parentNode&&h.parentNode!==document.getElementById('app'))h.insertAdjacentElement('afterend',el);else document.body.insertBefore(el,document.body.firstChild);
 window.xappsShow=function(on){if(!gone)el.hidden=!on};try{xappsShow(['welcome','home'].includes(S.v))}catch(e){}
 })();
+
+const FBX={app:'Tasko',get:()=>jget('ms_fb'),set:L=>spSaveAll('ms_fb',L),me:()=>S.user,after:()=>{const y=scrollY;render();scrollTo(0,y)},open:()=>go('fb'),tela:()=>S.v};
+/* ---------- problema ou sugestão (comum aos apps) ---------- */
+const FB_T=[['bug','🐞 Algo travou'],['ideia','💡 Sugestão de melhoria'],['novo','🛠️ Serviço ou produto novo'],['elogio','👏 Elogio']],FB_S={nova:'Nova',vista:'Vista',ok:'Resolvida'};
+const FB_PH={bug:'Ex.: a tela travou quando toquei em Enviar',ideia:'Ex.: seria bom poder filtrar por cidade',novo:'Ex.: queria encontrar também serviço de jardinagem',elogio:'Ex.: achei muito fácil de usar'};
+const FBU={t:'bug',img:'',resp:true,msg:'',ft:'',fs:'',mo:false};
+const fbE=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fbTL=t=>(FB_T.find(x=>x[0]===t)||[0,'💬 Mensagem'])[1];
+const fbProt=x=>String(x.id).slice(-6);
+const fbDt=s=>{try{return new Date(s).toLocaleDateString('pt-BR')}catch(e){return ''}};
+function fbShrink(file){return new Promise((ok,no)=>{if(!file||!/^image\//.test(file.type||''))return no();const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,720/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.6))};im.onerror=()=>{URL.revokeObjectURL(u);no()};im.src=u})}
+function fbForm(){const me=FBX.me(),mine=me?FBX.get().filter(x=>x&&x.email&&x.email===me.email).sort((a,b)=>b.id-a.id):[];
+  return `<div class="card fbcard" id="fbbox"><b>💬 Enviar problema ou sugestão</b><p class="muted" style="margin:6px 0 10px">Algo travou, ficou confuso ou você teve uma ideia? Conte aqui. A mensagem vai direto para a equipe do ${FBX.app}.</p>
+<div class="fbchips" role="group" aria-label="Tipo da mensagem">${FB_T.map(([k,l])=>`<button type="button" class="fbchip" data-fbt="${k}" aria-pressed="${FBU.t===k}">${l}</button>`).join('')}</div>
+<label for="fbtx" class="fblab">Conte com suas palavras</label><textarea id="fbtx" rows="3" maxlength="800" placeholder="${FB_PH[FBU.t]}"></textarea>
+<div class="fbrow"><label class="fbbtn">📷 ${FBU.img?'Trocar o print':'Anexar print (opcional)'}<input type="file" accept="image/*" id="fbimg" class="fbsr" aria-label="Anexar print da tela"></label>${FBU.img?`<span class="fbprev"><img src="${FBU.img}" alt="Print anexado"><button type="button" data-fbx="rmimg" aria-label="Remover o print">✕</button></span>`:''}</div>
+<label class="fbchk"><input type="checkbox" id="fbresp" ${FBU.resp?'checked':''}> Quero receber resposta aqui no app</label>
+<button type="button" class="fbsend" data-fbx="send">Enviar</button><div id="fbmsg" class="fbmsg" role="status" aria-live="polite">${FBU.msg}</div>
+${mine.length?`<details class="fbmine" id="fbmine"${FBU.mo?' open':''}><summary>Minhas mensagens (${mine.length})</summary>${mine.slice(0,20).map(x=>`<div class="fbit"><div class="fbh"><span class="fbtag">${fbTL(x.tipo)}</span><span class="fbst fbst-${x.st||'nova'}">${FB_S[x.st||'nova']}</span></div><p>${fbE(String(x.text||x.tx||'').slice(0,300))}</p>${x.rep?`<p class="fbrep"><b>Resposta da equipe:</b> ${fbE(x.rep)}</p>`:''}<p class="fbsm">Protocolo ${fbProt(x)} · ${fbDt(x.at)}</p></div>`).join('')}</details>`:''}</div>`}
+function fbLink(){return `<button type="button" class="fblink" data-fbx="open"><span class="fbi" aria-hidden="true">💬</span><span class="fbx2"><b>Problema ou sugestão</b><br><span class="fbsm">Conte o que travou ou dê uma ideia para melhorar o ${FBX.app}</span></span><span class="fbar" aria-hidden="true">›</span></button>`}
+function fbAdmin(){const L=FBX.get().filter(Boolean).sort((a,b)=>b.id-a.id),f=L.filter(x=>(!FBU.ft||(x.tipo||'')===FBU.ft)&&(!FBU.fs||(x.st||'nova')===FBU.fs)),n=s=>L.filter(x=>(x.st||'nova')===s).length;
+  return `<div class="fbadm"><div class="fbchips" role="group" aria-label="Filtrar por tipo">${[['','Todos os tipos']].concat(FB_T).map(([k,l])=>`<button type="button" class="fbchip" data-fbft="${k}" aria-pressed="${FBU.ft===k}">${l}</button>`).join('')}</div><div class="fbchips" role="group" aria-label="Filtrar por situação">${[['','Todas']].concat(Object.entries(FB_S)).map(([k,l])=>`<button type="button" class="fbchip" data-fbfs="${k}" aria-pressed="${FBU.fs===k}">${l}${k?' ('+n(k)+')':''}</button>`).join('')}</div>
+${f.length?f.slice(0,60).map(x=>{const st=x.st||'nova';return `<div class="card fbit" style="padding:14px;margin-top:10px"><div class="fbh"><span class="fbtag">${fbTL(x.tipo)}</span><span class="fbst fbst-${st}">${FB_S[st]}</span>${x.resp?'<span class="fbtag">Quer resposta</span>':''}</div><p><b>${fbE(x.name||x.email||'Sem nome')}</b>${x.email?' · '+fbE(x.email):''}</p><p>${fbE(String(x.text||x.tx||'').slice(0,800))}</p>${x.img?`<a class="fbthumb" href="${x.img}" target="_blank" rel="noopener"><img src="${x.img}" alt="Print enviado"></a>`:''}<p class="fbsm">Protocolo ${fbProt(x)} · ${fbDt(x.at)}${x.tela?' · tela: '+fbE(x.tela):''}</p>
+<div class="fbrow">${Object.entries(FB_S).map(([k,l])=>`<button type="button" data-fbst="${k}" data-id="${x.id}" aria-pressed="${st===k}">${l}</button>`).join('')}</div>
+<label class="fblab" for="fbr-${x.id}" style="margin-top:10px">Resposta para a pessoa</label><textarea id="fbr-${x.id}" rows="2" maxlength="500" placeholder="Ex.: Obrigado! Já corrigimos.">${fbE(x.rep||'')}</textarea><div class="fbrow"><button type="button" data-fbrep="${x.id}">${x.rep?'Atualizar resposta':'Responder'}</button></div></div>`}).join(''):'<div class="card" style="margin-top:10px"><b>Nenhuma mensagem aqui</b></div>'}</div>`}
+function fbRefresh(){const b=document.getElementById('fbbox');if(!b)return;const t=document.getElementById('fbtx'),v=t?t.value:'';b.outerHTML=fbForm();const t2=document.getElementById('fbtx');if(t2)t2.value=v}
+function fbUpd(id,fn){const L=FBX.get(),x=L.find(y=>y&&String(y.id)===String(id));if(!x)return;fn(x);FBX.set(L);FBX.after()}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fbt],[data-fbx],[data-fbft],[data-fbfs],[data-fbst],[data-fbrep]');if(!b)return;e.preventDefault();e.stopPropagation();const D=b.dataset;
+  if(D.fbt){FBU.t=D.fbt;FBU.msg='';fbRefresh();return}
+  if(D.fbft!==undefined){FBU.ft=D.fbft;FBX.after();return}
+  if(D.fbfs!==undefined){FBU.fs=D.fbfs;FBX.after();return}
+  if(D.fbst){fbUpd(D.id,x=>{x.st=D.fbst});return}
+  if(D.fbrep){const t=document.getElementById('fbr-'+D.fbrep),v=t?t.value.trim().slice(0,500):'';fbUpd(D.fbrep,x=>{x.rep=v;x.repAt=new Date().toISOString();if(v&&(x.st||'nova')==='nova')x.st='vista'});return}
+  if(D.fbx==='open'){FBX.open();return}
+  if(D.fbx==='rmimg'){FBU.img='';fbRefresh();return}
+  if(D.fbx==='send'){const t=document.getElementById('fbtx'),tx=t?t.value.trim():'',m=document.getElementById('fbmsg');if(tx.length<3){if(m)m.textContent='Escreva o que aconteceu ou a sua ideia.';if(t)t.focus();return}
+    const me=FBX.me()||{},r={id:Date.now(),app:FBX.app,tipo:FBU.t,text:tx.slice(0,800),img:FBU.img||'',resp:FBU.resp,email:me.email||'',name:me.name||'',pk:me.pk||'',tela:FBX.tela?FBX.tela():'',st:'nova',at:new Date().toISOString()};
+    try{FBX.set([...FBX.get(),r])}catch(err){if(m)m.textContent='Não consegui enviar agora. Tente de novo.';return}
+    FBU.img='';FBU.msg='Recebemos, obrigado! Protocolo nº '+fbProt(r)+'.'+(FBU.resp?' A resposta aparece em "Minhas mensagens", aqui embaixo.':'');FBU.mo=false;if(t)t.value='';fbRefresh();return}
+},true);
+document.addEventListener('change',e=>{const t=e.target;if(!t)return;
+  if(t.id==='fbresp'){FBU.resp=t.checked;return}
+  if(t.id==='fbimg'){const f=t.files&&t.files[0];t.value='';const m=document.getElementById('fbmsg');fbShrink(f).then(u=>{FBU.img=u;FBU.msg='';fbRefresh()},()=>{if(m)m.textContent='Não consegui ler essa imagem. Tente outro print.'})}
+},true);
+document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='fbmine')FBU.mo=e.target.open},true);
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body>
 </html>
