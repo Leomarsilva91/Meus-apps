@@ -1,4 +1,5 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=2"></script><script src="../claude-shim.js?v=2"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body><title>Achei Barato</title>
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=2"></script><script src="../claude-shim.js?v=2"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<title>Achei Barato</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
 /* Layout: cabeçalho, abas, cartões de promoção em grade, roteiro com mapa esquemático e paradas em lista. */
@@ -503,9 +504,9 @@ function comV(){
   const mr=new Set(myRep()),RP={};comSeenOk=true;comSeen=new Set(P.filter(p=>!p.re&&p.uid!==UID&&!p.hid).map(p=>p.id));{const pb=document.getElementById('cm_pend');if(pb)pb.remove()}P.filter(p=>p.re).slice().reverse().forEach(p=>{(RP[p.re]=RP[p.re]||[]).push(p)});
   const rows=L.slice(0,mem.cmN||10).map(p=>`<div class="box" data-nc="1" style="gap:5px;${p.hid?'opacity:.6':''}"><div class="row" style="gap:6px">${comEq(p)}<span class="tag">${esc(COMK[p.k]||'Dica')}</span>${p.about?`<b>${esc(p.about)}</b>`:''}${p.hid?'<span class="tag off">Oculto</span>':''}</div>
    <span style="overflow-wrap:anywhere">${esc(p.txt)}</span><span class="m">${esc(p.nick)} · ${fd(p.t)} · opinião de usuário, confira no local${adm&&p.rs?` · ${p.rs} denúncia${p.rs>1?'s':''}`:''}</span>
-   <div class="row">${comLk(p,ok)}${ok?`<button class="chip" type="button" data-crp="${esc(p.id)}">Responder</button>`:''}${ok&&p.uid!==UID&&!mr.has(p.id)?`<button class="chip" type="button" data-crep="${esc(p.id)}">Denunciar</button>`:ok&&mr.has(p.id)?'<span class="m">Você denunciou</span>':''}${p.uid===UID?`<button class="chip" type="button" data-cdel="${esc(p.id)}">Apagar o meu</button>`:''}${adm?`<button class="chip" type="button" data-chide="${esc(p.id)}">${comX[p.id]?'Mostrar':'Ocultar'}</button>${p.uid!==UID?`<button class="chip" type="button" data-cdel="${esc(p.id)}" data-cuid="${esc(p.uid)}">Apagar</button>`:''}`:''}</div>${comRep(p,RP[p.id]||[],ok,mr)}</div>`).join('');
+   <div class="row">${comLk(p,ok)}${ok?`<button class="chip" type="button" data-crp="${esc(p.id)}">Responder</button>`:''}${ok&&p.uid!==UID&&window.DM?DM.btn(p.uid):''}${ok&&p.uid!==UID&&!mr.has(p.id)?`<button class="chip" type="button" data-crep="${esc(p.id)}">Denunciar</button>`:ok&&mr.has(p.id)?'<span class="m">Você denunciou</span>':''}${p.uid===UID?`<button class="chip" type="button" data-cdel="${esc(p.id)}">Apagar o meu</button>`:''}${adm?`<button class="chip" type="button" data-chide="${esc(p.id)}">${comX[p.id]?'Mostrar':'Ocultar'}</button>${p.uid!==UID?`<button class="chip" type="button" data-cdel="${esc(p.id)}" data-cuid="${esc(p.uid)}">Apagar</button>`:''}`:''}</div>${comRep(p,RP[p.id]||[],ok,mr)}</div>`).join('');
   return `${admBox}<div class="box" data-nc="1" style="gap:8px"><div class="row" style="gap:10px;flex-wrap:nowrap"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" style="flex:none;fill:none;stroke:var(--c-com);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">${(()=>{try{return document.querySelector('#tabs [data-tab=com] svg')?document.querySelector('#tabs [data-tab=com] svg').innerHTML:''}catch(_){return''}})()}</svg><b style="font-family:var(--f-d);font-size:19px">Comunidade</b></div><span class="m">Troque experiências sobre lojas, promoções e formas de economizar. Opiniões de usuários, sem confirmação do app.</span>
-   <div class="row">${[['','Tudo'],['geral','Geral'],['loja','Lojas'],['promo','Promoções'],['dica','Dicas']].map(c=>`<button class="chip" type="button" data-cfil="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div></div>
+   <div class="row">${[['','Tudo'],['geral','Geral'],['loja','Lojas'],['promo','Promoções'],['dica','Dicas']].map(c=>`<button class="chip" type="button" data-cfil="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div>${window.DM?'<div class="row">'+DM.head()+'</div>':''}</div>
    <div class="box" data-nc="1">${dtl('comf','O que está acontecendo? Escrever na comunidade',form,true)}</div>
    ${rows||'<div class="box" data-nc="1"><b>Ainda não há publicações</b><span class="m">Seja o primeiro a contar uma experiência.</span></div>'}
    ${L.length>(mem.cmN||10)?'<button class="chip" type="button" data-cmore="1" style="justify-self:start">Ver mais</button>':''}
@@ -514,7 +515,7 @@ function comV(){
 function comRep(p,rl,ok,mr){rl=rl.filter(r=>adm||!r.hid);const k='cr'+p.id,op=mem.crp===p.id;if(op){mem.dto=mem.dto||{};if(!(k in mem.dto))mem.dto[k]=true}
   if(!rl.length&&!op)return '';
   const nick=LS.g('ab_nick',''),form=ok&&op?`<form class="f" id="comrf" novalidate><label for="cmr_n">Seu apelido<input id="cmr_n" maxlength="20" autocomplete="off" value="${esc(nick)}"></label><label for="cmr_x">Sua resposta (até 200 letras)<textarea id="cmr_x" rows="2" maxlength="200" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%"></textarea></label><div class="err" id="cmr_e" role="alert"></div><div class="row"><button class="btn acc" type="submit">Responder</button><button class="chip" type="button" data-crp="${esc(p.id)}">Cancelar</button></div></form>`:'';
-  const body=rl.map(r=>`<div style="background:var(--bg);border-radius:12px;padding:10px;display:grid;gap:4px;border-left:3px solid var(--c-com);${r.hid?'opacity:.6':''}">${r.hid?'<span class="tag off" style="justify-self:start">Oculto</span>':''}${comAD.includes(r.uid)?'<span style="justify-self:start">'+comEq(r)+'</span>':''}<span style="overflow-wrap:anywhere">${esc(r.txt)}</span><span class="m">${esc(r.nick)} · ${fd(r.t)}${adm&&r.rs?` · ${r.rs} denúncia${r.rs>1?'s':''}`:''}</span><div class="row">${comLk(r,ok)}${ok&&r.uid!==UID&&!mr.has(r.id)?`<button class="chip" type="button" data-crep="${esc(r.id)}">Denunciar</button>`:ok&&mr.has(r.id)?'<span class="m">Você denunciou</span>':''}${r.uid===UID?`<button class="chip" type="button" data-cdel="${esc(r.id)}">Apagar a minha</button>`:''}${adm?`<button class="chip" type="button" data-chide="${esc(r.id)}">${comX[r.id]?'Mostrar':'Ocultar'}</button>${r.uid!==UID?`<button class="chip" type="button" data-cdel="${esc(r.id)}" data-cuid="${esc(r.uid)}">Apagar</button>`:''}`:''}</div></div>`).join('');
+  const body=rl.map(r=>`<div style="background:var(--bg);border-radius:12px;padding:10px;display:grid;gap:4px;border-left:3px solid var(--c-com);${r.hid?'opacity:.6':''}">${r.hid?'<span class="tag off" style="justify-self:start">Oculto</span>':''}${comAD.includes(r.uid)?'<span style="justify-self:start">'+comEq(r)+'</span>':''}<span style="overflow-wrap:anywhere">${esc(r.txt)}</span><span class="m">${esc(r.nick)} · ${fd(r.t)}${adm&&r.rs?` · ${r.rs} denúncia${r.rs>1?'s':''}`:''}</span><div class="row">${comLk(r,ok)}${ok&&r.uid!==UID&&window.DM?DM.btn(r.uid):''}${ok&&r.uid!==UID&&!mr.has(r.id)?`<button class="chip" type="button" data-crep="${esc(r.id)}">Denunciar</button>`:ok&&mr.has(r.id)?'<span class="m">Você denunciou</span>':''}${r.uid===UID?`<button class="chip" type="button" data-cdel="${esc(r.id)}">Apagar a minha</button>`:''}${adm?`<button class="chip" type="button" data-chide="${esc(r.id)}">${comX[r.id]?'Mostrar':'Ocultar'}</button>${r.uid!==UID?`<button class="chip" type="button" data-cdel="${esc(r.id)}" data-cuid="${esc(r.uid)}">Apagar</button>`:''}`:''}</div></div>`).join('');
   return dtl(k,'Respostas ('+rl.length+')',body+form)}
 
 function comPend(){const ids=comPosts().filter(p=>!p.re&&p.uid!==UID&&!p.hid).map(p=>p.id),nw=comSeenOk?ids.filter(i=>!comSeen.has(i)).length:0,a=document.activeElement,typ=a&&a.closest&&a.closest('#comf,#comrf');
@@ -1788,5 +1789,204 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 C.hook(function(){try{note()}catch(e){}});
 try{note()}catch(e){}
 })();
+</script>
+
+<script>
+window.DMCFG={key:'ab_dm',db:()=>DB,uid:()=>UID,adm:()=>adm,on:()=>comOn,getNick:()=>LS.g('ab_nick',''),setNick:n=>LS.s('ab_nick',n),people:()=>comAll.map(d=>({uid:d.uid,nick:d.nick})),bad:COMBAD,toast:t=>toast(t),chip:'chip',color:'#0B7A7A',onColor:'#fff'};
+/* ---- Bate-papo: conversas particulares e grupos (fora da timeline da Comunidade) ---- */
+(function(){
+if(window.DM)return;
+const K=()=>window.DMCFG||{};
+const e=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LSg=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(_){return d}},LSs=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}};
+let ALL=[],SUB=false,V=null,CUR=null,T=0,PP=false,ADDP=false,Q='',GSEL=new Set(),GN='',ERR='',LOADED=false;
+const P=()=>K().key||'dm',me=()=>K().uid?K().uid():null,db=()=>K().db?K().db():null,adm=()=>!!(K().adm&&K().adm());
+const on=()=>!!(K().on?K().on():true)||adm(),blkMsg=()=>K().block?K().block():'';
+const seen=()=>LSg(P()+'_seen',{}),blk=()=>LSg(P()+'_blk',[]);
+const nickGet=()=>{try{return K().getNick?K().getNick():''}catch(_){return''}},nickSet=n=>{try{K().setNick&&K().setNick(n)}catch(_){}};
+const doc=u=>ALL.find(x=>x.uid===u)||{uid:u,nick:'',m:[],g:[],left:[]};
+const by=(a,b)=>String(a.ts).localeCompare(String(b.ts));
+const toast=t=>{try{K().toast?K().toast(t):alert(t)}catch(_){}};
+const chip=()=>K().chip||'dmx-chip';
+function people(){const o=new Map(),u=me(),b=blk();try{(K().people?K().people():[]).forEach(p=>{if(p&&p.uid&&p.uid!==u&&!b.includes(p.uid))o.set(p.uid,p.nick||'Usuário')})}catch(_){}
+  ALL.forEach(d=>{if(d.uid!==u&&d.nick&&!b.includes(d.uid))o.set(d.uid,d.nick)});return [...o].map(([uid,nick])=>({uid,nick})).sort((a,b)=>a.nick.localeCompare(b.nick))}
+function nickOf(u){if(u===me())return 'Você';const d=ALL.find(x=>x.uid===u);if(d&&d.nick)return d.nick;try{const p=(K().people?K().people():[]).find(x=>x.uid===u);if(p&&p.nick)return p.nick}catch(_){}return 'Usuário'}
+function groups(){const u=me(),left=doc(u).left||[],o=[];ALL.forEach(d=>(d.g||[]).forEach(g=>{if(!g||!g.id)return;const mem=[d.uid,...(g.mem||[]).filter(x=>x!==d.uid)];if(mem.includes(u)&&!left.includes(g.id))o.push({...g,own:d.uid,mem})}));return o}
+const grp=id=>groups().find(g=>g.id===id);
+function msgs(k){const u=me();
+  if(k.startsWith('g:')){const g=grp(k.slice(2));if(!g)return[];const b=blk(),o=[];g.mem.forEach(m=>{if(m!==u&&b.includes(m))return;(doc(m).m||[]).forEach(x=>{if(x.to===k)o.push({...x,from:m})})});return o.sort(by)}
+  const p=k.slice(2),b=blk();return [...(doc(u).m||[]).filter(x=>x.to===p).map(x=>({...x,from:u})),...(b.includes(p)?[]:(doc(p).m||[]).filter(x=>x.to===u).map(x=>({...x,from:p})))].sort(by)}
+function convs(){const u=me(),ks=new Set(),b=blk();
+  (doc(u).m||[]).forEach(x=>{if(!String(x.to).startsWith('g:'))ks.add('u:'+x.to)});
+  ALL.forEach(d=>{if(d.uid!==u&&!b.includes(d.uid)&&(d.m||[]).some(x=>x.to===u))ks.add('u:'+d.uid)});
+  groups().forEach(g=>ks.add('g:'+g.id));
+  const s=seen();return [...ks].map(k=>{const L=msgs(k),last=L[L.length-1],un=L.filter(x=>x.from!==u&&String(x.ts)>String(s[k]||'')).length;
+    return {k,last,un,ts:last?last.ts:(k.startsWith('g:')?((grp(k.slice(2))||{}).ts||''):'')}}).sort((a,b)=>String(b.ts).localeCompare(String(a.ts)))}
+const title=k=>k.startsWith('g:')?((grp(k.slice(2))||{}).name||'Grupo'):nickOf(k.slice(2));
+function unread(){if(!me())return 0;return convs().reduce((s,c)=>s+c.un,0)}
+function badge(){const n=unread();document.querySelectorAll('[data-dmbadge]').forEach(x=>{x.textContent=n>99?'99+':n||'';x.hidden=!n})}
+const hm=t=>{try{const d=new Date(t),n=new Date();return d.toDateString()===n.toDateString()?d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}catch(_){return''}};
+const ini=n=>e(String(n||'?').trim().charAt(0).toUpperCase()||'?');
+
+const st=document.createElement('style');st.textContent=`
+#dmx{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.45);display:flex;justify-content:center}
+#dmx[hidden]{display:none!important}
+.dmx-p{background:var(--bg);color:var(--ink);width:100%;max-width:560px;height:100%;display:grid;grid-template-rows:auto 1fr auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 0 40px rgba(0,0,0,.3)}
+.dmx-top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface,var(--card));border-bottom:1px solid var(--line)}
+.dmx-top b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px;text-align:center}
+.dmx-top button,.dmx-chip{border:1.5px solid var(--line);background:var(--surface,var(--card));color:var(--ink);border-radius:99px;padding:7px 12px;font:600 14px inherit;font-family:inherit;min-height:40px;cursor:pointer;white-space:nowrap}
+.dmx-body{overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.dmx-btn{border:0;border-radius:12px;background:var(--dmx-c);color:var(--dmx-on);font:700 15px inherit;font-family:inherit;padding:10px 16px;min-height:44px;cursor:pointer}
+.dmx-btn.gh{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.dmx-in{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface,var(--card));color:var(--ink);width:100%;min-width:0;font:16px inherit;font-family:inherit}
+.dmx-m{color:var(--muted);font-size:13px}.dmx-err{color:var(--bad,#C62828);font-size:13.5px}
+.dmx-note{background:var(--surface,var(--card));border:1px dashed var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;color:var(--muted)}
+.dmx-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface,var(--card));border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--ink);font:inherit;cursor:pointer;min-height:58px}
+.dmx-row .tx{flex:1;min-width:0;display:grid}.dmx-row .tx b,.dmx-row .tx span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dmx-av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--dmx-c);color:var(--dmx-on)}
+.dmx-av.g{border-radius:12px}
+.dmx-n{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--dmx-c);color:var(--dmx-on);font-size:12px;font-weight:800;margin-left:4px}
+.dmx-n[hidden]{display:none}
+.dmx-b{max-width:80%;padding:8px 12px;border-radius:16px 16px 16px 4px;background:var(--surface,var(--card));border:1px solid var(--line);display:grid;gap:2px;overflow-wrap:anywhere;align-self:flex-start}
+.dmx-b.me{align-self:flex-end;border-radius:16px 16px 4px 16px;background:var(--dmx-c);color:var(--dmx-on);border-color:transparent}
+.dmx-b .who{font-size:12.5px;font-weight:800;color:var(--dmx-c)}.dmx-b .t{font-size:11px;opacity:.75;justify-self:end}
+.dmx-day{align-self:center;font-size:12px;color:var(--muted);background:var(--surface,var(--card));border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+.dmx-comp{display:grid;gap:6px;padding:8px 12px 10px;background:var(--surface,var(--card));border-top:1px solid var(--line)}
+.dmx-comp .r{display:flex;gap:8px;align-items:flex-end}.dmx-comp textarea{resize:none;min-height:44px;max-height:120px}
+.dmx-sec{background:var(--surface,var(--card));border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:8px}
+.dmx-sec>button.h{display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:0;font:700 15px inherit;font-family:inherit;color:var(--ink);min-height:36px;cursor:pointer;width:100%;text-align:left}
+.dmx-sec>button.h::after{content:'+';font-weight:800;font-size:1.2em}.dmx-sec>button.h[aria-expanded=true]::after{content:'\\2212'}
+.dmx-pick{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:600;cursor:pointer}.dmx-pick input{width:22px;height:22px;accent-color:var(--dmx-c)}
+.dmx-pl{display:grid;gap:6px;max-height:260px;overflow:auto}
+`;document.head.appendChild(st);
+function setColors(){const r=document.documentElement;r.style.setProperty('--dmx-c',K().color||'#0E8F8F');r.style.setProperty('--dmx-on',K().onColor||'#fff')}
+
+function el(){let x=document.getElementById('dmx');if(!x){x=document.createElement('div');x.id='dmx';x.hidden=true;document.body.appendChild(x)}return x}
+function top(t,back){return `<div class="dmx-top"><button type="button" data-dmx="back" aria-label="Voltar">← Voltar</button><b>${e(t)}</b><button type="button" data-dmx="close">Fechar</button></div>`}
+function listV(){const C=convs(),u=me();
+  const rows=C.map(c=>{const g=c.k.startsWith('g:'),n=title(c.k),l=c.last;
+    const pv=l?(g&&l.from!==u?nickOf(l.from)+': ':l.from===u?'Você: ':'')+l.txt:(g?'Grupo criado. Diga oi!':'');
+    return `<button type="button" class="dmx-row" data-dmk="${e(c.k)}"><span class="dmx-av${g?' g':''}">${g?'👥':ini(n)}</span><span class="tx"><b>${e(n)}</b><span class="dmx-m">${e(pv)}</span></span><span style="display:grid;justify-items:end;gap:4px"><span class="dmx-m">${l?hm(l.ts):''}</span>${c.un?`<span class="dmx-n">${c.un}</span>`:''}</span></button>`}).join('');
+  return top('Conversas e grupos')+`<div class="dmx-body">
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" class="dmx-btn" data-dmx="new">+ Conversa</button><button type="button" class="dmx-btn" data-dmx="group">+ Grupo</button></div>
+   <div class="dmx-note">Aqui é particular: só quem está na conversa vê. Nada daqui aparece na timeline da Comunidade.</div>
+   ${rows||'<div class="dmx-sec"><b>Nenhuma conversa ainda</b><span class="dmx-m">Toque em “+ Conversa” para falar com alguém da Comunidade, ou “+ Grupo” para juntar várias pessoas.</span></div>'}
+  </div><div></div>`}
+function pickList(sel,mode){const q=Q.trim().toLowerCase(),L=people().filter(p=>!q||p.nick.toLowerCase().includes(q));
+  if(!L.length)return '<span class="dmx-m">'+(people().length?'Ninguém com esse apelido.':'Ainda não há outras pessoas na Comunidade. Quem publica ou conversa aparece aqui.')+'</span>';
+  return '<div class="dmx-pl">'+L.map(p=>mode==='one'?`<button type="button" class="dmx-row" data-dmo="${e(p.uid)}"><span class="dmx-av">${ini(p.nick)}</span><span class="tx"><b>${e(p.nick)}</b></span></button>`
+   :`<label class="dmx-pick"><input type="checkbox" data-dmp="${e(p.uid)}" ${sel.has(p.uid)?'checked':''}><span class="dmx-av" style="width:32px;height:32px">${ini(p.nick)}</span>${e(p.nick)}</label>`).join('')+'</div>'}
+function newV(){return top('Nova conversa')+`<div class="dmx-body"><input class="dmx-in" id="dmx_q" placeholder="Procurar apelido" value="${e(Q)}" autocomplete="off"><div id="dmx_pl">${pickList(null,'one')}</div></div><div></div>`}
+function groupV(){return top('Novo grupo')+`<div class="dmx-body">
+  <label style="display:grid;gap:4px;font-weight:700">Nome do grupo<input class="dmx-in" id="dmx_gn" maxlength="30" value="${e(GN)}" placeholder="Ex.: Turma da economia" autocomplete="off"></label>
+  <b>Quem vai participar (${GSEL.size} escolhida${GSEL.size===1?'':'s'})</b>
+  <input class="dmx-in" id="dmx_q" placeholder="Procurar apelido" value="${e(Q)}" autocomplete="off"><div id="dmx_pl">${pickList(GSEL,'many')}</div>
+  <div class="dmx-err" role="alert">${e(ERR)}</div>
+  <button type="button" class="dmx-btn" data-dmx="gcreate">Criar grupo</button>
+  <span class="dmx-m">Até 30 pessoas. Você será o dono do grupo e pode adicionar ou tirar pessoas.</span></div><div></div>`}
+function bubbles(k){const u=me(),L=msgs(k),g=k.startsWith('g:');let lastDay='';
+  if(!L.length)return `<div class="dmx-note" style="align-self:center;text-align:center">${g?'Grupo criado. Mande a primeira mensagem.':'Mande a primeira mensagem para '+e(title(k))+'.'}</div>`;
+  return L.map(x=>{let d='';try{d=new Date(x.ts).toLocaleDateString('pt-BR')}catch(_){}const day=d!==lastDay?`<span class="dmx-day">${e(d)}</span>`:'';lastDay=d;
+    const mine=x.from===u;return day+`<div class="dmx-b${mine?' me':''}">${g&&!mine?`<span class="who">${e(nickOf(x.from))}</span>`:''}<span>${e(x.txt)}</span><span class="t">${hm(x.ts).split(' ').pop()}</span></div>`}).join('')}
+function partsV(k){const g=grp(k.slice(2));if(!g)return '';const u=me(),own=g.own===u;
+  const L=g.mem.map(m=>`<div class="dmx-pick" style="cursor:default"><span class="dmx-av" style="width:32px;height:32px">${ini(nickOf(m))}</span><span style="flex:1">${e(nickOf(m))}${m===g.own?' <span class="dmx-m">(dono)</span>':''}</span>${own&&m!==u?`<button type="button" class="dmx-chip" data-dmrm="${e(m)}">Tirar</button>`:''}</div>`).join('');
+  const add=own?`<button type="button" class="dmx-chip" data-dmx="addp">${ADDP?'Fechar lista':'+ Adicionar pessoas'}</button>${ADDP?`<input class="dmx-in" id="dmx_q" placeholder="Procurar apelido" value="${e(Q)}" autocomplete="off"><div id="dmx_pl">${addList(g)}</div>`:''}`:'';
+  return `<div class="dmx-sec"><button type="button" class="h" data-dmx="parts" aria-expanded="${PP}">Participantes (${g.mem.length})</button>${PP?`<div class="dmx-pl">${L}</div>${add}<div class="row" style="display:flex;gap:8px;flex-wrap:wrap">${own?'<button type="button" class="dmx-chip" data-dmx="gdel">Apagar o grupo</button>':'<button type="button" class="dmx-chip" data-dmx="gleave">Sair do grupo</button>'}</div>`:''}</div>`}
+function addList(g){const q=Q.trim().toLowerCase(),L=people().filter(p=>!g.mem.includes(p.uid)&&(!q||p.nick.toLowerCase().includes(q)));
+  return L.length?'<div class="dmx-pl">'+L.map(p=>`<div class="dmx-pick" style="cursor:default"><span class="dmx-av" style="width:32px;height:32px">${ini(p.nick)}</span><span style="flex:1">${e(p.nick)}</span><button type="button" class="dmx-chip" data-dmadd="${e(p.uid)}">Adicionar</button></div>`).join('')+'</div>':'<span class="dmx-m">Ninguém para adicionar.</span>'}
+function chatV(){const k=CUR,g=k.startsWith('g:'),nick=nickGet(),b=blkMsg();
+  const extra=g?partsV(k):`<div class="dmx-sec"><button type="button" class="h" data-dmx="parts" aria-expanded="${PP}">Opções da conversa</button>${PP?`<button type="button" class="dmx-chip" data-dmx="block" style="justify-self:start">Bloquear ${e(title(k))}</button><span class="dmx-m">Bloquear esconde as mensagens dessa pessoa neste aparelho.</span>`:''}</div>`;
+  const comp=b?`<div class="dmx-comp"><span class="dmx-m">${e(b)}</span></div>`:`<div class="dmx-comp">${nick?'':`<input class="dmx-in" id="dmx_n" maxlength="20" placeholder="Seu apelido (3 a 20 letras)" autocomplete="off">`}
+   <div class="dmx-err" id="dmx_e" role="alert"></div>
+   <div class="r"><textarea class="dmx-in" id="dmx_t" rows="1" maxlength="300" placeholder="Escreva uma mensagem"></textarea><button type="button" class="dmx-btn" data-dmx="send" aria-label="Enviar">Enviar</button></div>
+   <span class="dmx-m">Particular${g?' do grupo':''}: não vai para a timeline. Sem telefone, links ou ofensas.</span></div>`;
+  return top(title(k))+`<div class="dmx-body" id="dmx_body"><div id="dmx_x">${extra}</div><div class="dmx-note">Só ${g?'quem está no grupo':'vocês dois'} veem estas mensagens.</div><div id="dmx_msgs" style="display:flex;flex-direction:column;gap:6px">${bubbles(k)}</div></div>`+comp}
+function markSeen(){if(V!=='chat'||!CUR)return;const L=msgs(CUR),l=L[L.length-1];if(!l)return;const s=seen();if(String(s[CUR]||'')<String(l.ts)){s[CUR]=l.ts;LSs(P()+'_seen',s)}}
+function draw(full){const x=el();if(!V){x.hidden=true;document.body.style.overflow='';badge();return}
+  setColors();x.hidden=false;document.body.style.overflow='hidden';
+  const a=document.activeElement,inside=a&&x.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName);
+  if(V==='chat'&&!full&&document.getElementById('dmx_msgs')){const b=document.getElementById('dmx_body'),near=b.scrollHeight-b.scrollTop-b.clientHeight<120;
+    document.getElementById('dmx_msgs').innerHTML=bubbles(CUR);if(!(inside&&a.id==='dmx_q'))document.getElementById('dmx_x').innerHTML=CUR.startsWith('g:')?partsV(CUR):document.getElementById('dmx_x').innerHTML;
+    if(near)b.scrollTop=b.scrollHeight;markSeen();badge();return}
+  if(!full&&inside)return;
+  if(V==='chat'&&CUR.startsWith('g:')&&!grp(CUR.slice(2))){V='list';CUR=null;toast('Você não está mais nesse grupo.')}
+  x.innerHTML=`<div class="dmx-p" role="dialog" aria-modal="true" aria-label="Conversas">${V==='list'?listV():V==='new'?newV():V==='group'?groupV():chatV()}</div>`;
+  if(V==='chat'){const b=document.getElementById('dmx_body');b.scrollTop=b.scrollHeight;markSeen()}
+  badge()}
+function go(v,k){V=v;if(k!==undefined)CUR=k;PP=false;ADDP=false;Q='';ERR='';if(v==='group'){GSEL=new Set();GN=''}draw(true);
+  if(v==='chat'){const t=document.getElementById('dmx_t');if(t&&matchMedia('(min-width:700px)').matches)t.focus()}}
+function close(){V=null;CUR=null;draw(true)}
+function ready(){if(!db()||!me()){toast('O bate-papo precisa da sua conta. Ele não está ativo agora.');return false}if(!on()){toast('A Comunidade está fechada no momento.');return false}const b=blkMsg();if(b){toast(b);return false}return true}
+function put(patch){const u=me(),d=doc(u),v={nick:d.nick||nickGet()||'',m:d.m||[],g:d.g||[],left:d.left||[],...patch};
+  const i=ALL.findIndex(x=>x.uid===u);if(i>=0)ALL[i]={uid:u,...v};else ALL.push({uid:u,...v});
+  return db().collection('dm').doc(u).set(v)}
+const CONTACT=/\d{8,}|@|https?:|www\./i;
+function check(t){const bad=K().bad,bad2=K().bad2;
+  if(CONTACT.test(t.replace(/[\s.\-()]/g,'')))return 'Por segurança, não passe telefone, e-mail ou links por aqui.';
+  if(bad&&bad.test(t))return 'Retire ofensas ou palavrões.';
+  if(bad2&&bad2.test(t))return K().bad2msg||'Essa mensagem não pode ser enviada.';return ''}
+function send(){const er=s=>{const x=document.getElementById('dmx_e');if(x)x.textContent=s};const ta=document.getElementById('dmx_t');if(!ta)return;
+  const txt=ta.value.trim().replace(/[ \t]+/g,' ');if(!txt)return;if(!ready())return;
+  let nick=nickGet();const ni=document.getElementById('dmx_n');if(!nick&&ni){nick=ni.value.trim().replace(/\s+/g,' ');if(nick.length<3||nick.length>20)return er('Escolha um apelido de 3 a 20 letras.');const c=check(nick);if(c)return er(c);nickSet(nick)}
+  const c=check(txt);if(c)return er(c);
+  if(Date.now()-T<1500)return er('Calma, aguarde um instante.');
+  if(CUR.startsWith('u:')&&blk().includes(CUR.slice(2)))return er('Você bloqueou essa pessoa.');
+  if(CUR.startsWith('g:')&&!grp(CUR.slice(2)))return er('Esse grupo não existe mais.');
+  er('');T=Date.now();const to=CUR.startsWith('g:')?CUR:CUR.slice(2);
+  const it={id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),to,txt:txt.slice(0,300),ts:new Date().toISOString()};
+  const old=ta.value;ta.value='';ta.style.height='';
+  put({nick:nick||doc(me()).nick||'',m:[...(doc(me()).m||[]),it].slice(-400)}).then(()=>{draw(false)}).catch(()=>{T=0;ta.value=old;const d=doc(me());d.m=(d.m||[]).filter(x=>x.id!==it.id);er('Não foi possível enviar agora.');draw(false)});
+  if(ni)draw(true);else draw(false)}
+function myGroups(){return (doc(me()).g||[]).slice()}
+function gCreate(){const n=(document.getElementById('dmx_gn')||{}).value||GN;GN=n;const name=n.trim().replace(/\s+/g,' ');
+  if(!ready())return;if(name.length<3)return ERR='Dê um nome de 3 a 30 letras ao grupo.',draw(true);
+  const c=check(name);if(c)return ERR=c,draw(true);if(!GSEL.size)return ERR='Escolha pelo menos uma pessoa.',draw(true);if(GSEL.size>29)return ERR='O grupo pode ter até 30 pessoas.',draw(true);
+  if(myGroups().length>=20)return ERR='Você já tem 20 grupos. Apague um para criar outro.',draw(true);
+  if(!nickGet()){const nk=prompt('Seu apelido no bate-papo (3 a 20 letras):','')||'';const v=nk.trim();if(v.length<3||v.length>20||check(v))return ERR='Escolha um apelido de 3 a 20 letras.',draw(true);nickSet(v)}
+  const g={id:'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:name.slice(0,30),mem:[...GSEL],ts:new Date().toISOString()};
+  put({nick:nickGet()||doc(me()).nick||'',g:[...myGroups(),g]}).then(()=>{toast('Grupo criado.')}).catch(()=>toast('Não foi possível criar o grupo agora.'));go('chat','g:'+g.id)}
+function gEdit(fn,msg){const id=CUR.slice(2),L=myGroups(),i=L.findIndex(x=>x.id===id);if(i<0)return;const r=fn(L[i],L,i);put({g:r}).then(()=>msg&&toast(msg)).catch(()=>toast('Não foi possível agora.'));draw(true)}
+
+document.addEventListener('click',ev=>{
+  if(ev.target.id==='dmx'){close();return}
+  const t=ev.target.closest('button');if(!t)return;const D=t.dataset;
+  if(D.dml!==undefined){if(!ready())return;go('list');return}
+  if(D.dmo){if(!ready())return;if(D.dmo===me())return;go('chat','u:'+D.dmo);return}
+  if(D.dmk){go('chat',D.dmk);return}
+  if(D.dmrm){gEdit((g,L,i)=>{L[i]={...g,mem:(g.mem||[]).filter(x=>x!==D.dmrm)};return L},'Pessoa retirada do grupo.');return}
+  if(D.dmadd){gEdit((g,L,i)=>{const m=[...new Set([...(g.mem||[]),D.dmadd])];if(m.length>29){toast('O grupo pode ter até 30 pessoas.');return L}L[i]={...g,mem:m};return L},'Pessoa adicionada.');return}
+  const a=D.dmx;if(!a)return;
+  if(a==='close')return close();
+  if(a==='back'){if(V==='list')return close();return go('list')}
+  if(a==='new')return go('new');
+  if(a==='group')return go('group');
+  if(a==='gcreate')return gCreate();
+  if(a==='send')return send();
+  if(a==='parts'){PP=!PP;ADDP=false;Q='';return draw(true)}
+  if(a==='addp'){ADDP=!ADDP;Q='';return draw(true)}
+  if(a==='block'){const p=CUR.slice(2);if(!confirm('Bloquear '+title(CUR)+'? As mensagens dessa pessoa somem deste aparelho.'))return;LSs(P()+'_blk',[...new Set([...blk(),p])]);toast('Pessoa bloqueada.');return go('list')}
+  if(a==='gleave'){if(!confirm('Sair do grupo '+title(CUR)+'?'))return;const id=CUR.slice(2);put({left:[...new Set([...(doc(me()).left||[]),id])].slice(-100)}).then(()=>toast('Você saiu do grupo.')).catch(()=>toast('Não foi possível sair agora.'));return go('list')}
+  if(a==='gdel'){if(!confirm('Apagar o grupo '+title(CUR)+' para todos?'))return;const id=CUR.slice(2);put({g:myGroups().filter(x=>x.id!==id),m:(doc(me()).m||[]).filter(x=>x.to!=='g:'+id)}).then(()=>toast('Grupo apagado.')).catch(()=>toast('Não foi possível apagar agora.'));return go('list')}
+},true);
+document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.dataset&&t.dataset.dmp){t.checked?GSEL.add(t.dataset.dmp):GSEL.delete(t.dataset.dmp);const gn=document.getElementById('dmx_gn');if(gn)GN=gn.value;const b=document.querySelector('#dmx .dmx-body>b');if(b)b.textContent='Quem vai participar ('+GSEL.size+' escolhida'+(GSEL.size===1?'':'s')+')'}});
+document.addEventListener('input',ev=>{const t=ev.target;if(!t)return;
+  if(t.id==='dmx_q'){Q=t.value;const pl=document.getElementById('dmx_pl');if(pl){if(V==='new')pl.innerHTML=pickList(null,'one');else if(V==='group')pl.innerHTML=pickList(GSEL,'many');else if(V==='chat'){const g=grp(CUR.slice(2));if(g)pl.innerHTML=addList(g)}}}
+  if(t.id==='dmx_gn')GN=t.value;
+  if(t.id==='dmx_t'){t.style.height='auto';t.style.height=Math.min(120,t.scrollHeight)+'px'}});
+document.addEventListener('keydown',ev=>{if(ev.target&&ev.target.id==='dmx_t'&&ev.key==='Enter'&&!ev.shiftKey&&!ev.isComposing&&matchMedia('(hover:hover)').matches){ev.preventDefault();send()}
+  if(ev.key==='Escape'&&V){close()}});
+
+function start(){if(SUB)return;const d=db();if(!d||!me())return;SUB=true;
+  try{d.collection('dm').onSnapshot(sn=>{ALL=sn.docs.map(x=>{const v=x.data()||{};return {uid:x.id,nick:typeof v.nick==='string'?v.nick.slice(0,20):'',m:Array.isArray(v.m)?v.m.filter(m=>m&&typeof m.txt==='string'&&typeof m.to==='string').map(m=>({id:String(m.id||''),to:m.to,txt:m.txt.slice(0,300),ts:String(m.ts||'')})):[],g:Array.isArray(v.g)?v.g.filter(g=>g&&typeof g.id==='string').map(g=>({id:g.id,name:String(g.name||'Grupo').slice(0,30),mem:Array.isArray(g.mem)?g.mem.filter(x=>typeof x==='string').slice(0,30):[],ts:String(g.ts||'')})):[],left:Array.isArray(v.left)?v.left.filter(x=>typeof x==='string'):[]}});LOADED=true;
+    if(V)draw(false);else badge()},()=>{SUB=false})}catch(_){SUB=false}}
+const iv=setInterval(()=>{start();if(SUB)clearInterval(iv)},1200);
+
+window.DM={
+  btn:(uid)=>{if(!uid||uid===me()||!db()||!me()||!on()||blkMsg())return '';return `<button class="${chip()}" type="button" data-dmo="${e(uid)}">💬 Conversar</button>`},
+  head:()=>{if(!db()||!me()||!on()||blkMsg())return '';const n=unread();return `<button class="${chip()}" type="button" data-dml="1" style="font-weight:700">💬 Conversas e grupos <span class="dmx-n" data-dmbadge ${n?'':'hidden'}>${n||''}</span></button>`},
+  unread,open:()=>{if(ready())go('list')}
+};
+})();
+
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
