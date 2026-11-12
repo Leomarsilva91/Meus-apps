@@ -238,6 +238,14 @@ input,select,textarea{border-radius:12px}
 .bar,.bar2{height:10px}
 .invrow{background:var(--bg);border-radius:12px;padding:10px;display:grid;gap:4px}.invh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}.invn{font:700 20px var(--f-display)}.invs{display:flex;gap:6px;flex-wrap:wrap}.invd{background:var(--bg);border-radius:12px;padding:10px}.invd summary{cursor:pointer}.invd ul{margin:2px 0 6px;padding-left:18px}.chip.ok{color:var(--ok,#0a7a4b)}.chip.bad{color:var(--bad,#b3261e)}.invcard{margin-top:10px}.invad{border:1.5px dashed var(--line);border-radius:12px;padding:12px;display:grid;gap:4px}.invad-t{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.chip{display:inline-block;border:1.5px solid var(--line);border-radius:99px;padding:3px 10px;font:700 12px var(--f-body);color:var(--ink);text-decoration:none;background:var(--surface)}a.chip{padding:7px 12px}
 details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}details>summary::after{content:'+';display:inline-block;margin-left:8px;font-weight:800;font-size:1.15em;line-height:1}details[open]>summary::after{content:'\2212'}
+#paysh{z-index:70}body:has(#paysh) #navbar{display:none}.pysh-top{position:sticky;top:-18px;z-index:3;margin:-18px -16px 0;padding:12px 16px;background:var(--surface);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);border-radius:22px 22px 0 0}
+.pysh-x{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:700 24px/1 var(--f-body);cursor:pointer}
+.pyt{display:grid}.pyt>div{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:8px 0;border-top:1px dashed var(--line);font-size:14px}.pyt>div:first-child{border-top:0}.pyt>div>b{text-align:right}
+.pyt>div.tt{border-top:2px solid var(--line)}.pyt>div.tt b{font:700 18px var(--f-display)}
+.pyent{display:grid;grid-template-columns:44px 1fr 44px;gap:8px;align-items:center}.pyent input[type=range]{min-height:0;padding:0;border:0;background:none;accent-color:var(--debt)}
+.pystep{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:700 24px/1 var(--f-body);cursor:pointer}
+#paysh .chips button[aria-pressed=true]{background:var(--debt);color:var(--on-debt);border-color:transparent}
+#paysh .chips button{min-height:40px;padding:6px 12px;font-size:13px}
 /* cofrinho */
 .entry.cofre{background:var(--sun);color:var(--on-sun);padding:20px}.entry.cofre h2{font-size:28px}.entry.cofre .in{background:rgba(255,255,255,.45)}.entry.cofre .blob.b1{background:#fff;opacity:.5}
 .cof-kids button{min-height:44px;font-size:15px}
@@ -833,11 +841,11 @@ function planBoxes(g,tot,T,it){
    <label>Margem para imprevistos (%)<input id="pl-i" inputmode="numeric" value="${T.ip}"></label>
    ${segs.length?`<div class="gbsum">${segs.map(x=>`<div><span><i style="background:${x[1]}"></i>${x[0]}</span><b class="num">${brl0(x[2])}</b></div>`).join('')}</div>`:''}<div class="tot"><span>Subtotal ${brl0(T.sub)}${T.ip?' + margem '+brl0(T.imp):''}</span><b class="big num" style="font-size:24px">${brl0(T.total)}</b></div></div>`}
 /* ---------- como pagar: juntar tudo, entrada + financiamento ou consórcio ---------- */
-const PAYDEF={carro:{tx:1.99,n:48,sis:'price',adm:15,fr:2,cn:80},casa:{tx:0.95,n:360,sis:'sac',adm:18,fr:2,cn:200},negocio:{tx:2.2,n:36,sis:'price',adm:16,fr:2,cn:60}};
+const PAYDEF={carro:{tx:1.97,n:48,sis:'price',adm:15,fr:2,cn:80},casa:{tx:0.95,n:360,sis:'sac',adm:18,fr:2,cn:200},negocio:{tx:2.2,n:36,sis:'price',adm:16,fr:2,cn:60}};
 const payOn=g=>!!PAYDEF[g.tipo];
 function payD(g){const d=PAYDEF[g.tipo]||PAYDEF.carro;if(!g.pay)g.pay={};const p=g.pay;['tx','n','sis','adm','fr','cn'].forEach(k=>{if(p[k]===undefined||p[k]==='')p[k]=d[k]});return p}
 const pv=x=>x===''||x==null?NaN:+x;
-function payCalc(g,tot){const p=payD(g),V=pv(p.v)>0?+p.v:tot,ju=+g.guardado||0,E=pv(p.ent)>=0&&p.ent!==''?+p.ent:ju,F=Math.max(0,V-E),i=(+p.tx||0)/100,n=Math.max(1,Math.round(+p.n||1));
+function payCalc(g,tot,eo){const p=payD(g),V=pv(p.v)>0?+p.v:tot,ju=+g.guardado||0,E=eo!==undefined?eo:Math.min(V>0?V:Infinity,pv(p.ent)>=0&&p.ent!==''?+p.ent:ju),F=Math.max(0,V-E),i=(+p.tx||0)/100,n=Math.max(1,Math.round(+p.n||1));
   let pm1,pmL,tf;if(p.sis==='sac'){const a=F/n;pm1=a+F*i;pmL=a+a*i;tf=F+i*F*(n+1)/2}else{pm1=i>0?F*i/(1-Math.pow(1+i,-n)):F/n;pmL=pm1;tf=pm1*n}
   const cn=Math.max(1,Math.round(+p.cn||1)),ctot=V*(1+(+p.adm||0)/100+(+p.fr||0)/100),lance=p.lance?Math.min(E,ctot):0,cpar=(ctot-lance)/cn,meses=Math.max(1,Math.ceil(daysTo(g.prazo)/30.44));
   return{p,V,ju,E,F,n,i,pm1,pmL,tf,jur:Math.max(0,tf-F),cn,ctot,lance,cpar,cgasto:ctot,cxtra:ctot-V,meses,vfalta:Math.max(0,V-ju),efalta:Math.max(0,E-ju)}}
@@ -846,12 +854,13 @@ function payCard(g,tot){if(!payOn(g))return '';const C=payCalc(g,tot),p=C.p,op=p
   const tile=(k,c,t,big,sub)=>`<button type="button" data-pyop="${k}" class="card flat" style="text-align:left;cursor:pointer;gap:4px;border:2px solid ${op===k?c:'var(--line)'};background:color-mix(in srgb,${c} ${op===k?14:5}%,var(--surface));font:inherit;color:inherit"><b style="color:${c}">${t}${op===k?' ✓':''}</b><span class="num" style="font:700 19px var(--f-display)">${big}</span><span class="muted small">${sub}</span></button>`;
   const casaW=g.tipo==='casa'&&C.V>0&&C.E<C.V*.2?`<div class="note">Para financiar imóvel, os bancos costumam pedir entrada de pelo menos 20% (${brl0(C.V*.2)}).</div>`:'';
   return `<div class="card" style="gap:10px;border:2px solid var(--sky)"><h3 style="margin:0;color:var(--sky)">💳 Como pagar</h3>
-   <p class="muted small" style="margin:0">Compare juntar o valor todo, dar uma entrada e financiar o resto, ou entrar num consórcio. Toque na forma que você prefere.</p>
+   <p class="muted small" style="margin:0">Compare juntar o valor todo, dar uma entrada e financiar o resto, financiar tudo ou entrar num consórcio. Toque numa forma para abrir as contas completas e ajustar entrada, juros e prazo.</p>
    <div class="grid2">${I('v','Valor do '+(g.tipo==='casa'?'imóvel':g.tipo==='carro'?'veículo':'bem')+' (R$)',tot>0?brl0(tot)+' (da lista)':'Ex.: 80.000',p.v)}${I('ent','Entrada que pretende dar (R$)',C.ju>0?brl0(C.ju)+' (já juntado)':'Ex.: 20.000',p.ent)}</div>
    <div class="sum3"><div><span class="muted small">Valor</span><b class="num">${brl0(C.V)}</b></div><div><span class="muted small">Já juntado</span><b class="num">${brl0(C.ju)}</b></div><div><span class="muted small">Entrada</span><b class="num">${brl0(C.E)}</b></div></div>
    ${C.V>0?`<div style="display:grid;gap:8px">
     ${tile('vista','var(--mei)','💰 Juntar tudo e pagar à vista',C.vfalta>0?brl0(C.vfalta/C.meses)+'/mês':'Já dá!',C.vfalta>0?'Faltam '+brl0(C.vfalta)+' em '+C.meses+' '+(C.meses===1?'mês':'meses')+'. Sem juros.':'Você já tem o valor todo.')}
     ${tile('fin','var(--debt)','🏦 Entrada + financiamento',C.F>0?(p.sis==='sac'?brl0(C.pm1)+' → '+brl0(C.pmL):C.n+'× '+brl0(C.pm1)):'Sem financiar',C.F>0?'Financia '+brl0(C.F)+' em '+C.n+' meses a '+String(p.tx).replace('.',',')+'% ao mês. Juros: '+brl0(C.jur)+'.':'A entrada já cobre o valor.')}
+    ${(()=>{const Z=payCalc(g,tot,0);return tile('fin0','var(--plum)','🏦 Só financiamento (sem entrada)',Z.n+'× '+brl0(Z.pm1),'Financia tudo: '+brl0(Z.F)+'. Juros: '+brl0(Z.jur)+'. Sai por '+brl0(Z.tf)+'.')})()}
     ${tile('con','var(--orange)','🤝 Consórcio',C.cn+'× '+brl0(C.cpar),'Sem juros, mas com taxa de administração: total '+brl0(C.cgasto)+' ('+brl0(C.cxtra)+' a mais). Você recebe a carta quando for sorteado ou der lance.')}
    </div>`:'<p class="muted small" style="margin:0">Informe o valor para comparar.</p>'}
    ${casaW}
@@ -870,16 +879,100 @@ function payCard(g,tot){if(!payOn(g))return '';const C=payCalc(g,tot),p=C.p,op=p
    ${op==='con'&&C.lance>0&&Math.round(g.alvo)!==Math.round(C.lance)?`<button class="btn meta sm" data-act="payalvo" data-v="${Math.round(C.lance)}" style="justify-self:start">Juntar o lance: usar ${brl0(C.lance)} como valor da meta</button>`:''}
    ${op==='vista'&&C.V>0&&Math.round(g.alvo)!==Math.round(C.V)?`<button class="btn meta sm" data-act="payalvo" data-v="${Math.round(C.V)}" style="justify-self:start">Usar ${brl0(C.V)} como valor da meta</button>`:''}
    <p class="muted small" style="margin:0">Simulação simples, não é proposta de banco nem recomendação. O Prumo não vende financiamento nem consórcio.</p></div>`}
-function payLine(g){if(!payOn(g)||!g.pay||!g.pay.op)return '';try{const tot=planTotals(g).total,C=payCalc(g,tot>0?tot:+g.alvo||0);if(!(C.V>0))return '';
-  const t=g.pay.op==='fin'?(C.F>0?'Entrada de '+brl0(C.E)+' + financiamento: '+(g.pay.sis==='sac'?'parcelas de '+brl0(C.pm1)+' a '+brl0(C.pmL):C.n+'× '+brl0(C.pm1)):'À vista com a entrada'):g.pay.op==='con'?'Consórcio: '+C.cn+'× '+brl0(C.cpar)+(C.lance>0?', com lance de '+brl0(C.lance):''):'À vista: juntar '+brl0(C.V);
+function payLine(g){if(!payOn(g)||!g.pay||!g.pay.op)return '';try{const tot=planTotals(g).total,C=payCalc(g,tot>0?tot:+g.alvo||0,g.pay.op==='fin0'?0:undefined);if(!(C.V>0))return '';
+  const t=g.pay.op==='fin0'?'Só financiamento: '+(g.pay.sis==='sac'?'parcelas de '+brl0(C.pm1)+' a '+brl0(C.pmL):C.n+'× '+brl0(C.pm1)):g.pay.op==='fin'?(C.F>0?'Entrada de '+brl0(C.E)+' + financiamento: '+(g.pay.sis==='sac'?'parcelas de '+brl0(C.pm1)+' a '+brl0(C.pmL):C.n+'× '+brl0(C.pm1)):'À vista com a entrada'):g.pay.op==='con'?'Consórcio: '+C.cn+'× '+brl0(C.cpar)+(C.lance>0?', com lance de '+brl0(C.lance):''):'À vista: juntar '+brl0(C.V);
   return `<p class="small" style="margin:0"><b>💳 ${t}</b></p>`}catch(_){return ''}}
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.py)return;const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;const p=payD(g),k=t.dataset.py;
   if(k==='lance')p.lance=t.checked;else if(k==='sis')p.sis=t.value;else{const v=num(t.value);p[k]=t.value.trim()===''?'':(isNaN(v)||v<0?p[k]:v);if((k==='n'||k==='cn')&&+p[k]>480)p[k]=480;if(k==='tx'&&+p.tx>20)p.tx=20}
   save();render(true)},true);
 document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='pay-d')UI.payO=e.target.open},true);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pyop],[data-act=payalvo]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;
-  if(b.dataset.pyop){const p=payD(g);p.op=p.op===b.dataset.pyop?'':b.dataset.pyop;save();render(true);toast(p.op?'Forma de pagar escolhida.':'Escolha desmarcada.');return}
+  if(b.dataset.pyop){const p=payD(g);p.op=b.dataset.pyop;UI.paySh=b.dataset.pyop;save();render(true);return}
   const v=+b.dataset.v;if(v>0){g.alvo=v;save();render(true);toast('Valor da meta: '+brl0(v)+'.')}},true);
+/* ---------- telinha de cada forma de pagar (abre ao tocar na opção) ---------- */
+/* Referências pesquisadas em 12/11/2026: Selic do Copom de 04/11/2026; média do Banco Central para compra de veículos (pessoa física), agosto de 2026. */
+const REFJ={selic:13.75,selicD:'04/11/2026',veic:1.97,veicA:26.42,veicD:'agosto de 2026',baixa:1.11,alta:3,bcb:'https://www.bcb.gov.br/estatisticas/txjuros/'};
+const PZ={carro:[24,36,48,60,72],casa:[120,180,240,300,360,420],negocio:[12,24,36,48,60]},PZC={carro:[50,60,72,80,100],casa:[120,150,180,200,240],negocio:[36,48,60,72]};
+const anoTx=i=>(Math.pow(1+i/100,12)-1)*100,pctS=v=>String(Math.round(v*100)/100).replace('.',',');
+function finCalc(F,i,n,sis){if(!(F>0))return{pm1:0,pmL:0,tf:0,jur:0};if(sis==='sac'){const a=F/n;return{pm1:a+F*i,pmL:a+a*i,tf:F+i*F*(n+1)/2,jur:i*F*(n+1)/2}}const pm=i>0?F*i/(1-Math.pow(1+i,-n)):F/n;return{pm1:pm,pmL:pm,tf:pm*n,jur:Math.max(0,pm*n-F)}}
+const bemN=g=>g.tipo==='casa'?'imóvel':g.tipo==='carro'?'veículo':'bem';
+function pyGoal(){return S.goals.find(x=>x.id===UI.plan)}
+function pyTot(g){const t=planTotals(g).total;return t>0?t:+g.alvo||0}
+function pyRow(l,v,cls){return `<div class="${cls||''}"><span>${l}</span><b class="num">${v}</b></div>`}
+function pySum(g,op){
+  const C=payCalc(g,pyTot(g),op==='fin0'?0:undefined),p=C.p,b=bemN(g);
+  if(op==='vista'){const pm=C.vfalta/C.meses;return `<div class="pyt">${pyRow('Valor do '+b,brl0(C.V))}${pyRow('Já juntado',brl0(C.ju))}${pyRow('Falta juntar',brl0(C.vfalta))}${pyRow('Meses até o prazo',C.meses)}${pyRow('Guardar por mês',C.vfalta>0?brl0(pm):'Já dá!','tt')}</div><p class="muted small" style="margin:0">Sem juros: o ${b} sai pelo preço. Pagando à vista, peça desconto: costuma ter.</p>`}
+  if(op==='con'){const f=finCalc(Math.max(0,C.V-C.E),C.i,C.n,p.sis);return `<div class="pyt">${pyRow('Carta de crédito (valor do '+b+')',brl0(C.V))}${pyRow('Taxa de administração + fundo de reserva',pctS((+p.adm||0)+(+p.fr||0))+'%')}${pyRow('Total a pagar no consórcio',brl0(C.ctot))}${C.lance>0?pyRow('Lance (com o dinheiro juntado)',brl0(C.lance)):''}${pyRow('Prazo',C.cn+' meses')}${pyRow('Parcela',brl(C.cpar),'tt')}${pyRow('Custo a mais que à vista',brl0(C.cxtra))}</div>
+   ${C.F>0?`<div class="tip"><span class="small">Comparando: financiando com a mesma entrada (${brl0(C.E)}), seriam ${C.n}× ${brl0(f.pm1)} e o ${b} sairia por <b>${brl0(f.tf+C.E)}</b>. No consórcio sai por <b>${brl0(C.ctot)}</b>, mas sem data certa para receber.</span></div>`:''}`}
+  const pctE=C.V>0?C.E/C.V*100:0,mais=C.tf+C.E-C.V;
+  return `<div class="pyt">${pyRow('Valor do '+b,brl0(C.V))}${pyRow('Entrada'+(C.V>0?' ('+Math.round(pctE)+'%)':''),brl0(C.E))}${pyRow('Valor financiado',brl0(C.F))}${pyRow('Juros',pctS(+p.tx||0)+'% ao mês (cerca de '+pctS(anoTx(+p.tx||0))+'% ao ano)')}${pyRow('Prazo',C.n+' meses'+(p.sis==='sac'?' (SAC)':''))}
+   ${C.F>0?(p.sis==='sac'?pyRow('Primeira parcela',brl(C.pm1),'tt')+pyRow('Última parcela',brl(C.pmL)):pyRow('Parcela',brl(C.pm1),'tt')):pyRow('Parcela','Sem financiar','tt')}
+   ${pyRow('Total pago nas parcelas',brl0(C.tf))}${pyRow('Total de juros',brl0(C.jur))}${pyRow('O '+b+' sai por (entrada + parcelas)',brl0(C.tf+C.E),'tt')}${pyRow('A mais que à vista',brl0(Math.max(0,mais)))}</div>`}
+function pyEnt(g,C){const V=C.V,st=V>200000?5000:V>50000?1000:500,pct=V>0?Math.round(C.E/V*100):0;
+  return `<div class="card flat" style="gap:8px"><div class="row sp"><b>Entrada</b><b class="num" id="pyentv" style="font:700 20px var(--f-display)">${brl0(C.E)} <span class="muted small">(${pct}%)</span></b></div>
+   <div class="pyent"><button type="button" class="pystep" data-pyst="-${st}" aria-label="Diminuir a entrada em ${brl0(st)}">−</button><input type="range" data-pyr="ent" min="0" max="${Math.round(V)}" step="${st}" value="${Math.round(C.E)}" aria-label="Valor da entrada"><button type="button" class="pystep" data-pyst="${st}" aria-label="Aumentar a entrada em ${brl0(st)}">+</button></div>
+   <div class="chips">${[0,10,20,30,40,50].map(k=>`<button type="button" data-pyep="${k}" aria-pressed="${pct===k}">${k}%</button>`).join('')}${C.ju>0?`<button type="button" data-pyep="ju">O que já juntei</button>`:''}</div>
+   ${C.efalta>0?`<p class="small" style="margin:0">Falta juntar <b>${brl0(C.efalta)}</b> para essa entrada: cerca de <b>${brl0(C.efalta/C.meses)}</b> por mês até o prazo da meta.</p>`:C.E>0?'<p class="small" style="margin:0">Você já tem o dinheiro dessa entrada.</p>':''}
+   ${g.tipo==='casa'&&C.E<C.V*.2?`<p class="small" style="margin:0;color:var(--warn)">Para imóvel, os bancos costumam pedir pelo menos 20% de entrada (${brl0(C.V*.2)}).</p>`:''}</div>`}
+function pyTx(g,p,op){const ai=(UI.pyAI||{})[g.id+op],car=g.tipo==='carro',cur=+p.tx||0;
+  return `<div class="card flat" style="gap:8px"><b>Taxa de juros</b><div class="grid2"><label>Juros ao mês (%)<input data-py="tx" inputmode="decimal" value="${pctS(cur)}"></label><label>Tabela<select data-py="sis"><option value="price"${p.sis!=='sac'?' selected':''}>Price (parcela igual)</option><option value="sac"${p.sis==='sac'?' selected':''}>SAC (cai com o tempo)</option></select></label></div>
+   ${car?`<div class="chips">${[[REFJ.baixa,'Taxa baixa'],[REFJ.veic,'Média do mercado'],[REFJ.alta,'Taxa alta']].map(([v,l])=>`<button type="button" data-pytx="${v}" aria-pressed="${Math.abs(cur-v)<.005}">${l}: ${pctS(v)}%</button>`).join('')}</div>
+   <p class="muted small" style="margin:0">Média do Banco Central para compra de veículos: ${pctS(REFJ.veic)}% ao mês (${pctS(REFJ.veicA)}% ao ano, ${REFJ.veicD}). Taxa básica (Selic): ${pctS(REFJ.selic)}% ao ano, desde ${REFJ.selicD}. A sua taxa depende do banco, da entrada, do prazo e do seu cadastro.</p>`:`<p class="muted small" style="margin:0">Taxa básica (Selic): ${pctS(REFJ.selic)}% ao ano, desde ${REFJ.selicD}. A sua taxa depende do banco, da entrada, do prazo e do seu cadastro.</p>`}
+   <div class="row"><button type="button" class="btn ghost sm" data-pyai="${op}" id="pyai-b">🔎 Pesquisar taxa com IA</button><a class="btn ghost sm" href="${REFJ.bcb}" target="_blank" rel="noopener noreferrer">Taxa de cada banco (Banco Central)</a></div>
+   ${ai?`<div class="tip" aria-live="polite"><span class="small">${esc(ai.t)}</span>${ai.v&&ai.v.length?`<div class="chips" style="margin-top:6px">${ai.v.map(x=>`<button type="button" data-pytx="${x[0]}">${esc(x[1])}: ${pctS(x[0])}%</button>`).join('')}</div>`:''}</div>`:''}</div>`}
+function pyPz(g,p,k,list){const cur=Math.round(+p[k]||0);return `<div class="card flat" style="gap:8px"><b>Prazo</b><div class="chips">${list.map(n=>`<button type="button" data-pypz="${k}:${n}" aria-pressed="${cur===n}">${n}x</button>`).join('')}</div><label>Outro prazo (meses)<input data-py="${k}" inputmode="numeric" value="${cur}"></label></div>`}
+function pyOther(g,C,p){const L=(PZ[g.tipo]||PZ.carro);return `<details class="fold"><summary>Ver a parcela em outros prazos</summary><div class="pyt">${L.map(n=>{const f=finCalc(C.F,C.i,n,p.sis);return pyRow(n+' meses'+(n===C.n?' (atual)':''),brl0(f.pm1)+'/mês · juros '+brl0(f.jur))}).join('')}</div></details>`}
+function pyWhatIf(g,C,p,op){if(!(C.F>0))return '';const st=C.V>200000?20000:C.V>50000?5000:2000,a=[];
+  if(op==='fin'&&C.E+st<C.V){const f=finCalc(C.F-st,C.i,C.n,p.sis);a.push('Com '+brl0(st)+' a mais de entrada, a parcela cai para <b>'+brl0(f.pm1)+'</b> e você paga <b>'+brl0(C.jur-f.jur)+'</b> a menos de juros.')}
+  const n2=Math.max(6,C.n-12),f2=finCalc(C.F,C.i,n2,p.sis);if(n2<C.n)a.push('Em '+n2+' meses, a parcela sobe para <b>'+brl0(f2.pm1)+'</b>, mas os juros caem <b>'+brl0(C.jur-f2.jur)+'</b>.');
+  if(C.i>0.004){const f3=finCalc(C.F,C.i-0.003,C.n,p.sis);a.push('Conseguindo 0,3 ponto a menos de juros ao mês, você economiza <b>'+brl0(C.jur-f3.jur)+'</b>. Vale pesquisar em mais de um banco.')}
+  return a.length?`<div class="tip"><b class="small">E se…</b><ul class="steps small" style="margin:4px 0 0">${a.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`:''}
+const PYT={vista:['💰 Juntar tudo e pagar à vista','var(--mei)'],fin:['🏦 Entrada + financiamento','var(--debt)'],fin0:['🏦 Só financiamento (sem entrada)','var(--plum)'],con:['🤝 Consórcio','var(--orange)']};
+function paySheet(g){const op=UI.paySh;if(!op||!PYT[op]||!payOn(g))return '';const tot=pyTot(g),C=payCalc(g,tot,op==='fin0'?0:undefined),p=C.p,[tt,cc]=PYT[op],chosen=p.op===op;let body='';
+  if(!(C.V>0))body=`<div class="note">Informe o valor do ${bemN(g)} no card "Como pagar" para ver as contas.</div>`;
+  else if(op==='vista')body=`<div id="pysum">${pySum(g,op)}</div>`;
+  else if(op==='con')body=`${pyEnt(g,C)}<label class="fbchk" style="margin:0"><input type="checkbox" data-py="lance" ${p.lance?'checked':''}> Usar o dinheiro da entrada como lance</label>
+    <div class="card flat" style="gap:8px"><b>Taxas do consórcio</b><div class="grid2"><label>Taxa de administração total (%)<input data-py="adm" inputmode="decimal" value="${pctS(+p.adm||0)}"></label><label>Fundo de reserva (%)<input data-py="fr" inputmode="decimal" value="${pctS(+p.fr||0)}"></label></div>
+    <div class="row"><button type="button" class="btn ghost sm" data-pyai="con" id="pyai-b">🔎 Pesquisar taxas com IA</button></div>${(UI.pyAI||{})[g.id+'con']?`<div class="tip"><span class="small">${esc(UI.pyAI[g.id+'con'].t)}</span></div>`:''}
+    <p class="muted small" style="margin:0">Consórcio não tem juros, mas tem taxa de administração e fundo de reserva. A carta costuma ser corrigida uma vez por ano e a parcela acompanha. A contemplação pode sair no 1º ou no último mês.</p></div>
+    ${pyPz(g,p,'cn',PZC[g.tipo]||PZC.carro)}<div id="pysum">${pySum(g,op)}</div>`;
+  else body=`${op==='fin'?pyEnt(g,C):`<div class="note info">Sem entrada: o banco financia o valor todo do ${bemN(g)}. Nem todo banco aceita, e a taxa costuma ser maior. <button type="button" class="btn ghost sm" data-pyop="fin" style="margin-top:6px">Prefiro dar uma entrada</button></div>`}
+    ${pyTx(g,p,op)}${pyPz(g,p,'n',PZ[g.tipo]||PZ.carro)}<div id="pysum">${pySum(g,op)}</div>${pyWhatIf(g,C,p,op)}${pyOther(g,C,p)}`;
+  const alvoBtn=op==='fin'&&C.E>0&&Math.round(g.alvo)!==Math.round(C.E)?`<button class="btn meta sm" data-act="payalvo" data-v="${Math.round(C.E)}">Juntar só a entrada: meta de ${brl0(C.E)}</button>`:op==='con'&&C.lance>0&&Math.round(g.alvo)!==Math.round(C.lance)?`<button class="btn meta sm" data-act="payalvo" data-v="${Math.round(C.lance)}">Juntar o lance: meta de ${brl0(C.lance)}</button>`:op==='vista'&&Math.round(g.alvo)!==Math.round(C.V)&&C.V>0?`<button class="btn meta sm" data-act="payalvo" data-v="${Math.round(C.V)}">Usar ${brl0(C.V)} como valor da meta</button>`:'';
+  return `<div class="sheet" id="paysh"><div class="sheet-bg" data-pyx="close"></div><div class="sheet-p" role="dialog" aria-modal="true" aria-label="${esc(tt)}">
+   <div class="pysh-top"><button type="button" class="btn ghost sm" data-pyx="close">‹ Voltar às opções</button><b style="color:${cc};flex:1;min-width:0">${tt}</b><button type="button" class="pysh-x" data-pyx="close" aria-label="Fechar">−</button></div>
+   ${body}
+   <div class="row">${chosen?`<span class="pill ok">✓ Forma escolhida</span><button type="button" class="btn ghost sm" data-pyx="unset">Desmarcar</button>`:`<button type="button" class="btn sm" data-pyx="set" style="background:${cc};color:#fff">✓ Escolher esta forma</button>`}${alvoBtn}</div>
+   <p class="muted small" style="margin:0">Simulação simples, não é proposta de banco nem recomendação. Peça sempre o CET (custo efetivo total), que inclui seguro e tarifas.</p></div></div>`}
+function pyLive(){const g=pyGoal(),s=$('#pysum');if(!g||!s)return;s.innerHTML=pySum(g,UI.paySh);const C=payCalc(g,pyTot(g)),v=$('#pyentv');if(v)v.innerHTML=brl0(C.E)+' <span class="muted small">('+(C.V>0?Math.round(C.E/C.V*100):0)+'%)</span>'}
+async function pyAsk(op,btn){const g=pyGoal();if(!g)return;const C=payCalc(g,pyTot(g),op==='fin0'?0:undefined),k=g.id+op;UI.pyAI=UI.pyAI||{};
+  const ent=C.V>0?Math.round(C.E/C.V*100):0,car=g.tipo==='carro';
+  const local=()=>{if(op==='con')return{t:'Para consórcio de '+(car?'veículo':bemN(g))+', a taxa de administração total costuma ficar entre 10% e 20%, mais 1% a 3% de fundo de reserva. Compare pelo menos três administradoras autorizadas pelo Banco Central.'};
+    if(!car)return{t:'Não tenho uma média pronta para esse tipo de financiamento. Peça a simulação em pelo menos dois bancos e confira as médias no site do Banco Central.'};
+    let m=REFJ.veic;if(ent>=40)m-=.3;else if(ent<10)m+=.3;if(C.n>60)m+=.15;m=Math.round(m*100)/100;
+    return{t:'Pelo seu caso (entrada de '+ent+'%, '+C.n+' meses), a taxa provável fica perto de '+pctS(m)+'% ao mês. Bancos com as menores médias chegam a '+pctS(REFJ.baixa)+'%; perfis de mais risco passam de '+pctS(REFJ.alta)+'%.',v:[[REFJ.baixa,'Melhor caso'],[m,'Provável'],[REFJ.alta,'Pior caso']]}};
+  const old=btn?btn.textContent:'';if(btn){btn.textContent='Pesquisando…';btn.disabled=true}
+  let r=null;try{const sm=await claude.use('sample');if(sm){
+    const dados={tipo:(GT[g.tipo]||GT.outro).n,valor:Math.round(C.V),entrada_pct:ent,prazo_meses:op==='con'?C.cn:C.n,forma:op==='con'?'consórcio':op==='fin0'?'financiamento sem entrada':'entrada + financiamento',referencias:{selic_ao_ano:REFJ.selic,selic_desde:REFJ.selicD,media_bc_veiculos_ao_mes:REFJ.veic,media_bc_veiculos_ao_ano:REFJ.veicA,media_bc_referente_a:REFJ.veicD,menores_medias_de_bancos_ao_mes:REFJ.baixa}};
+    const q=op==='con'?'Você é o Prumo, app brasileiro de finanças. Com base nos dados, diga em português simples, em no máximo 60 palavras, qual taxa de administração total e fundo de reserva são comuns em consórcio desse tipo no Brasil e o que conferir antes de assinar. Não invente nomes de empresas nem promessas. Responda só o texto.':
+      'Você é o Prumo, app brasileiro de finanças. Use as referências (dados reais do Banco Central e do Copom) e o caso da pessoa para estimar a taxa de juros mensal provável do financiamento. Responda SÓ um JSON: {"baixa":n,"provavel":n,"alta":n,"texto":"explicação em português simples, no máximo 50 palavras, sem prometer nada e lembrando de pedir o CET"} com taxas em % ao mês (número, ponto decimal).';
+    const res=await sm(q+'\n\nDados: '+JSON.stringify(dados),{modelTier:'quick',cache:false}),tx=(res&&res.text||'').trim();
+    if(op==='con'){if(tx)r={t:clipW(tx,70)}}else{const m=tx.match(/\{[\s\S]*\}/);if(m){const o=JSON.parse(m[0]),ok=v=>+v>0&&+v<15;if(ok(o.provavel))r={t:clipW(String(o.texto||''),60),v:[[o.baixa,'Melhor caso'],[o.provavel,'Provável'],[o.alta,'Pior caso']].filter(x=>ok(x[0])).map(x=>[Math.round(+x[0]*100)/100,x[1]])}}}}}catch(_){}
+  UI.pyAI[k]=r||local();if(!r)UI.pyAI[k].t=(UI.pyAI[k].t||'')+' (estimativa do Prumo com as médias do Banco Central)';if(btn){btn.textContent=old;btn.disabled=false}render(true)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pyx],[data-pyst],[data-pyep],[data-pytx],[data-pypz],[data-pyai]');if(!b)return;const g=pyGoal();if(!g)return;e.preventDefault();e.stopImmediatePropagation();const D=b.dataset,p=payD(g);
+  if(D.pyx==='close'){UI.paySh=null;return render(true)}
+  if(D.pyx==='set'){p.op=UI.paySh;save();UI.paySh=null;render(true);return toast('Forma de pagar escolhida.')}
+  if(D.pyx==='unset'){p.op='';save();UI.paySh=null;render(true);return toast('Escolha desmarcada.')}
+  if(D.pyai)return pyAsk(D.pyai,b);
+  const C=payCalc(g,pyTot(g));
+  if(D.pyst){p.ent=Math.max(0,Math.min(C.V,C.E+(+D.pyst)))}
+  else if(D.pyep){p.ent=D.pyep==='ju'?C.ju:Math.round(C.V*(+D.pyep)/100)}
+  else if(D.pytx){p.tx=+D.pytx}
+  else if(D.pypz){const [k,n]=D.pypz.split(':');p[k]=+n}
+  save();render(true)},true);
+document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.pyr!=='ent')return;const g=pyGoal();if(!g)return;payD(g).ent=+t.value;pyLive()},true);
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.pyr!=='ent')return;save();render(true)},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.paySh){UI.paySh=null;render(true)}});
 function vPlan(){
   const g0=S.goals.find(x=>x.id===UI.plan);if(g0){itemSync(g0);if(g0.tipo==='viagem'){const r0=rotaDef(g0);planItems(g0).forEach(x=>{if(x.auto&&x.man)delete x.man});planSync(g0)}save()}
   const g=S.goals.find(x=>x.id===UI.plan),t=GT[g.tipo]||GT.outro,it=planItems(g),T=planTotals(g),pl=S.orc?orcPlan():null,av=pl&&pl.livre>0?orcV(pl,'metas')+orcV(pl,'reserva')*0:0,meses=Math.max(1,Math.ceil(daysTo(g.prazo)/30.44));
@@ -899,7 +992,7 @@ function vPlan(){
   return `<div class="row"><button class="btn ghost sm" data-act="planback">Voltar para as metas</button></div>
   <div class="hero" style="--hg:${t.c}"><span class="blob b1"></span><span class="sticker" style="justify-self:start">${t.n}</span><h2 style="margin:0">${esc(g.nome)}</h2><span>Total dos custos${g.tipo==='viagem'?' do grupo':''}${T.ip?' com '+T.ip+'% de margem':''}</span><div class="big num">${brl0(T.total)}</div><span>${T.n} de ${it.length} itens preenchidos</span>${g.tipo==='viagem'&&T.total>0?(()=>{const h=rotaShare(g);return h.G.rach>1?`<span>Dividido entre ${h.G.rach} adultos, cada um paga <b>${brl0(h.contrib)}</b></span>`:''})():''}</div>
   <div class="card"><label>Nome da meta<input data-gn="1" value="${esc(g.nome)}" maxlength="60" placeholder="Ex.: Viagem de fim de ano"></label></div>
-  ${gdepCard(g,tot)}${payCard(g,tot)}
+  ${gdepCard(g,tot)}${payCard(g,tot)}${paySheet(g)}
   ${planBoxes(g,tot,T,it)}${g.tipo==='viagem'?shareCard(g):''}${proj}`;
 }
 
