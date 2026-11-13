@@ -1,0 +1,582 @@
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=2"></script><script src="../claude-shim.js?v=2"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2D6A4F"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Respiro"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<title>Respiro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: barra flutuante no topo (voltar e início), raio e mapa em radar, lista resumida em cartões, detalhes recolhíveis, navegação fixa embaixo. */
+:root{
+  --bg:#EFF3EC; --card:#FFFFFF; --ink:#18271E; --muted:#56655B; --line:#D3DDD0;
+  --pri:#2D6A4F; --pri-ink:#FFFFFF; --sun:#E0A526; --sun-ink:#3A2900; --soft:#DFEADB; --ok:#1B7345; --okbg:#D9F0E2; --warn:#8A5A00; --warnbg:#FFF0CC; --bad:#B3261E;
+  --map:#E4EEDF; --ring:#B9CBB5;
+  --t-parque:#2B8A57; --t-cachoeira:#2478B8; --t-hotel:#C0602B; --t-clube:#7B4FB3; --t-dayuse:#B98410; --t-pesqueiro:#1B8E97; --t-camping:#A8435F;
+  --shadow:0 1px 2px rgba(24,39,30,.07),0 8px 22px rgba(24,39,30,.08);
+  --fd:'Fraunces',Georgia,serif; --fb:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101A14; --card:#18281F; --ink:#E6F0E8; --muted:#9DB2A3; --line:#2A4032;
+  --pri:#6FCB9A; --pri-ink:#07241A; --sun:#F0BE48; --sun-ink:#3A2900; --soft:#1D3327; --ok:#6EDCA0; --okbg:#143A28; --warn:#F2C260; --warnbg:#3A2E10; --bad:#FF8A80;
+  --map:#16261C; --ring:#2F4A38;
+  --t-parque:#53C98A; --t-cachoeira:#58A8E8; --t-hotel:#EE8A57; --t-clube:#B28BE6; --t-dayuse:#E6B53D; --t-pesqueiro:#4CC4CD; --t-camping:#E57A98; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101A14; --card:#18281F; --ink:#E6F0E8; --muted:#9DB2A3; --line:#2A4032;
+  --pri:#6FCB9A; --pri-ink:#07241A; --sun:#F0BE48; --sun-ink:#3A2900; --soft:#1D3327; --ok:#6EDCA0; --okbg:#143A28; --warn:#F2C260; --warnbg:#3A2E10; --bad:#FF8A80;
+  --map:#16261C; --ring:#2F4A38;
+  --t-parque:#53C98A; --t-cachoeira:#58A8E8; --t-hotel:#EE8A57; --t-clube:#B28BE6; --t-dayuse:#E6B53D; --t-pesqueiro:#4CC4CD; --t-camping:#E57A98; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:16px;line-height:1.45;padding-block:calc(66px + env(safe-area-inset-top,0px)) calc(84px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+h1,h2,h3{font-family:var(--fd);line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:34px;font-weight:700}h2{font-size:25px;font-weight:700}h3{font-size:19px;font-weight:600}
+p{margin:0}button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{max-width:820px;margin:0 auto;display:grid;gap:14px}
+.top{position:fixed;z-index:40;left:0;right:0;top:env(safe-area-inset-top,0px);display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));pointer-events:none}
+.top>*{pointer-events:auto}
+.fb{min-height:46px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);box-shadow:var(--shadow);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:none}
+.fb:disabled{opacity:.4;cursor:default}
+.ttl{font-family:var(--fd);font-weight:700;font-size:19px;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;box-shadow:var(--shadow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.nav{position:fixed;z-index:40;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:2px;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));background:var(--card);border-top:1.5px solid var(--line)}
+.nav button{border:0;background:transparent;border-radius:14px;min-height:56px;display:grid;justify-items:center;align-content:center;gap:2px;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--muted);padding:0}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nav button[aria-current=page]{background:var(--pri);color:var(--pri-ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:8px;min-width:0}
+.card.pop{box-shadow:var(--shadow)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sp{justify-content:space-between}
+.m{color:var(--muted);font-size:14px}.b{font-weight:700}
+.btn{min-height:48px;padding:0 18px;border:0;border-radius:12px;background:var(--pri);color:var(--pri-ink);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.btn.sun{background:var(--sun);color:var(--sun-ink)}.btn.gh{background:transparent;color:var(--ink);border:1.5px solid var(--line)}.btn:disabled,.btn[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+.chip{min-height:42px;padding:0 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:7px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;display:inline-block}
+.tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12.5px;font-weight:700;background:var(--soft)}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.warn{background:var(--warnbg);color:var(--warn)}.tag.sun{background:var(--sun);color:var(--sun-ink)}
+.f{display:grid;gap:12px}.f label,.lab{display:grid;gap:4px;font-weight:600;font-size:14.5px}
+.f input,.f select{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);width:100%;min-width:0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.err{color:var(--bad);font-size:13.5px;min-height:1px}
+.hero{background:var(--pri);color:var(--pri-ink);border-radius:20px;padding:18px;display:grid;gap:8px}
+.hero h1{color:var(--pri-ink)}
+.rad{display:grid;gap:6px}.rad input[type=range]{width:100%;accent-color:var(--pri);min-height:34px}
+.big{font-family:var(--fd);font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.tile{text-align:left;cursor:pointer;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:13px;display:grid;gap:5px;color:inherit;min-width:0}
+.tile:hover,.tile.sel{border-color:var(--pri)}.tile.sel{box-shadow:0 0 0 2px var(--pri)}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(235px,1fr))}
+details>summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center;justify-content:space-between;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:'+';font-weight:800;font-size:1.3em;padding:0 6px}
+details[open]>summary::after{content:'\2212'}
+.dbody{display:grid;gap:8px;padding-top:6px}
+.kv{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:6px}.kv:first-child{border-top:0;padding-top:0}.kv span:last-child{text-align:right;font-weight:600}
+.dias{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.dias span{text-align:center;font-size:12.5px;font-weight:700;border-radius:8px;padding:6px 0;background:var(--soft);color:var(--muted)}.dias span.on{background:var(--pri);color:var(--pri-ink)}.dias span.hoje{outline:2px solid var(--sun)}
+svg.map{width:100%;height:auto;display:block;border-radius:16px;background:var(--map);border:1px solid var(--line)}
+svg.map text{font-family:var(--fb);fill:var(--muted);font-size:10px}
+svg.map .pin{cursor:pointer}svg.map .pin:focus-visible{outline:none}svg.map .pin:focus-visible circle.pc{stroke:var(--sun);stroke-width:3}
+.bar{display:grid;grid-template-columns:minmax(90px,38%) 1fr auto;gap:8px;align-items:center;font-size:14px}.bar i{display:block;height:12px;border-radius:6px;background:var(--pri);min-width:2px}.bar b{font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 16px;z-index:60;max-width:92vw}
+:root{--fb-acc:var(--pri);--fb-line:var(--line);--fb-on:var(--pri-ink)}
+.fbchips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.fbchip{min-height:44px;padding:0 14px;border-radius:22px;border:1.5px solid var(--fb-line,#ccc);background:transparent;color:inherit;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.fbchip[aria-pressed=true]{background:var(--fb-acc,#333);border-color:var(--fb-acc,#333);color:var(--fb-on,#fff)}
+.fblab{display:block;font-weight:700;font-size:14px;margin:0 0 6px}
+.fbcard textarea{width:100%;box-sizing:border-box}
+.fbrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.fbbtn{position:relative;overflow:hidden;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;border:1.5px dashed var(--fb-line,#ccc);cursor:pointer;font-weight:600;font-size:14px}
+.fbsr{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.fbprev{position:relative;display:inline-block}.fbprev img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--fb-line,#ccc);display:block}
+.fbprev button{position:absolute;top:-10px;right:-10px;width:30px;height:30px;border-radius:50%;border:0;background:#B3261E;color:#fff;font-size:14px;cursor:pointer}
+.fbchk{display:flex!important;gap:10px;align-items:center;min-height:44px;font-weight:500!important;font-size:15px;margin:6px 0 0}.fbchk input{width:22px!important;height:22px;min-height:0!important;flex:none}
+.fbsend{width:100%;min-height:50px;border:0;border-radius:14px;background:var(--fb-acc,#333);color:var(--fb-on,#fff);font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.fbmsg{margin-top:8px;font-size:14px;font-weight:600}.fbmsg:empty{display:none}
+.fbmine{margin-top:12px;border-top:1px solid var(--fb-line,#ccc);padding-top:4px}.fbmine>summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+.fbit{padding:10px 0;border-top:1px solid var(--fb-line,#ccc)}.fbit:first-of-type{border-top:0}
+.fbh{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fbtag,.fbst{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid currentColor;line-height:1.5}
+.fbst-nova{color:#B26A00}.fbst-vista{color:#1C6FB0}.fbst-ok{color:#12803F}
+@media (prefers-color-scheme:dark){.fbst-nova{color:#F5B95C}.fbst-vista{color:#7CC4FF}.fbst-ok{color:#5CD98A}}
+.fbit p{margin:6px 0 0;overflow-wrap:anywhere}.fbrep{background:color-mix(in srgb,var(--fb-acc,#333) 12%,transparent);padding:8px 10px;border-radius:10px}.fbsm{font-size:12px;opacity:.8}
+.fbthumb{display:inline-block;margin-top:6px}.fbthumb img{max-width:160px;max-height:160px;border-radius:10px;border:1px solid var(--fb-line,#ccc);display:block}
+.fbadm .fbrow button{min-height:40px;padding:0 12px;border-radius:12px;border:1.5px solid var(--fb-line,#ccc);background:transparent;color:inherit;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.fbadm .fbrow button[aria-pressed=true]{background:var(--fb-acc,#333);border-color:var(--fb-acc,#333);color:var(--fb-on,#fff)}
+.fblink{display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:56px;padding:12px 14px;border-radius:16px;border:1.5px dashed var(--fb-acc,#333);background:transparent;color:inherit;font-family:inherit;font-size:15px;cursor:pointer;box-sizing:border-box}
+.fblink .fbi{font-size:24px;flex:none}.fblink .fbx2{flex:1;min-width:0}.fblink .fbar{flex:none;font-size:24px;color:var(--fb-acc,#333)}
+
+#fbsheet{position:fixed;inset:0;z-index:95;display:grid;place-items:end center}#fbsheet:empty{display:none}
+.fbbg{position:absolute;inset:0;background:rgba(10,18,30,.6)}
+.fbsh{position:relative;width:min(560px,100%);max-height:92dvh;overflow:auto;background:var(--bg);color:var(--ink);border-radius:22px 22px 0 0;padding:12px 14px calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:12px;box-shadow:0 -8px 40px rgba(0,0,0,.3)}
+.fbtop{position:sticky;top:-12px;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:-12px -14px 0;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--fb-line,#ccc)}
+.fbclose{min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--fb-line,#ccc);background:var(--card);color:inherit;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.fbsh .card{padding:14px}
+.fbhb{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);color:inherit;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.fbhd{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-height:40px;padding:0 14px;font-weight:700;font-size:14px;cursor:pointer}
+.muted{color:var(--muted)}.fbcard textarea,.fbadm textarea{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);width:100%;font:inherit;color:inherit}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<div class="top"><button class="fb" id="bk" type="button" aria-label="Voltar uma tela">← Voltar</button><span class="ttl" id="tt">Respiro</span><button class="fb" id="hm" type="button" aria-label="Ir para o início">⌂ Início</button></div>
+<div class="wrap" id="app"></div>
+<div class="wrap" id="fblk" style="margin-top:18px"></div>
+<nav class="nav" id="nav" aria-label="Seções"></nav>
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={g(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(_){return d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
+const brl=n=>'R$ '+Math.round(n).toLocaleString('pt-BR');
+/* posições em km a partir do Plano Piloto (exemplo). x leste, y norte */
+const ORIG={lat:-15.7939,lon:-47.8828},KX=111.32*Math.cos(ORIG.lat*Math.PI/180),KY=110.57;
+const CEN={plano:['Plano Piloto',0,0],tagua:['Taguatinga',-18,-6],sobr:['Sobradinho',8,20],plan:['Planaltina',22,32],gama:['Gama',-12,-28],lago:['Lago Sul',8,-6]};
+const TIPOS={parque:['Parques e trilhas','--t-parque'],cachoeira:['Cachoeiras','--t-cachoeira'],hotel:['Hotéis fazenda','--t-hotel'],clube:['Clubes e balneários','--t-clube'],dayuse:['Sítios e day use','--t-dayuse'],pesqueiro:['Pesqueiros','--t-pesqueiro'],camping:['Camping','--t-camping']};
+const DN=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],TODOS=[0,1,2,3,4,5,6],FDS=[6,0],SEM=[1,2,3,4,5];
+/* Lugares FICTÍCIOS, só para o protótipo. du: day use; pr: faixa por pessoa; dia: diária por pessoa */
+const P0=[
+{id:'p1',n:'Parque Vale das Seriemas (exemplo)',t:'parque',x:6,y:-9,du:0,dias:TODOS,hor:'7h às 17h',pr:[0,0],k:1,pet:1,pis:0,tri:1,est:1,ob:'Entrada gratuita. Trilhas de 1 a 4 km.'},
+{id:'p2',n:'Cachoeira do Véu Dourado (exemplo)',t:'cachoeira',x:34,y:22,du:0,dias:[6,0,1],hor:'8h às 16h',pr:[15,25],k:1,pet:0,pis:0,tri:1,est:1,ob:'Trilha de 1 hora até a queda. Leve calçado fechado.'},
+{id:'p3',n:'Cachoeira Poço Azul (exemplo)',t:'cachoeira',x:-28,y:45,du:0,dias:[2,3,4,5,6,0],hor:'8h às 16h30',pr:[20,35],k:1,pet:0,pis:0,tri:1,est:1,ob:'Poço para banho. Agendar fim de semana.'},
+{id:'p4',n:'Fazenda Recanto das Araras (exemplo)',t:'hotel',x:22,y:-30,du:1,dias:FDS,hor:'9h às 17h',pr:[90,140],dia:[380,520],k:1,pet:1,pis:1,tri:1,est:1,ob:'Day use inclui almoço. Pensão completa na diária.'},
+{id:'p5',n:'Hotel Fazenda Bela Vista do Cerrado (exemplo)',t:'hotel',x:-40,y:12,du:1,dias:[5,6,0],hor:'9h às 17h',pr:[110,160],dia:[420,610],k:1,pet:0,pis:1,tri:0,est:1,ob:'Day use com café da manhã e almoço.'},
+{id:'p6',n:'Clube Águas do Planalto (exemplo)',t:'clube',x:-12,y:-18,du:1,dias:[3,4,5,6,0],hor:'8h às 18h',pr:[60,90],k:1,pet:0,pis:1,tri:0,est:1,ob:'Aceita visitante pagando diária.'},
+{id:'p7',n:'Chácara Lazer Ipê Amarelo (exemplo)',t:'dayuse',x:15,y:20,du:1,dias:FDS,hor:'9h às 18h',pr:[50,80],k:1,pet:1,pis:1,tri:0,est:1,ob:'Piscina, campo e área para churrasco.'},
+{id:'p8',n:'Pesqueiro Lagoa Mansa (exemplo)',t:'pesqueiro',x:30,y:-12,du:0,dias:[3,4,5,6,0],hor:'8h às 17h',pr:[30,60],k:1,pet:1,pis:0,tri:0,est:1,ob:'Pesca esportiva e restaurante no local.'},
+{id:'p9',n:'Camping Estrela do Cerrado (exemplo)',t:'camping',x:-35,y:-30,du:0,dias:TODOS,hor:'Entrada 14h, saída 12h',pr:[40,70],k:1,pet:1,pis:0,tri:1,est:1,ob:'Preço por pessoa na noite. Banheiros e cozinha comum.'},
+{id:'p10',n:'Parque Trilha das Orquídeas (exemplo)',t:'parque',x:45,y:35,du:0,dias:[2,3,4,5,6,0],hor:'8h às 16h',pr:[10,20],k:1,pet:0,pis:0,tri:1,est:1,ob:'Trilha guiada de 3 km com orquídeas nativas.'},
+{id:'p11',n:'Reserva Cerrado Vivo (exemplo)',t:'parque',x:-22,y:28,du:0,dias:FDS,hor:'8h às 15h',pr:[15,30],k:1,pet:0,pis:0,tri:1,est:1,ob:'Só com agendamento. Trilhas com guia.'},
+{id:'p12',n:'Sítio Pé de Pequi (exemplo)',t:'dayuse',x:10,y:40,du:1,dias:TODOS,hor:'9h às 17h',pr:[70,110],k:1,pet:1,pis:1,tri:1,est:1,ob:'Almoço caseiro incluso. Tranquilo, sem som alto.'},
+{id:'p13',n:'Spa Rural Paz do Campo (exemplo)',t:'hotel',x:-48,y:-10,du:1,dias:[2,3,4,5,6],hor:'10h às 17h',pr:[150,250],dia:[520,800],k:0,pet:0,pis:1,tri:0,est:1,ob:'Foco em descanso. Sem crianças menores de 12 anos.'},
+{id:'p14',n:'Parque Lago Sereno (exemplo)',t:'parque',x:-3,y:-26,du:0,dias:TODOS,hor:'6h às 18h',pr:[0,0],k:1,pet:1,pis:0,tri:1,est:1,ob:'Caminhada em volta do lago, 5 km.'},
+{id:'p15',n:'Balneário Fonte Cristalina (exemplo)',t:'clube',x:55,y:-20,du:1,dias:FDS,hor:'8h às 17h',pr:[35,60],k:1,pet:0,pis:1,tri:0,est:1,ob:'Águas naturais em piscinas.'},
+{id:'p16',n:'Mirante Pedra do Sol (exemplo)',t:'parque',x:28,y:52,du:0,dias:TODOS,hor:'5h às 18h',pr:[5,10],k:1,pet:1,pis:0,tri:1,est:1,ob:'Nascer do sol. Subida de 40 minutos.'},
+{id:'p17',n:'Fazenda Ecológica Jatobá (exemplo)',t:'hotel',x:60,y:30,du:1,dias:[6,0],hor:'9h às 17h',pr:[100,150],dia:[400,580],k:1,pet:1,pis:1,tri:1,est:1,ob:'Colheita e ordenha para crianças.'},
+{id:'p18',n:'Cachoeira Três Quedas (exemplo)',t:'cachoeira',x:70,y:70,du:0,dias:TODOS,hor:'8h às 16h',pr:[20,30],k:1,pet:0,pis:0,tri:1,est:1,ob:'Três quedas em sequência. Trilha moderada.'},
+{id:'p19',n:'Parque Águas Claras (exemplo)',t:'parque',x:-18,y:4,du:0,dias:TODOS,hor:'6h às 20h',pr:[0,0],k:1,pet:1,pis:0,tri:1,est:1,ob:'Parque urbano grande, bom para piquenique.'},
+{id:'p20',n:'Clube de Campo Sombra Boa (exemplo)',t:'clube',x:38,y:2,du:1,dias:[5,6,0],hor:'9h às 18h',pr:[80,120],k:1,pet:0,pis:1,tri:0,est:1,ob:'Campo, quadras e restaurante.'},
+{id:'p21',n:'Pousada Rural Rio das Pedras (exemplo)',t:'hotel',x:-60,y:40,du:0,dias:TODOS,hor:'Entrada 14h',pr:[0,0],dia:[300,450],k:1,pet:1,pis:0,tri:1,est:1,ob:'Só hospedagem. Café da manhã incluso.'},
+{id:'p22',n:'Sítio Cantinho Verde (exemplo)',t:'dayuse',x:-8,y:15,du:1,dias:[6,0,5],hor:'9h às 17h',pr:[45,70],k:1,pet:1,pis:1,tri:0,est:1,ob:'Pequeno, pouca gente, com horta.'},
+{id:'p23',n:'Camping Rio Claro (exemplo)',t:'camping',x:18,y:-48,du:0,dias:TODOS,hor:'Entrada 14h, saída 12h',pr:[35,60],k:1,pet:1,pis:0,tri:1,est:1,ob:'Beira de rio, sem energia elétrica.'},
+{id:'p24',n:'Parque Cachoeirinha (exemplo)',t:'parque',x:-30,y:-5,du:0,dias:[2,3,4,5,6,0],hor:'8h às 17h',pr:[0,10],k:1,pet:1,pis:0,tri:1,est:1,ob:'Trilha curta com pequena queda.'}];
+P0.forEach(p=>{p.x=Math.round(p.x*55)/100;p.y=Math.round(p.y*55)/100});Object.values(CEN).forEach(v=>{v[1]=Math.round(v[1]*55)/100;v[2]=Math.round(v[2]*55)/100});
+const TEL=i=>'(61) 90000-00'+String(10+(i%80));
+const D0={v:'ex',hist:[],id:null,c:'plano',cx:null,rad:20,tp:[],fdu:false,fhoje:false,fk:false,fpet:false,fpmax:0,fav:[],mine:[],anun:null,nick:'',op:{},dr:{},ck:'tudo',rp:null,last:0,cs:'pub',lastm:0};
+let S=Object.assign({},D0,LS.g('rs_s',{}));S.hist=[];S.id=null;S.op={};S.dr={};S.rp=null;
+const save=()=>{const{hist,id,op,dr,rp,last,lastm,...r}=S;LS.s('rs_s',r)};
+const toast=t=>{const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>e.hidden=true,2600)};
+const TITLES={prf:'Organizador',grp:'Grupo',com:'Comunidade',ex:'Respiro',det:'Lugar',fav:'Favoritos',cad:'Cadastre seu lugar',adm:'Painel'};
+function go(v,o){o=o||{};if(v==='det'&&o.id)tkView(o.id);if(v!==S.v)tk(T=>{T.sec[v]=(T.sec[v]||0)+1});if(!o.back&&S.v!==v)S.hist.push(S.v+'|'+(S.id||''));S.v=v;if(o.id!==undefined)S.id=o.id;render();scrollTo(0,0)}
+function back(){const h=S.hist.pop();if(!h){S.v='ex';S.id=null}else{const[v,t]=h.split('|');S.v=v;S.id=t||null}render();scrollTo(0,0)}
+const all=()=>[...P0,...S.mine];
+const byId=id=>all().find(p=>p.id===id);
+const center=()=>S.cx?S.cx:{x:CEN[S.c][1],y:CEN[S.c][2]};
+const dist=p=>{const c=center();return Math.hypot(p.x-c.x,p.y-c.y)};
+const HOJE=new Date().getDay();
+const abre=p=>p.dias.includes(HOJE);
+function diasTxt(a){if(a.length===7)return 'Todos os dias';const s=[...a].sort((x,y)=>x-y);if(s.join()==='0,6')return 'Sábado e domingo';return s.map(d=>DN[d]).join(', ')}
+function precoTxt(p){return p.pr[1]===0?'Gratuito':p.pr[0]===p.pr[1]?brl(p.pr[0]):brl(p.pr[0])+' a '+brl(p.pr[1])}
+function lista(){const r=S.rad;return all().filter(p=>dist(p)<=r&&(!S.tp.length||S.tp.includes(p.t))&&(!S.fdu||p.du)&&(!S.fhoje||abre(p))&&(!S.fk||p.k)&&(!S.fpet||p.pet)&&(!S.fpmax||p.pr[1]<=S.fpmax||p.pr[0]<=S.fpmax&&p.pr[1]===0)).sort((a,b)=>(b.pl&&b.pl!=='g'?1:0)-(a.pl&&a.pl!=='g'?1:0)||dist(a)-dist(b))}
+const col=t=>`var(${TIPOS[t][1]})`;
+const IC={adm:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',com:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',ex:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',fav:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',cad:'<path d="M12 21V9M12 9c0-3 2-5 5-5 0 3-2 5-5 5zM12 13c0-2.5-1.8-4-4.5-4 0 2.5 1.8 4 4.5 4z"/>'};
+/* ---------- mapa radar ---------- */
+function mapa(L){const R=140,rad=S.rad,sc=R/rad,c=center();
+ const pins=L.map(p=>{const px=160+(p.x-c.x)*sc,py=160-(p.y-c.y)*sc;return `<g class="pin" tabindex="0" role="button" data-open="${p.id}" aria-label="${esc(p.n)}, ${dist(p).toFixed(0)} quilômetros"><circle class="pc" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${S.id===p.id?10:8}" fill="${col(p.t)}" stroke="var(--card)" stroke-width="2"/>${p.du?`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.6" fill="var(--card)"/>`:''}</g>`}).join('');
+ return `<svg class="map" viewBox="0 0 320 320" role="img" aria-label="Mapa em radar com ${L.length} lugares num raio de ${rad} quilômetros"><circle cx="160" cy="160" r="${R}" fill="none" stroke="var(--ring)" stroke-width="1.5"/><circle cx="160" cy="160" r="${R/2}" fill="none" stroke="var(--ring)" stroke-dasharray="3 4"/><path d="M160 20V300M20 160H300" stroke="var(--ring)" stroke-width=".7"/><text x="163" y="${160-R/2+11}">${(rad/2).toFixed(rad<10?1:0).replace('.',',')} km</text><text x="163" y="${160-R+11}">${rad} km</text><text x="160" y="14" text-anchor="middle">N</text><circle cx="160" cy="160" r="6" fill="var(--ink)" stroke="var(--card)" stroke-width="2"/><text x="170" y="174">Você</text>${pins}</svg>`}
+/* ---------- telas ---------- */
+function tileP(p){const d=dist(p),fav=S.fav.includes(p.id);
+ const st=p.du?(abre(p)?'<span class="tag ok">Day use hoje: sim</span>':'<span class="tag warn">Day use hoje: não</span>'):(abre(p)?'<span class="tag ok">Aberto hoje</span>':'<span class="tag warn">Fechado hoje</span>');
+ return `<button class="tile ${S.id===p.id?'sel':''}" data-open="${p.id}" id="t_${p.id}"><span class="row sp"><span class="row" style="gap:6px"><span class="dot" style="background:${col(p.t)}"></span><span class="m">${TIPOS[p.t][0]}</span></span><span class="b" style="font-variant-numeric:tabular-nums">${d.toFixed(1).replace('.',',')} km</span></span><span class="b" style="font-size:16.5px">${esc(p.n.replace(' (exemplo)',''))}</span>${ratingLine(p.id)}<span class="row sp">${st}${fav?'<span class="tag sun">Favorito</span>':''}${p.pl&&p.pl!=='g'?'<span class="tag sun">★ Destaque</span>':''}</span>${p.promo?`<span class="tag ok" style="justify-self:start">Promoção: ${esc(p.promo)}</span>`:''}<span class="big">${precoTxt(p)}</span><span class="m">${p.pr[1]===0?'entrada':'por pessoa'} · ${p.du?'tem day use':'sem day use'} · ${p.k?'aceita criança':'sem criança'}${p.pet?' · aceita pet':''}</span></button>`}
+function viewEx(){const L=lista(),c=CEN[S.c];
+ return `<div class="hero"><h1>Natureza e descanso perto de você</h1><p>Veja tudo num raio de ${S.rad} km: parques, cachoeiras, hotéis fazenda, clubes, day use e mais. Sem precisar saber o nome.</p><span class="tag sun" style="justify-self:start">Protótipo · lugares, preços e contatos são exemplos</span></div>
+<div class="card pop"><div class="row sp"><b>Onde você está</b><button class="chip" data-act="geo" type="button">Usar minha localização</button></div>
+<div class="row">${Object.entries(CEN).map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${!S.cx&&S.c===k}">${v[0]}</button>`).join('')}</div>
+<div class="rad"><label for="rad" class="row sp"><b>Raio de busca</b><b id="radv">${S.rad} km</b></label><input type="range" id="rad" min="5" max="100" step="5" value="${S.rad}"></div>
+<details data-k="fo" ${op('fo',false)}><summary>Filtros</summary><div class="dbody"><div class="row">${Object.entries(TIPOS).map(([k,v])=>`<button class="chip" data-tp="${k}" aria-pressed="${S.tp.includes(k)}"><span class="dot" style="background:var(${v[1]})"></span>${v[0]}</button>`).join('')}</div>
+<div class="row"><button class="chip" data-f="fdu" aria-pressed="${S.fdu}">Tem day use</button><button class="chip" data-f="fhoje" aria-pressed="${S.fhoje}">Funciona hoje (${DN[HOJE]})</button><button class="chip" data-f="fk" aria-pressed="${S.fk}">Aceita criança</button><button class="chip" data-f="fpet" aria-pressed="${S.fpet}">Aceita pet</button></div>
+<label class="lab" for="pmax">Preço máximo por pessoa<select id="pmax">${[[0,'Qualquer preço'],[30,'Até R$ 30'],[60,'Até R$ 60'],[100,'Até R$ 100'],[150,'Até R$ 150']].map(([v,l])=>`<option value="${v}"${S.fpmax===v?' selected':''}>${l}</option>`).join('')}</select></label></div></details></div>
+<div class="card"><div class="row sp"><b>${L.length} lugar${L.length===1?'':'es'} em ${S.rad} km</b><span class="m">${S.cx?'Perto de você':'Perto de '+c[0]}</span></div>${mapa(L)}<p class="m">Cada ponto é um lugar. Ponto com miolo claro tem day use. Toque num ponto para abrir os detalhes.</p></div>
+${L.length?`<div class="grid">${L.map(tileP).join('')}</div>`:`<div class="card"><b>Nada nesse raio com esses filtros</b><p class="m">Aumente o raio ou tire algum filtro.</p><button class="btn gh" data-act="clr">Limpar filtros</button></div>`}
+<div class="card"><details data-k="how" ${op('how',false)}><summary>Como funciona</summary><div class="dbody"><p class="m">• O app só mostra e organiza: não vende nem intermedia. Para reservar ou ver pacotes, você vai para o contato ou o site do próprio lugar.<br>• Os preços são faixas estimadas, com a data da última conferência. Confirme sempre com o lugar.<br>• Day use é passar o dia, sem dormir. Os dias do day use podem ser diferentes dos dias da hospedagem.<br>• O dono do lugar pode cadastrar e atualizar os dados na aba Cadastre.</p></div></details></div>`}
+function viewDet(){const p=byId(S.id);if(!p)return '<div class="card"><b>Lugar não encontrado</b></div>';const d=dist(p),fav=S.fav.includes(p.id),nm=p.n.replace(' (exemplo)','');
+ const q=p.id.startsWith('m')?'Informado pelo dono neste protótipo. Ainda não conferido.':'Exemplo fictício do protótipo.';
+ return `<div class="card pop"><div class="row sp"><span class="row" style="gap:6px"><span class="dot" style="background:${col(p.t)}"></span><b>${TIPOS[p.t][0]}</b></span><span class="b">${d.toFixed(1).replace('.',',')} km</span></div><h2>${esc(nm)}</h2><p>${esc(p.ob)}</p>
+<div class="row">${p.du?'<span class="tag ok">Tem day use</span>':'<span class="tag">Sem day use</span>'}<span class="tag ${abre(p)?'ok':'warn'}">${abre(p)?(p.du?'Day use hoje: sim':'Aberto hoje'):(p.du?'Day use hoje: não':'Fechado hoje')}</span>${p.k?'<span class="tag">Criança</span>':''}${p.pet?'<span class="tag">Pet</span>':''}${p.pis?'<span class="tag">Piscina</span>':''}${p.tri?'<span class="tag">Trilha</span>':''}${p.est?'<span class="tag">Estacionamento</span>':''}</div>
+<div class="row"><button class="btn ${fav?'gh':'sun'}" data-act="fav" data-id="${p.id}">${fav?'Tirar dos favoritos':'Salvar nos favoritos'}</button></div></div>
+<div class="card"><details data-k="d1" ${op('d1',true)}><summary>${p.du?'Day use e funcionamento':'Funcionamento'}</summary><div class="dbody"><div class="dias" aria-label="Dias de funcionamento">${DN.map((n,i)=>`<span class="${p.dias.includes(i)?'on':''} ${i===HOJE?'hoje':''}">${n}</span>`).join('')}</div><div class="kv"><span>${p.du?'Day use':'Funciona'}</span><span>${diasTxt(p.dias)}</span></div><div class="kv"><span>Horário</span><span>${esc(p.hor)}</span></div><p class="m">Hoje é ${DN[HOJE]}. Feriados e chuva podem mudar tudo: confirme antes de ir.</p></div></details></div>
+<div class="card"><details data-k="d2" ${op('d2',true)}><summary>Preço estimado</summary><div class="dbody"><div class="kv"><span>${p.du?'Day use':p.t==='camping'?'Camping, por noite':'Entrada'}</span><span>${precoTxt(p)}${p.pr[1]===0?'':' por pessoa'}</span></div>${p.dia?`<div class="kv"><span>Diária, por pessoa</span><span>${brl(p.dia[0])} a ${brl(p.dia[1])}</span></div>`:''}<p class="m">Faixa estimada. Os valores reais mudam por época e pacote. ${esc(q)}</p></div></details></div>
+${revCard(p)}${comPlace(p)}
+<div class="card"><details data-k="d3" ${op('d3',false)}><summary>Como chegar</summary><div class="dbody"><div class="kv"><span>Distância em linha reta</span><span>${d.toFixed(1).replace('.',',')} km</span></div><a class="btn gh" target="_blank" rel="noopener noreferrer" data-ct="${p.id}" href="https://www.google.com/maps/search/?api=1&query=${(ORIG.lat+p.y/KY).toFixed(5)},${(ORIG.lon+p.x/KX).toFixed(5)}">Abrir no Google Maps</a><p class="m">No protótipo a posição é aproximada, porque o lugar é um exemplo.</p></div></details></div>
+<div class="card"><details data-k="d4" ${op('d4',true)}><summary>Contato</summary><div class="dbody"><div class="kv"><span>Telefone</span><span style="user-select:all">${p.tel||TEL(parseInt(String(p.id).replace(/\D/g,''))||7)}</span></div><div class="row"><button class="btn gh" data-act="copy" data-id="${p.id}">Copiar telefone</button>${p.emp&&p.emp.site?`<a class="btn" target="_blank" rel="noopener noreferrer" data-ct="${p.id}" href="${esc(p.emp.site)}">Ver pacotes no site do lugar</a>`:'<button class="btn" aria-disabled="true" data-act="site">Ver pacotes no site do lugar</button>'}</div>${p.promo?`<div class="kv"><span>Promoção</span><span>${esc(p.promo)}</span></div>`:''}${p.emp?`<div class="kv"><span>Empresa</span><span>${esc(p.emp.n)}</span></div><div class="kv"><span>Endereço</span><span>${esc(p.emp.end)}, ${esc(p.emp.cid)}</span></div>`:''}<p class="m">Número de exemplo. No app de verdade, este botão leva ao site de pacotes do próprio estabelecimento.</p></div></details></div>
+<div class="card"><button class="btn gh" data-act="err">Informar erro neste lugar</button></div>`}
+function viewFav(){const L=S.fav.map(byId).filter(Boolean);return `<div class="card"><h2>Favoritos</h2><p class="m">Lugares que você salvou neste aparelho.</p></div>${L.length?`<div class="grid">${L.map(tileP).join('')}</div>`:'<div class="card"><b>Você ainda não salvou nenhum lugar</b><p class="m">Abra um lugar e toque em "Salvar nos favoritos".</p><button class="btn" data-go="ex">Explorar lugares</button></div>'}`}
+function cnpjOk(v){const d=String(v).replace(/\D/g,'');if(d.length!==14||/^(\d)\1+$/.test(d))return false;const c=n=>{let s=0,p=n-7;for(let i=0;i<n;i++){s+=+d[i]*p--;if(p<2)p=9}const r=s%11;return r<2?0:11-r};return c(12)==+d[12]&&c(13)==+d[13]}
+const PLANOS={g:['Grátis','R$ 0','Aparece no mapa e na lista da região, com contato, dias e preço.'],d:['Destaque','R$ 49 por mês (a definir)','Aparece primeiro na região, com selo "Destaque" e mais fotos.'],dp:['Destaque + Promoção','R$ 89 por mês (a definir)','Tudo do Destaque, mais uma promoção em evidência no cartão do lugar e na Comunidade.']};
+const FUNC=['Dono ou sócio','Gerente','Funcionário autorizado','Agência ou representante'];
+function viewCad(){const n=S.mine.length,A=S.anun||{},inp=(id,lb,o)=>`<label for="${id}">${lb}<input id="${id}" ${o||''}></label>`;
+return `${ADM?`<div class="card" style="background:var(--soft)"><div class="row sp"><b>Administrador: cobrança dos planos</b><span class="tag ${cobOn?'sun':'ok'}">${cobOn?'Ligada':'Desligada'}</span></div><p class="m">${cobOn?'As empresas veem o passo 4 e escolhem entre Grátis, Destaque e Destaque + Promoção.':'Período de lançamento: as empresas se cadastram de graça e o passo 4 (planos) fica escondido. Ligue quando já tiver bastante gente usando.'}</p><button class="btn ${cobOn?'gh':''}" data-act="cobtog">${cobOn?'Desligar a cobrança':'Ligar a cobrança'}</button><p class="m">Só você, como administrador, vê este quadro. Quem já se cadastrou de graça continua no plano Grátis até escolher outro.</p></div>`:''}<div class="card pop"><h2>Cadastre seu lugar</h2>${cobOn?'':'<span class="tag sun" style="justify-self:start">Lançamento: cadastro 100% grátis</span>'}<p class="m">Para donos de parque, clube, hotel fazenda, sítio com day use, pesqueiro e camping. É gratuito neste protótipo. Tudo em um só lugar, em ${cobOn?'4 passos: quem anuncia, a empresa, o lugar e o plano':'3 passos: quem anuncia, a empresa e o lugar'}.</p>
+<form class="f" id="cf" novalidate>
+<div class="card" style="background:var(--bg)"><details data-k="cf1" ${op('cf1',!S.anun)}><summary><span>1. Seus dados (quem anuncia)${S.anun?`<br><span class="m" style="font-weight:500">${esc(A.n)} · ${esc(A.tel)}</span>`:''}</span></summary><div class="dbody f">
+${inp('a_n','Seu nome completo',`maxlength="60" autocomplete="name" value="${esc(A.n||'')}"`)}
+<div class="two">${inp('a_tel','Seu celular ou WhatsApp',`inputmode="tel" maxlength="20" autocomplete="tel" placeholder="(61) 90000-0000" value="${esc(A.tel||'')}"`)}${inp('a_em','Seu e-mail',`type="email" maxlength="80" autocomplete="email" placeholder="voce@exemplo.com" value="${esc(A.em||'')}"`)}</div>
+<label for="a_fn">Você é<select id="a_fn">${FUNC.map(x=>`<option ${A.fn===x?'selected':''}>${x}</option>`).join('')}</select></label>
+<p class="m">Esses dados são só para a equipe do app falar com você. Não aparecem para o público. Ficam salvos neste aparelho para o próximo cadastro.</p></div></details></div>
+<div class="card" style="background:var(--bg)"><details data-k="cf2" ${op('cf2',true)}><summary>2. Dados da empresa</summary><div class="dbody f">
+${inp('e_n','Nome da empresa (razão social ou nome fantasia)','maxlength="80"')}
+<div class="two">${inp('e_cnpj','CNPJ (se tiver)','inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00"')}${inp('e_cid','Cidade e estado','maxlength="50" placeholder="Ex.: Brasília - DF"')}</div>
+${inp('e_end','Endereço do lugar','maxlength="120" placeholder="Rua, rodovia, km, chácara..."')}
+${inp('e_site','Site de pacotes ou Instagram (opcional)','type="url" maxlength="120" placeholder="https://..."')}
+<p class="m">Sem CNPJ também pode (ex.: sítio de pessoa física). Nesse caso, a conferência pede outro documento que mostre que você é o responsável.</p></div></details></div>
+<div class="card" style="background:var(--bg)"><details data-k="cf3" ${op('cf3',true)}><summary>3. Dados do lugar</summary><div class="dbody f">
+<label for="c_n">Nome do lugar (como aparece no app)<input id="c_n" maxlength="50"></label>
+<div class="two"><label for="c_t">Tipo<select id="c_t">${Object.entries(TIPOS).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select></label><label for="c_r">Região mais próxima<select id="c_r">${Object.entries(CEN).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select></label></div>
+<div class="two"><label for="c_p1">Preço mínimo por pessoa (R$)<input id="c_p1" inputmode="numeric" placeholder="Ex.: 50"></label><label for="c_p2">Preço máximo (R$)<input id="c_p2" inputmode="numeric" placeholder="Ex.: 90"></label></div>
+<label for="c_du">Tem day use?<select id="c_du"><option value="1">Sim</option><option value="0">Não</option></select></label>
+<div class="lab">Dias de funcionamento<div class="row">${DN.map((d,i)=>`<button class="chip" type="button" data-cd="${i}" aria-pressed="${(S.cd||[6,0]).includes(i)}">${d}</button>`).join('')}</div></div>
+<label for="c_h">Horário<input id="c_h" maxlength="24" placeholder="Ex.: 9h às 17h"></label>
+<label for="c_tel">Telefone de contato do lugar (aparece para o público)<input id="c_tel" inputmode="tel" maxlength="20" placeholder="(61) 90000-0000"></label>
+<div class="row"><label class="row" style="gap:8px;font-weight:500"><input type="checkbox" id="c_k" checked style="width:22px;height:22px">Aceita criança</label><label class="row" style="gap:8px;font-weight:500"><input type="checkbox" id="c_pet" style="width:22px;height:22px">Aceita pet</label></div></div></details></div>
+${cobOn?'':'<!--'}<div class="card" style="background:var(--bg)"><details data-k="cf4" ${op('cf4',true)}><summary>4. Escolha como aparecer</summary><div class="dbody">
+<p class="m">Só você, dono, vê esta parte. O visitante usa o app de graça e nunca vê valores de plano.</p>
+${Object.entries(PLANOS).map(([k,v])=>`<label for="pl_${k}" class="tile" style="grid-template-columns:auto 1fr;align-items:start;gap:10px;font-weight:500"><input type="radio" name="c_pl" id="pl_${k}" value="${k}" ${k==='g'?'checked':''} style="width:22px;height:22px;margin:2px 0 0;accent-color:var(--pri)"><span style="display:grid;gap:3px"><span class="row sp"><b>${v[0]}</b><span class="tag ${k==='g'?'ok':'sun'}">${v[1]}</span></span><span class="m">${v[2]}</span></span></label>`).join('')}
+<label for="c_promo" style="display:grid;gap:4px;font-weight:600;font-size:14.5px">Texto da promoção (só no plano Destaque + Promoção)<input id="c_promo" maxlength="60" placeholder="Ex.: Day use com 10% de desconto às quintas" style="border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card);width:100%"></label>
+<p class="m">Valores de exemplo, ainda a definir. Neste protótipo nada é cobrado. No app de verdade, o pagamento do plano só começa depois que o cadastro for conferido e aprovado.</p></div></details></div>${cobOn?'':'-->'}
+<label class="row" style="gap:10px;font-weight:500;align-items:flex-start"><input type="checkbox" id="a_ok" style="width:22px;height:22px;flex:none"><span>Declaro que sou o responsável por este lugar ou tenho autorização para anunciá-lo.</span></label>
+<div class="err" id="ce" role="alert"></div><button class="btn sun" type="submit">Cadastrar (simulado)</button></form>
+<p class="m">No app de verdade, o cadastro passa por conferência (CNPJ ou prova de que você é o responsável) antes de aparecer para todos. O telefone do lugar aparece só se você autorizar.</p></div>
+${n?`<div class="card"><details data-k="cfm" ${op('cfm',true)}><summary>Seus cadastros (${n})</summary><div class="dbody">${S.mine.map(p=>`<div class="row sp"><span>${esc(p.n)}${p.emp?`<br><span class="m">${esc(p.emp.n)}${p.emp.cnpj?' · CNPJ '+esc(p.emp.cnpj):''} · Plano: ${PLANOS[p.pl||'g'][0]}</span>`:''}</span><span class="row"><button class="chip" data-open="${p.id}">Ver</button><button class="chip" data-act="del" data-id="${p.id}">Excluir</button></span></div>${ownRev(p)}`).join('')}</div></details></div>`:''}`}
+
+/* ---------- comunidade e avaliações (banco compartilhado, só funciona aberto pelo Claude com login) ---------- */
+let DB=null,UID=null,ADM=false,comOn=true,cobOn=false,comAll=[],revAll=[],comX={},comR={},comL={},comLoaded=false,comFail=false,dirty=false,grpAll=[],gmAll=[],gmsgAll=[],orrAll=[];
+const op=(k,d)=>(k in S.op?S.op[k]:d)?'open':'';
+const dv=(k,d)=>k in S.dr?S.dr[k]:d;
+const ago=t=>{const m=Math.round((Date.now()-t)/6e4);if(m<1)return 'agora';if(m<60)return m+' min';const h=Math.round(m/60);if(h<24)return h+' h';const d=Math.round(h/24);return d<30?d+' d':new Date(t).toLocaleDateString('pt-BR')};
+const BAD=/https?:\/\/|www\.|\.com\b|\(?\d{2}\)?\s?9?\d{4}[-\s]?\d{4}/i;
+const KINDS={dica:'Dica',pergunta:'Pergunta',aviso:'Aviso de preço ou horário',companhia:'Quero companhia',papo:'Papo livre'};
+const flat=a=>a.flatMap(d=>(d.items||[]).map(i=>({...i,uid:d.uid,nick:d.nick||'Visitante'})));
+const posts=()=>flat(comAll).filter(i=>ADM||!comX[i.id]);
+const revs=()=>flat(revAll).filter(i=>ADM||!comX[i.id]);
+const revsOf=pid=>revs().filter(r=>r.pid===pid).sort((a,b)=>b.at-a.at);
+const fmt1=n=>n.toFixed(1).replace('.',',');
+function stat(pid){const L=revsOf(pid).filter(r=>!comX[r.id]);const n=L.length,avg=n?L.reduce((a,r)=>a+r.s,0)/n:0,dd=L.filter(r=>r.du==='sim'||r.du==='nao'),pg=L.filter(r=>r.pg>0).map(r=>r.pg).sort((a,b)=>a-b);
+ return{n,avg:n?fmt1(avg):'',duT:dd.length,duY:dd.filter(r=>r.du==='sim').length,pgn:pg.length,pm:pg.length?pg[Math.floor(pg.length/2)]:0}}
+const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+function ratingLine(pid){const t=stat(pid);return t.n?`<span class="m" aria-label="Nota ${t.avg} de 5, ${t.n} avaliações"><b style="color:var(--ink)">★ ${t.avg}</b> (${t.n})</span>`:'<span class="m">Sem avaliações ainda</span>'}
+const needLogin='<p class="m">Para participar é preciso entrar com a sua conta. Abra o Respiro pelo Claude e entre. No lançamento, o login será do próprio app.</p>';
+const nickField=()=>S.nick?'':`<label for="n_k">Seu apelido (aparece para todos)<input id="n_k" maxlength="20" data-dr="nick" value="${esc(dv('nick',''))}" placeholder="Ex.: Maria do Cerrado"></label><span class="m">Use um apelido, não o seu nome completo.</span>`;
+function takeNick(er){if(S.nick)return true;const v=String(dv('nick','')).trim();if(v.length<2||v.length>20||BAD.test(v)){er.textContent='Escolha um apelido de 2 a 20 letras, sem telefone nem link.';return false}S.nick=v;return true}
+function revCard(p){const st=stat(p.id),L=revsOf(p.id).slice(0,12),mine=revs().find(r=>r.pid===p.id&&r.uid===UID);const mes=[...Array(6)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);return[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})]});
+ const sc=dv('v_s',0);
+ const form=DB&&UID?`<form class="f" id="vf" data-pid="${p.id}" novalidate>
+<label class="row" style="gap:10px;font-weight:500"><input type="checkbox" data-dr="v_vis" ${dv('v_vis',false)?'checked':''} style="width:22px;height:22px"><span>Eu visitei este lugar</span></label>
+<div class="lab">Sua nota<div class="row" role="group" aria-label="Nota de 1 a 5">${[1,2,3,4,5].map(i=>`<button class="chip" type="button" data-star="${i}" aria-pressed="${sc===i}" aria-label="${i} estrela${i>1?'s':''}">${i} ★</button>`).join('')}</div></div>
+${p.du?`<label for="v_du">O day use funcionou como informado?<select id="v_du" data-dr="v_du"><option value="">Escolha</option>${[['sim','Sim'],['nao','Não'],['nf','Não fui ao day use']].map(([k,l])=>`<option value="${k}"${dv('v_du','')===k?' selected':''}>${l}</option>`).join('')}</select></label>`:''}
+<div class="two"><label for="v_pg">Quanto pagou por pessoa (R$, opcional)<input id="v_pg" inputmode="numeric" data-dr="v_pg" value="${esc(dv('v_pg',''))}" placeholder="Ex.: 80"></label><label for="v_mes">Mês da visita<select id="v_mes" data-dr="v_mes">${mes.map(([v,l])=>`<option value="${v}"${dv('v_mes',mes[0][0])===v?' selected':''}>${l}</option>`).join('')}</select></label></div>
+<label for="v_t">Conte como foi (opcional)<textarea id="v_t" maxlength="300" data-dr="v_t" style="border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-height:76px;width:100%" placeholder="Estrutura, limpeza, atendimento, o que você levaria...">${esc(dv('v_t',''))}</textarea></label>
+${nickField()}
+<label class="row" style="gap:10px;font-weight:500;align-items:flex-start"><input type="checkbox" data-dr="v_sh" ${dv('v_sh',true)?'checked':''} style="width:22px;height:22px;flex:none"><span>Enviar esta avaliação também ao próprio lugar, para ele ver e melhorar</span></label>
+<div class="err" id="ve" role="alert"></div><button class="btn sun" type="submit">${mine?'Atualizar minha avaliação':'Publicar avaliação'}</button>${mine?'<p class="m">Você já avaliou este lugar. Enviar de novo substitui a anterior.</p>':''}</form>`:needLogin;
+ return `<div class="card"><details data-k="rv" ${op('rv',true)}><summary><span>Avaliações dos visitantes ${st.n?`<span class="m">· ★ ${st.avg} (${st.n})</span>`:''}</span></summary><div class="dbody">
+${!DB?needLogin:!comLoaded&&!comFail?'<p class="m">Carregando avaliações…</p>':comFail?'<p class="m">Não consegui carregar as avaliações agora.</p>':''}
+${st.n?`${p.du&&st.duT?`<div class="kv"><span>Day use funcionou como informado</span><span>${st.duY} de ${st.duT} visitantes</span></div>`:''}${st.pgn?`<div class="kv"><span>Visitantes relataram pagar cerca de</span><span>${brl(st.pm)} por pessoa (${st.pgn} relato${st.pgn>1?'s':''})</span></div>`:''}`:(DB&&comLoaded?'<p class="m">Ninguém avaliou este lugar ainda. Seja a primeira pessoa.</p>':'')}
+${L.map(r=>`<div class="card" style="background:var(--bg)"><div class="row sp"><span><b aria-label="Nota ${r.s} de 5">${stars(r.s)}</b> <span class="m">${esc(r.nick)} · ${esc(r.mes||'')}</span></span><span class="m">${ago(r.at)}</span></div>${r.du==='sim'?'<span class="tag ok" style="justify-self:start">Day use funcionou</span>':r.du==='nao'?'<span class="tag warn" style="justify-self:start">Day use não funcionou como informado</span>':''}${r.pg?`<span class="m">Pagou ${brl(r.pg)} por pessoa</span>`:''}${r.txt?`<p>${esc(r.txt)}</p>`:''}${comX[r.id]?'<span class="tag warn" style="justify-self:start">Oculta pela moderação</span>':''}<div class="row"><button class="chip" data-act="like" data-id="${r.id}" aria-pressed="${!!(comL[r.id]&&comL[r.id].has(UID))}">Útil${comL[r.id]?' · '+comL[r.id].size:''}</button><button class="chip" data-act="rep" data-id="${r.id}">Denunciar</button>${r.uid===UID?`<button class="chip" data-act="delr" data-id="${r.id}">Apagar</button>`:''}${ADM?`<button class="chip" data-act="hide" data-id="${r.id}">${comX[r.id]?'Mostrar':'Ocultar'}</button>`:''}</div></div>`).join('')}
+</div></details></div>
+<div class="card"><details data-k="rvf" ${op('rvf',false)}><summary>Avaliar este lugar</summary><div class="dbody"><p class="m">Só avalie se você visitou. Seu relato ajuda os outros a saber se o day use e o preço estão certos.</p>${form}<button class="btn gh" type="button" data-act="siteg">Deixar também no site ou no Google do lugar</button><p class="m">No app de verdade, este botão leva ao canal de avaliação do próprio estabelecimento.</p></div></details></div>`}
+function comPlace(p){const L=posts().filter(x=>x.pid===p.id&&!x.re).sort((a,b)=>b.at-a.at).slice(0,5);return `<div class="card"><details data-k="cp" ${op('cp',false)}><summary>Na comunidade sobre este lugar ${L.length?`<span class="m">· ${L.length}</span>`:''}</summary><div class="dbody">${groups().filter(g=>g.pid===p.id&&grpAtivo(g)).map(grpTile).join('')}${L.map(postCard).join('')||'<p class="m">Ninguém comentou este lugar ainda.</p>'}<button class="btn" data-act="postpl" data-id="${p.id}">Escrever sobre este lugar</button></div></details></div>`}
+function ownRev(p){const L=revsOf(p.id).filter(r=>r.sh);return `<details data-k="own_${p.id}" ${op('own_'+p.id,false)}><summary>Avaliações enviadas a este lugar ${L.length?'· '+L.length:''}</summary><div class="dbody">${L.map(r=>`<div class="card"><b>${stars(r.s)}</b> <span class="m">${esc(r.nick)}</span>${r.txt?`<p>${esc(r.txt)}</p>`:''}</div>`).join('')||'<p class="m">Ainda não há avaliações enviadas a este lugar.</p>'}<p class="m">No app de verdade, só o dono conferido vê este painel e pode responder.</p></div></details>`}
+function postCard(p){const rp=posts().filter(x=>x.re===p.id).sort((a,b)=>a.at-b.at),pl=p.pid?byId(p.pid):null;
+ return `<div class="card pop"><div class="row sp"><span class="row" style="gap:6px"><b>${esc(p.nick)}</b><span class="tag">${KINDS[p.k]||'Publicação'}</span></span><span class="m">${ago(p.at)}</span></div>${pl?`<button class="chip" data-open="${pl.id}"><span class="dot" style="background:${col(pl.t)}"></span>${esc(pl.n.replace(' (exemplo)',''))}</button>`:''}<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.txt)}</p>${p.g&&gById(p.g)?`<p class="m">Organizador: ${orgLine(p.uid)}</p><div class="row"><button class="btn gh" data-grp="${p.g}">Ver grupo e entrar</button><button class="chip" data-prf="${p.uid}">Ver histórico de ${esc(p.nick)}</button></div>`:''}${comX[p.id]?'<span class="tag warn" style="justify-self:start">Oculta pela moderação</span>':''}
+<div class="row"><button class="chip" data-act="like" data-id="${p.id}" aria-pressed="${!!(comL[p.id]&&comL[p.id].has(UID))}">Curtir${comL[p.id]?' · '+comL[p.id].size:''}</button><button class="chip" data-act="rpto" data-id="${p.id}">Responder</button><button class="chip" data-act="rep" data-id="${p.id}">Denunciar</button>${p.uid===UID?`<button class="chip" data-act="delp" data-id="${p.id}">Apagar</button>`:''}${ADM?`<button class="chip" data-act="hide" data-id="${p.id}">${comX[p.id]?'Mostrar':'Ocultar'}</button>`:''}</div>
+${rp.length?`<details data-k="rp_${p.id}" ${op('rp_'+p.id,true)}><summary>Respostas (${rp.length})</summary><div class="dbody">${rp.map(r=>`<div class="card" style="background:var(--bg)"><div class="row sp"><b>${esc(r.nick)}</b><span class="m">${ago(r.at)}</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(r.txt)}</p>${comX[r.id]?'<span class="tag warn" style="justify-self:start">Oculta pela moderação</span>':''}<div class="row"><button class="chip" data-act="rep" data-id="${r.id}">Denunciar</button>${r.uid===UID?`<button class="chip" data-act="delp" data-id="${r.id}">Apagar</button>`:''}${ADM?`<button class="chip" data-act="hide" data-id="${r.id}">${comX[r.id]?'Mostrar':'Ocultar'}</button>`:''}</div></div>`).join('')}</div></details>`:''}
+${S.rp===p.id&&DB&&UID?`<form class="f" id="rpf" data-pid="${p.id}" novalidate><label for="rp_t">Sua resposta<textarea id="rp_t" maxlength="300" data-dr="rp_t" style="border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-height:64px;width:100%">${esc(dv('rp_t',''))}</textarea></label>${nickField()}<div class="err" id="rpe" role="alert"></div><button class="btn" type="submit">Enviar resposta</button></form>`:''}</div>`}
+function viewComPub(){
+ if(!DB)return `<div class="card pop"><h2>Comunidade</h2><p>Aqui os visitantes trocam dicas, tiram dúvidas, avisam sobre preço e horário e combinam passeios em grupo.</p>${needLogin}</div>`;
+ if(!comOn&&!ADM)return '<div class="card"><h2>Comunidade</h2><p class="m">A comunidade ainda não está aberta. Volte em breve.</p></div>';
+ const k=S.ck,L=posts().filter(x=>!x.re&&(k==='tudo'||x.k===k)).sort((a,b)=>b.at-a.at).slice(0,40);
+ const pl=dv('x_p','');
+ return `<div class="card pop"><h2>Comunidade</h2>${UID?ptsHtml(UID,true):''}<p class="m">Dicas, dúvidas e avisos de quem já foi. Para reservar ou ver pacotes, fale com o próprio lugar. Aqui não se vende nada.</p>
+${ADM?`<div class="card" style="background:var(--soft)"><div class="row sp"><b>Moderação</b><button class="chip" data-act="comtog">${comOn?'Desligar a comunidade':'Ligar a comunidade'}</button></div><p class="m">Você vê publicações ocultas e pode ocultar ou mostrar qualquer uma.</p></div>`:''}
+<details data-k="cmp" ${op('cmp',false)}><summary>Escrever na comunidade</summary>${UID?`<form class="f dbody" id="pf" novalidate><label for="x_k">O que você quer publicar<select id="x_k" data-dr="x_k">${Object.entries(KINDS).map(([v,l])=>`<option value="${v}"${dv('x_k','dica')===v?' selected':''}>${l}</option>`).join('')}</select></label>
+<label for="x_p">Sobre qual lugar (opcional, obrigatório no aviso)<select id="x_p" data-dr="x_p"><option value="">Nenhum lugar</option>${all().map(p=>`<option value="${p.id}"${pl===p.id?' selected':''}>${esc(p.n.replace(' (exemplo)',''))}</option>`).join('')}</select></label>
+<label for="x_t">Sua mensagem<textarea id="x_t" maxlength="400" data-dr="x_t" style="border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-height:90px;width:100%" placeholder="Ex.: o day use aqui agora só abre sábado e domingo.">${esc(dv('x_t',''))}</textarea></label>${nickField()}
+<p class="m">Não publique telefone, link nem dados de outras pessoas. Use o contato do lugar.</p><div class="err" id="xe" role="alert"></div><button class="btn sun" type="submit">Publicar</button></form>`:`<div class="dbody">${needLogin}</div>`}</details></div>
+<div class="row">${[['tudo','Tudo'],...Object.entries(KINDS)].map(([v,l])=>`<button class="chip" data-ck="${v}" aria-pressed="${k===v}">${l}</button>`).join('')}</div>
+${!comLoaded&&!comFail?'<div class="card"><p class="m">Carregando a comunidade…</p></div>':comFail?'<div class="card"><p class="m">Não consegui carregar a comunidade agora. Tente de novo mais tarde.</p></div>':L.length?L.map(postCard).join(''):'<div class="card"><b>Ninguém publicou ainda</b><p class="m">Seja a primeira pessoa: conte como foi um passeio ou pergunte sobre um lugar.</p></div>'}`}
+/* escrita */
+/* ---------- grupos de passeio e conversa ---------- */
+function viewCom(){if(!DB||(!comOn&&!ADM))return viewComPub();return `<div class="row"><button class="chip" data-cs="pub" aria-pressed="${S.cs!=='grp'}">Publicações</button><button class="chip" data-cs="grp" aria-pressed="${S.cs==='grp'}">Grupos de passeio</button></div>`+(S.cs==='grp'?viewGrupos():viewComPub())}
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fmtDate=d=>d?d.split('-').reverse().join('/'):'';
+const groups=()=>flat(grpAll).filter(g=>ADM||!comX[g.id]);
+const gById=id=>flat(grpAll).find(g=>g.id===id);
+const grpOk=(g,u)=>!(g.rj||[]).includes(u)&&(g.uid===u||!g.apv||(g.ap||[]).includes(u));
+const membersOf=id=>{const g=gById(id);return g?gmAll.filter(m=>m.ids.includes(id)&&grpOk(g,m.uid)):[]};
+const pendOf=id=>{const g=gById(id);return g&&g.apv?gmAll.filter(m=>m.ids.includes(id)&&m.uid!==g.uid&&!(g.ap||[]).includes(m.uid)&&!(g.rj||[]).includes(m.uid)):[]};
+const isPend=id=>!!UID&&pendOf(id).some(m=>m.uid===UID);
+const isRej=id=>{const g=gById(id);return !!(UID&&g&&(g.rj||[]).includes(UID)&&gmAll.some(m=>m.uid===UID&&m.ids.includes(id)))};
+const nickOf=u=>(gmAll.find(m=>m.uid===u)||{}).nick||(flat(grpAll).find(g=>g.uid===u)||{}).nick||'Pessoa';
+const isMem=id=>!!UID&&membersOf(id).some(m=>m.uid===UID);
+const msgsOf=id=>flat(gmsgAll).filter(m=>m.g===id&&(ADM||!comX[m.id])).sort((a,b)=>a.at-b.at);
+const grpAtivo=g=>!g.dt||g.dt>=todayStr();
+function grpTile(g){const n=membersOf(g.id).length,pl=g.pid?byId(g.pid):null,eu=isMem(g.id);
+ return `<button class="tile" data-grp="${g.id}"><span class="row sp"><span class="row" style="gap:6px">${eu&&grpEncerrado(g)&&faltaAv(g)?`<span class="tag sun">Faltam ${faltaAv(g)} avaliações</span>`:''}${eu?'<span class="tag ok">Você está</span>':n>=g.max?'<span class="tag warn">Lotado</span>':'<span class="tag">Aberto</span>'}</span><span class="b" style="font-variant-numeric:tabular-nums">${n}/${g.max}</span></span><span class="b" style="font-size:16.5px">${esc(g.t)}</span><span class="m">${pl?esc(pl.n.replace(' (exemplo)','')):'Lugar a combinar'} · ${g.dt?fmtDate(g.dt):'data a combinar'}${g.hr?' às '+esc(g.hr):''}</span><span class="m">${esc(g.nick)} · ${orgLine(g.uid)}</span></button>`}
+function viewGrupos(){const MY=groups().filter(g=>isMem(g.id)||isPend(g.id)).sort((a,b)=>(b.dt||'9')<(a.dt||'9')?-1:1),L=groups().filter(g=>(ADM||grpAtivo(g))&&!MY.some(x=>x.id===g.id)).sort((a,b)=>(a.dt||'9')<(b.dt||'9')?-1:1),pl=dv('g_p','');
+ return `<div class="card pop"><h2>Grupos de passeio</h2><p class="m">Quer ir a um lugar acompanhado? Crie um grupo, combine o dia e converse com quem entrar. Quem tiver interesse entra e a conversa fica no grupo.</p>
+<details data-k="ng" ${op('ng',false)}><summary>Criar um grupo</summary>${UID?`<form class="f dbody" id="ngf" novalidate><label for="g_tt">Nome do grupo<input id="g_tt" maxlength="60" data-dr="g_tt" value="${esc(dv('g_tt',''))}" placeholder="Ex.: Day use no sábado com crianças"></label>
+<label for="g_p">Lugar (opcional)<select id="g_p" data-dr="g_p"><option value="">Lugar a combinar</option>${all().map(p=>`<option value="${p.id}"${pl===p.id?' selected':''}>${esc(p.n.replace(' (exemplo)',''))}</option>`).join('')}</select></label>
+<div class="two"><label for="g_d">Dia (opcional)<input id="g_d" type="date" min="${todayStr()}" data-dr="g_d" value="${esc(dv('g_d',''))}"></label><label for="g_h">Horário (opcional)<input id="g_h" maxlength="12" data-dr="g_h" value="${esc(dv('g_h',''))}" placeholder="Ex.: 9h"></label><label for="g_m">Vagas no grupo<select id="g_m" data-dr="g_m">${[3,4,5,6,8,10,15,20].map(x=>`<option${String(dv('g_m',6))===String(x)?' selected':''}>${x}</option>`).join('')}</select></label></div>
+<label for="g_ds">Conte o plano (opcional)<textarea id="g_ds" maxlength="300" data-dr="g_ds" style="border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-height:76px;width:100%" placeholder="Ex.: saímos de carro às 8h, cada um paga o seu day use.">${esc(dv('g_ds',''))}</textarea></label>${nickField()}
+<label class="row" style="gap:10px;font-weight:500;align-items:flex-start"><input type="checkbox" data-dr="g_inv" ${dv('g_inv',true)?'checked':''} style="width:22px;height:22px;flex:none"><span>Publicar também um convite "quero companhia" na comunidade</span></label>
+<label class="row" style="gap:10px;font-weight:500;align-items:flex-start"><input type="checkbox" data-dr="g_apv" ${dv('g_apv',true)?'checked':''} style="width:22px;height:22px;flex:none"><span>Eu aprovo cada pessoa antes de entrar (recomendado). Você vê o histórico dela antes de aceitar.</span></label>
+<p class="m">Não coloque telefone, link nem endereço de casa. Combinem o encontro num lugar público.</p><div class="err" id="ge" role="alert"></div><button class="btn sun" type="submit">Criar grupo</button></form>`:`<div class="dbody">${needLogin}</div>`}</details></div>
+${MY.length?`<div class="card"><details data-k="my" ${op('my',true)}><summary>Meus grupos (${MY.length})</summary><div class="dbody"><div class="grid">${MY.map(grpTile).join('')}</div><p class="m">Depois do passeio, avalie o organizador (ou quem foi, se você organizou) dentro do grupo.</p></div></details></div>`:''}
+${!comLoaded&&!comFail?'<div class="card"><p class="m">Carregando os grupos…</p></div>':L.length?`<div class="grid">${L.map(grpTile).join('')}</div>`:'<div class="card"><b>Nenhum grupo aberto</b><p class="m">Crie o primeiro: escolha um lugar, o dia e chame quem quiser ir junto.</p></div>'}`}
+function gmsgHtml(L){return L.length?L.map(m=>`<div class="card" style="background:var(--bg);gap:4px;${m.uid===UID?'border-color:var(--pri)':''}"><div class="row sp"><b>${esc(m.nick)}${m.uid===UID?' (você)':''}</b><span class="m">${ago(m.at)}</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(m.txt)}</p>${comX[m.id]?'<span class="tag warn" style="justify-self:start">Oculta pela moderação</span>':''}<div class="row"><button class="chip" style="min-height:32px;font-size:12.5px" data-act="rep" data-id="${m.id}">Denunciar</button>${m.uid===UID?`<button class="chip" style="min-height:32px;font-size:12.5px" data-act="delm" data-id="${m.id}">Apagar</button>`:''}${ADM?`<button class="chip" style="min-height:32px;font-size:12.5px" data-act="hide" data-id="${m.id}">${comX[m.id]?'Mostrar':'Ocultar'}</button>`:''}</div></div>`).join(''):'<p class="m">Ninguém falou ainda. Diga um oi!</p>'}
+function viewGrp(){const g=gById(S.id);if(!g||(!ADM&&comX[g.id]))return '<div class="card"><b>Grupo não encontrado</b><p class="m">Ele pode ter sido apagado.</p></div>';
+ const ms=membersOf(g.id),mem=isMem(g.id),pend=isPend(g.id),rej=isRej(g.id),full=ms.length>=g.max,own=g.uid===UID,pl=g.pid?byId(g.pid):null,pd=own?pendOf(g.id):[],enc=grpEncerrado(g);
+ return `<div class="card pop"><div class="row sp"><span class="tag ${grpAtivo(g)?'ok':'warn'}">${grpAtivo(g)?'Aberto':'Já passou'}</span><span class="b" style="font-variant-numeric:tabular-nums">${ms.length}/${g.max} pessoas</span></div><h2>${esc(g.t)}</h2>
+<div class="kv"><span>Lugar</span><span>${pl?`<button class="chip" data-open="${pl.id}">${esc(pl.n.replace(' (exemplo)',''))}</button>`:'A combinar'}</span></div><div class="kv"><span>Quando</span><span>${g.dt?fmtDate(g.dt):'A combinar'}${g.hr?' às '+esc(g.hr):''}</span></div><div class="kv"><span>Organizador</span><span><button class="chip" data-prf="${g.uid}">${esc(g.nick)}</button></span></div><p class="m">${orgLine(g.uid,'org')}. Toque no nome para ver o histórico.</p>
+${g.apv?'<span class="tag" style="justify-self:start">O organizador aprova quem entra</span>':''}
+${g.ds?`<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(g.ds)}</p>`:''}
+${!UID?needLogin:!S.nick&&!mem?`<div class="f">${nickField()}<div class="err" id="ge" role="alert"></div><button class="btn gh" data-act="savenick">Salvar apelido</button></div>`:''}
+<div class="row">${UID&&(S.nick||mem)?(mem?(own?'':`<button class="btn gh" data-act="leave" data-id="${g.id}">Sair do grupo</button>`):pend?`<span class="tag warn">Aguardando aprovação do organizador</span><button class="btn gh" data-act="leave" data-id="${g.id}">Cancelar pedido</button>`:rej?'<span class="tag warn">O organizador não aceitou seu pedido</span>':`<button class="btn sun" data-act="join" data-id="${g.id}" ${full?'disabled':''}>${full?'Grupo lotado':g.apv?'Pedir para entrar':'Entrar no grupo'}</button>`):''}${own?`<button class="btn gh" data-act="delg" data-id="${g.id}">Apagar grupo</button>`:''}<button class="chip" data-act="rep" data-id="${g.id}">Denunciar</button>${ADM?`<button class="chip" data-act="hide" data-id="${g.id}">${comX[g.id]?'Mostrar':'Ocultar'}</button>`:''}</div></div>
+${own&&g.apv?`<div class="card"><details data-k="pd" ${op('pd',true)}><summary>Pedidos para entrar (${pd.length})</summary><div class="dbody">${pd.map(m=>`<div class="card" style="background:var(--bg)"><div class="row sp"><button class="chip" data-prf="${m.uid}">${esc(m.nick)}</button><span class="m">${orgLine(m.uid,'part')}</span></div><div class="row"><button class="btn" data-act="acc" data-id="${g.id}" data-u="${m.uid}">Aceitar</button><button class="btn gh" data-act="rej" data-id="${g.id}" data-u="${m.uid}">Recusar</button></div></div>`).join('')||'<p class="m">Nenhum pedido agora.</p>'}<p class="m">Toque no nome para ver o histórico da pessoa antes de decidir.</p></div></details></div>`:''}
+<div class="card"><details data-k="gq" ${op('gq',true)}><summary>Quem vai (${ms.length})</summary><div class="dbody"><div class="row">${ms.map(m=>`<button class="chip" data-prf="${m.uid}">${esc(m.nick)}${m.uid===g.uid?' · organiza':''}</button>`).join('')||'<span class="m">Ninguém entrou ainda.</span>'}</div><p class="m">Toque numa pessoa para ver o histórico dela.${mem&&enc?' O passeio passou: avalie quem foi pelo perfil de cada um. Quanto mais avaliações, mais seguro fica para todos.':''}</p></div></details></div>
+${rateCard(g,mem,own)}
+<div class="card"><b>Conversa do grupo</b>${mem?`<div id="gmsgs" style="display:grid;gap:8px;max-height:340px;overflow-y:auto;align-content:start">${gmsgHtml(msgsOf(g.id))}</div><form class="row" id="gcf" novalidate style="flex-wrap:nowrap"><label for="g_t" style="position:absolute;left:-9999px">Mensagem</label><input id="g_t" maxlength="300" data-dr="g_t" value="${esc(dv('g_t',''))}" placeholder="Escreva uma mensagem" autocomplete="off" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)"><button class="btn" type="submit">Enviar</button></form><div class="err" id="gme" role="alert"></div><p class="m">Não passe telefone, link nem endereço. A conversa é para combinar o passeio e pode ser vista pela moderação.</p>`:'<p class="m">Entre no grupo para ver e escrever na conversa.</p>'}</div>`}
+
+/* ---------- pontos e nível (calculados das contribuições visíveis) ---------- */
+const NIV=[[0,'Visitante'],[30,'Explorador'],[100,'Guia'],[250,'Guardião']];
+const LIM=30,dia=t=>{const d=new Date(t);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()};
+function ptsOf(u){const c=(a)=>{const d=a.find(x=>x.uid===u);return d?(d.items||[]).filter(i=>!comX[i.id]):[]};
+ const R=c(revAll),O=c(orrAll),T=c(comAll).filter(i=>!i.re&&(i.k==='dica'||i.k==='aviso')),ev=[...R.map(i=>[i.at,10]),...O.map(i=>[i.at,5]),...T.map(i=>[i.at,3])],byDay={};
+ ev.forEach(([t,p])=>{const k=dia(t||0);byDay[k]=(byDay[k]||0)+p});let pts=0,cortado=false;Object.values(byDay).forEach(v=>{pts+=Math.min(v,LIM);if(v>LIM)cortado=true});
+ return{pts,hoje:Math.min(byDay[dia(Date.now())]||0,LIM),cortado,rv:R.length,or:O.length,tp:T.length}}
+function nivOf(p){let i=0;NIV.forEach((n,k)=>{if(p>=n[0])i=k});const nx=NIV[i+1];return{nome:NIV[i][1],falta:nx?nx[0]-p:0,prox:nx?nx[1]:''}}
+function ptsHtml(u,self){const t=ptsOf(u),n=nivOf(t.pts);return `<div class="row"><span class="tag sun">${n.nome}</span><span class="tag">${t.pts} pontos</span><span class="m">${t.rv} avaliaç${t.rv===1?'ão':'ões'} de lugares · ${t.or} de pessoas · ${t.tp} dica${t.tp===1?'':'s'}</span></div>${self?`<p class="m">${n.falta?`Faltam ${n.falta} pontos para ${n.prox}. `:'Você chegou ao nível mais alto. '}Avaliação de lugar vale 10 pontos, avaliação de pessoa vale 5 e dica ou aviso vale 3. O limite é de ${LIM} pontos por dia (hoje você tem ${t.hoje}). Os prêmios ainda serão definidos.</p>`:''}`}
+/* ---------- reputação de quem organiza e de quem participa ---------- */
+const TAGSO=['Pontual','Organizado','Simpático','Passou segurança','Mudou o combinado','Não me senti à vontade'],TAGSP=['Pontual','Educado','Simpático','Respeitou o combinado','Faltou sem avisar','Não me senti à vontade'],NEGT=['Mudou o combinado','Não me senti à vontade','Faltou sem avisar'];
+const orrs=()=>flat(orrAll).filter(r=>ADM||!comX[r.id]);
+const orrOf=(uid,role)=>orrs().filter(r=>r.to===uid&&(r.role||'org')===role).sort((a,b)=>b.at-a.at);
+function ostat(uid,role){const L=orrOf(uid,role).filter(r=>!comX[r.id]),n=L.length,avg=n?L.reduce((a,r)=>a+r.s,0)/n:0,tc={};L.forEach(r=>(r.tg||[]).forEach(t=>{tc[t]=(tc[t]||0)+1}));let total=0,done=0;const past=g=>g.dt&&g.dt<todayStr()&&membersOf(g.id).length>=2;
+ if(role==='org'){const m=flat(grpAll).filter(g=>g.uid===uid&&!comX[g.id]);total=m.length;done=m.filter(past).length}else{const m=flat(grpAll).filter(g=>g.uid!==uid&&!comX[g.id]&&membersOf(g.id).some(x=>x.uid===uid));total=m.length;done=m.filter(past).length}
+ return{n,avg:n?fmt1(avg):'',tc,total,done}}
+function orgLine(uid,role){role=role||'org';const t=ostat(uid,role),w=role==='org'?(t.done===1?'passeio realizado':'passeios realizados'):(t.done===1?'passeio como participante':'passeios como participante');return t.n?`<b style="color:var(--ink)">★ ${t.avg}</b> (${t.n}) · ${t.done} ${w}`:(role==='org'?'Organizador novo, sem avaliações ainda':'Participante novo, sem avaliações ainda')}
+const faltaAv=g=>{const mine=orrs().filter(r=>r.uid===UID&&r.g===g.id).map(r=>r.to);return membersOf(g.id).filter(m=>m.uid!==UID&&!mine.includes(m.uid)).length};
+const grpEncerrado=g=>g.dt?g.dt<todayStr():Date.now()-g.at>3*864e5;
+function rateForm(g,to,role){const my=orrs().find(r=>r.uid===UID&&r.g===g.id&&r.to===to),k=g.id+'_'+to;
+ if(my&&!(('o_s'+k) in S.dr)){S.dr['o_s'+k]=my.s;S.dr['o_tg'+k]=(my.tg||[]).slice();S.dr['o_t'+k]=my.txt||''}
+ const sc=dv('o_s'+k,0),tg=dv('o_tg'+k,[]),TG=role==='org'?TAGSO:TAGSP;
+ return `<details data-k="or_${k}" ${op('or_'+k,!my)}><summary>${my?'Sua avaliação':role==='org'?'Avaliar o organizador':'Avaliar esta pessoa'} · ${esc(g.t)}</summary><form class="f dbody" id="orf_${k}" data-g="${g.id}" data-to="${to}" data-role="${role}" novalidate><p class="m">Avalie só o que você viveu, com respeito. Avaliação ofensiva é removida.</p>
+<div class="lab">Sua nota<div class="row" role="group" aria-label="Nota de 1 a 5">${[1,2,3,4,5].map(i=>`<button class="chip" type="button" data-ostar="${i}" data-k2="${k}" aria-pressed="${sc===i}" aria-label="${i} estrela${i>1?'s':''}">${i} ★</button>`).join('')}</div></div>
+<div class="lab">Como foi (até 3)<div class="row">${TG.map((t,i)=>`<button class="chip" type="button" data-otag="${i}" data-k2="${k}" data-orole="${role}" aria-pressed="${tg.includes(t)}">${t}</button>`).join('')}</div></div>
+<label for="o_t_${k}">Quer contar mais? (opcional)<textarea id="o_t_${k}" maxlength="300" data-dr="o_t${k}" style="border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-height:76px;width:100%">${esc(dv('o_t'+k,''))}</textarea></label>
+${nickField()}<div class="err" id="oe_${k}" role="alert"></div><button class="btn sun" type="submit">${my?'Atualizar avaliação':'Publicar avaliação'}</button></form></details>`}
+function rateCard(g,mem,own){if(!mem||own||!UID)return '';if(!grpEncerrado(g))return '<div class="card"><b>Avaliar o organizador</b><p class="m">Depois do passeio, quem participou pode avaliar quem organizou, e o organizador avalia quem foi. Isso ajuda as próximas pessoas a decidir.</p></div>';return `<div class="card">${rateForm(g,g.uid,'org')}</div>`}
+function viewPrf(){const uid=S.id,nick=nickOf(uid),a=ostat(uid,'org'),b=ostat(uid,'part'),L=[...orrOf(uid,'org'),...orrOf(uid,'part')].sort((x,y)=>y.at-x.at),G=groups().filter(g=>g.uid===uid&&grpAtivo(g)),ctx=[];
+ flat(grpAll).forEach(g=>{if(comX[g.id]||!grpEncerrado(g)||!UID||uid===UID)return;if(!isMem(g.id)||!membersOf(g.id).some(m=>m.uid===uid))return;ctx.push([g,g.uid===uid?'org':'part'])});
+ const blk=(t,tit,w1,w2)=>`<div class="card"><b>${tit}</b><span class="big">${t.n?'★ '+t.avg:'—'}</span><span class="m">${t.n} avaliaç${t.n===1?'ão':'ões'} · ${t.done} ${w1} · ${t.total} ${w2}</span>${Object.keys(t.tc).length?`<div class="row">${Object.entries(t.tc).sort((x,y)=>y[1]-x[1]).slice(0,4).map(([k,n])=>`<span class="tag ${NEGT.includes(k)?'warn':'ok'}">${esc(k)} · ${n}</span>`).join('')}</div>`:''}</div>`;
+ return `<div class="card pop"><h2>${esc(nick)}</h2>${ptsHtml(uid,false)}<p class="m">Histórico em passeios em grupo. Os dados vêm dos próprios participantes e não são conferidos pelo app. Passeio realizado é grupo com data passada e pelo menos 2 pessoas.</p>
+<div class="grid">${blk(a,'Como organizador','realizados','grupos criados')}${blk(b,'Como participante','passeios','grupos que entrou')}</div></div>
+${ctx.length?`<div class="card"><b>Avaliar ${esc(nick)}</b>${ctx.map(([g,r])=>rateForm(g,uid,r)).join('')}</div>`:''}
+<div class="card"><details data-k="pr" ${op('pr',true)}><summary>Avaliações recebidas (${L.length})</summary><div class="dbody">${L.map(r=>`<div class="card" style="background:var(--bg);gap:4px"><div class="row sp"><span><b aria-label="Nota ${r.s} de 5">${stars(r.s)}</b> <span class="m">${esc(r.nick)}</span></span><span class="m">${ago(r.at)}</span></div><span class="m">Como ${(r.role||'org')==='org'?'organizador':'participante'}${r.gt?' · grupo: '+esc(r.gt):''}</span>${(r.tg||[]).length?`<div class="row">${r.tg.map(x=>`<span class="tag ${NEGT.includes(x)?'warn':''}">${esc(x)}</span>`).join('')}</div>`:''}${r.txt?`<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(r.txt)}</p>`:''}${comX[r.id]?'<span class="tag warn" style="justify-self:start">Oculta pela moderação</span>':''}<div class="row"><button class="chip" style="min-height:32px;font-size:12.5px" data-act="rep" data-id="${r.id}">Denunciar</button>${r.uid===UID?`<button class="chip" style="min-height:32px;font-size:12.5px" data-act="delo" data-id="${r.id}">Apagar</button>`:''}${ADM?`<button class="chip" style="min-height:32px;font-size:12.5px" data-act="hide" data-id="${r.id}">${comX[r.id]?'Mostrar':'Ocultar'}</button>`:''}</div></div>`).join('')||'<p class="m">Nenhuma avaliação ainda.</p>'}</div></details></div>
+${G.length?`<div class="card"><b>Grupos abertos de ${esc(nick)}</b><div class="grid">${G.map(grpTile).join('')}</div></div>`:''}`}
+async function updGm(mut){const ref=DB.collection('gm').doc(UID),d=await ref.get(),cur=d.exists?d.data():{};await ref.set({nick:S.nick,ids:mut((cur.ids||[]).slice()).slice(-60)})}
+
+async function updOwn(coll,mut,max){const ref=DB.collection(coll).doc(UID),d=await ref.get(),cur=d.exists?d.data():{};const items=mut((cur.items||[]).slice());await ref.set({nick:S.nick,items:items.slice(-max)})}
+async function updReact(mut){const ref=DB.collection('comr').doc(UID),d=await ref.get(),cur=d.exists?d.data():{};const o=mut({ids:(cur.ids||[]).slice(),lk:(cur.lk||[]).slice()});await ref.set({ids:o.ids.slice(-100),lk:o.lk.slice(-300)})}
+const busy=()=>{if(Date.now()-S.last<8000){toast('Espere alguns segundos para publicar de novo.');return true}return false};
+const nid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+function refresh(){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){if(S.v==='grp'&&a.id==='g_t'&&$('#gmsgs')){const g=gById(S.id);if(g){const el=$('#gmsgs'),b=el.scrollHeight-el.scrollTop-el.clientHeight<40;el.innerHTML=gmsgHtml(msgsOf(g.id));if(b)el.scrollTop=el.scrollHeight}return}dirty=true;return}render()}
+document.addEventListener('focusout',()=>{if(dirty)setTimeout(()=>{const a=document.activeElement;if(!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){dirty=false;render()}},50)});
+async function initDb(){let cl=null;try{cl=typeof claude!=='undefined'?claude:null}catch(_){}if(!cl)return;
+ try{const u=await cl.use('user');if(u){ADM=!!(await u.canEdit());UID=await u.id()}}catch(_){}
+ try{DB=await cl.use('db')}catch(_){DB=null}
+ if(!DB){render();return}
+ const tm=setTimeout(()=>{if(!comLoaded){comFail=true;render()}},10000);
+ try{DB.collection('com').onSnapshot(sn=>{comAll=sn.docs.map(d=>({uid:d.id,nick:d.data().nick||'',items:d.data().items||[]}));comLoaded=true;comFail=false;clearTimeout(tm);refresh()},()=>{comFail=true;render()});
+  DB.collection('rev').onSnapshot(sn=>{revAll=sn.docs.map(d=>({uid:d.id,nick:d.data().nick||'',items:d.data().items||[]}));refresh()},()=>{});
+  DB.collection('comx').onSnapshot(sn=>{comX={};sn.docs.forEach(d=>{comX[d.id]=1});refresh()},()=>{});
+  DB.collection('comr').onSnapshot(sn=>{comR={};comL={};sn.docs.forEach(d=>{(d.data().ids||[]).forEach(id=>{(comR[id]=comR[id]||new Set()).add(d.id)});(d.data().lk||[]).forEach(id=>{(comL[id]=comL[id]||new Set()).add(d.id)})});refresh()},()=>{});
+  DB.collection('grp').onSnapshot(sn=>{grpAll=sn.docs.map(d=>({uid:d.id,nick:d.data().nick||'',items:d.data().items||[]}));refresh()},()=>{});
+  DB.collection('orr').onSnapshot(sn=>{orrAll=sn.docs.map(d=>({uid:d.id,nick:d.data().nick||'',items:d.data().items||[]}));refresh()},()=>{});
+  DB.collection('gm').onSnapshot(sn=>{gmAll=sn.docs.map(d=>({uid:d.id,nick:d.data().nick||'Visitante',ids:d.data().ids||[]}));refresh()},()=>{});
+  DB.collection('gmsg').onSnapshot(sn=>{gmsgAll=sn.docs.map(d=>({uid:d.id,nick:d.data().nick||'',items:d.data().items||[]}));refresh()},()=>{});
+  if(UID)tkInit();if(ADM)DB.collection('vis').onSnapshot(sn=>{visAll=sn.docs.map(d=>d.data());visLoaded=true;if(S.v==='adm')refresh()},()=>{visLoaded=true});
+  DB.doc('config/com').onSnapshot(d=>{comOn=d.exists?d.data().on!==false:true;cobOn=d.exists?d.data().cob===true:false;refresh()},()=>{})}catch(_){comFail=true}
+ render()}
+function render(){const v=S.v;$('#tt').textContent=TITLES[v]||'Respiro';$('#bk').disabled=!S.hist.length&&v==='ex';
+ $('#nav').innerHTML=[['ex','Explorar'],['com','Comunidade'],['fav','Favoritos'],['cad','Cadastre'],...(ADM?[['adm','Painel']]:[])].map(([k,l])=>`<button data-go="${k}" ${(v===k||(v==='det'&&k==='ex')||(v==='grp'&&k==='com')||(v==='prf'&&k==='com'))?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>${l}</button>`).join('');
+ $('#app').innerHTML=v==='det'?viewDet():v==='grp'?viewGrp():v==='prf'?viewPrf():v==='com'?viewCom():v==='fav'?viewFav():v==='cad'?viewCad():v==='adm'&&ADM?viewAdm():viewEx();save();const gm=$('#gmsgs');if(gm)gm.scrollTop=gm.scrollHeight}
+/* ---------- estatísticas: cada pessoa grava só o próprio resumo; só o administrador lê o total ---------- */
+const dkey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const ORIGENS={direto:'Link direto do app',whatsapp:'WhatsApp',instagram:'Instagram',facebook:'Facebook',google:'Google (busca)',site:'Site',tiktok:'TikTok',outro:'Outro site'};
+function origem(){let q='';try{q=(new URLSearchParams(location.search).get('origem')||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20)}catch(_){}if(q)return q;let r='';try{r=document.referrer||''}catch(_){}
+ if(!r||/claude\.ai/.test(r))return 'direto';if(/whatsapp|wa\.me/.test(r))return 'whatsapp';if(/instagram/.test(r))return 'instagram';if(/facebook|fb\./.test(r))return 'facebook';if(/google\./.test(r))return 'google';if(/tiktok/.test(r))return 'tiktok';return 'outro'}
+const modo=()=>{try{return(matchMedia('(display-mode: standalone)').matches||navigator.standalone)?'app':'nav'}catch(_){return 'nav'}};
+const aparelho=()=>/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||'')?'cel':'pc';
+let T=null,tkQ=[],tkT=null,tkBusy=false,visAll=[],visLoaded=false;
+function tk(fn){if(!DB||!UID)return;tkQ.push(fn);if(T)tkFlush()}
+function tkView(id){const p=byId(id);tk(T=>{T.pv[id]=(T.pv[id]||0)+1;if(p&&!/^p\d+$/.test(id))T.pn[id]=p.n.slice(0,50)})}
+function tkFlush(){if(!T)return;tkQ.splice(0).forEach(f=>{try{f(T)}catch(_){}});clearTimeout(tkT);tkT=setTimeout(tkSave,1500)}
+async function tkSave(){if(tkBusy){tkT=setTimeout(tkSave,1500);return}tkBusy=true;try{const lim=(o,n)=>Object.fromEntries(Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n));T.pv=lim(T.pv,80);T.ct=lim(T.ct,80);T.dd=Object.fromEntries(Object.entries(T.dd).sort().slice(-90));await DB.collection('vis').doc(UID).set(T)}catch(_){}tkBusy=false}
+async function tkInit(){try{const d=await DB.collection('vis').doc(UID).get(),c=d.exists?d.data():{},now=Date.now();
+ T={f:c.f||now,l:c.l||0,n:c.n||0,dd:c.dd||{},o:c.o||{},m:c.m||{},dv:c.dv||{},pv:c.pv||{},pn:c.pn||{},ct:c.ct||{},sec:c.sec||{},cad:c.cad||0,orig:c.orig||origem()};
+ if(now-T.l>30*60000){T.n++;const o=origem(),m=modo(),a=aparelho();T.o[o]=(T.o[o]||0)+1;T.m[m]=(T.m[m]||0)+1;T.dv[a]=(T.dv[a]||0)+1}
+ const k=dkey(now);T.dd[k]=(T.dd[k]||0)+1;T.l=now;tkFlush()}catch(_){}}
+function somaObj(L,k){const r={};L.forEach(v=>Object.entries(v[k]||{}).forEach(([a,n])=>r[a]=(r[a]||0)+(+n||0)));return r}
+function barras(o,nome,max){const E=Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,max||10);if(!E.length)return '<p class="m">Ainda sem dados.</p>';const mx=E[0][1]||1;
+ return E.map(([k,n])=>`<div class="bar"><span>${esc(nome(k))}</span><i style="width:${Math.max(2,n/mx*100)}%" aria-hidden="true"></i><b>${n}</b></div>`).join('')}
+function viewAdm(){if(!DB)return '<div class="card"><h2>Painel do administrador</h2><p class="m">O painel só funciona com o app aberto pelo Claude, com login.</p></div>';
+ if(!visLoaded)return '<div class="card"><h2>Painel do administrador</h2><p class="m">Carregando as estatísticas...</p></div>';
+ const L=visAll,now=Date.now(),dia=86400000,hoje=dkey(now),ult=n=>L.filter(v=>now-(v.l||0)<n*dia).length,novos=n=>L.filter(v=>now-(v.f||0)<n*dia).length;
+ const ses=L.reduce((a,v)=>a+(v.n||0),0),pv=somaObj(L,'pv'),ct=somaObj(L,'ct'),pn=Object.assign({},...L.map(v=>v.pn||{})),nomeL=id=>{const p=byId(id);return p?p.n.replace(' (exemplo)',''):pn[id]||'Lugar removido'};
+ const dias=[...Array(14)].map((_,i)=>dkey(now-(13-i)*dia)),porDia={};dias.forEach(d=>porDia[d]=L.filter(v=>v.dd&&v.dd[d]).length);
+ const mo=somaObj(L,'m'),apps=(mo.app||0),navs=(mo.nav||0),tot=apps+navs||1;
+ const kpi=(n,t,s)=>`<div class="card"><span class="m">${t}</span><span class="big">${n}</span>${s?`<span class="m">${s}</span>`:''}</div>`;
+ const sec=(k,t,body,o)=>`<div class="card"><details data-k="${k}" ${op(k,!!o)}><summary>${t}</summary><div class="dbody">${body}</div></details></div>`;
+ return `<div class="card pop"><h2>Painel do administrador</h2><p class="m">Só você vê esta tela. Os números juntam todas as pessoas que abriram o Respiro. Ninguém é identificado aqui, só os totais.</p></div>
+<div class="kpis">${kpi(L.length,'Pessoas que já usaram','desde o início')}${kpi(L.filter(v=>v.dd&&v.dd[hoje]).length,'Usaram hoje')}${kpi(ult(7),'Últimos 7 dias',novos(7)+(novos(7)===1?' nova':' novas'))}${kpi(ult(30),'Últimos 30 dias',novos(30)+(novos(30)===1?' nova':' novas'))}${kpi(ses,'Visitas (aberturas)','pausa de 30 min conta nova visita')}${kpi(Math.round(apps/tot*100)+'%','Abriram pelo app instalado',Math.round(navs/tot*100)+'% pelo navegador (site)')}</div>
+${sec('a1','Pessoas por dia (últimos 14 dias)',(()=>{const mx=Math.max(1,...dias.map(d=>porDia[d]));return [...dias].reverse().map(d=>`<div class="bar"><span>${d===hoje?'Hoje':d.slice(8)+'/'+d.slice(5,7)}</span><i style="width:${Math.max(2,porDia[d]/mx*100)}%" aria-hidden="true"></i><b>${porDia[d]}</b></div>`).join('')})(),true)}
+${sec('a2','Lugares mais vistos',barras(pv,nomeL,10),true)}
+${sec('a3','Lugares com mais contatos (telefone, site, mapa)',barras(ct,nomeL,10)+'<p class="m">Bom para mostrar ao dono do lugar quanto cliente o app mandou para ele.</p>')}
+${sec('a4','De onde as pessoas vieram',barras(somaObj(L,'o'),k=>ORIGENS[k]||k)+'<p class="m">Para saber de onde veio, divulgue o link com a origem no final. Exemplo: <b>?origem=instagram</b> ou <b>?origem=whatsapp</b>. Quem chega sem isso entra como "Link direto do app".</p>')}
+${sec('a5','Como abriram e em qual aparelho',barras({'App instalado na tela do celular':apps,'Navegador (site)':navs},k=>k)+barras(Object.fromEntries(Object.entries(somaObj(L,'dv')).map(([k,n])=>[k==='cel'?'Celular':'Computador',n])),k=>k))}
+${sec('a6','Partes do app mais usadas',barras(somaObj(L,'sec'),k=>({ex:'Explorar',det:'Ver um lugar',com:'Comunidade',fav:'Favoritos',cad:'Cadastre',grp:'Grupos',prf:'Perfil de organizador',adm:'Painel'})[k]||k))}
+${sec('a7','Cadastros de empresas',`<div class="kv"><span>Lugares cadastrados por donos</span><span>${L.reduce((a,v)=>a+(v.cad||0),0)}</span></div><div class="kv"><span>Cobrança dos planos</span><span>${cobOn?'Ligada':'Desligada'}</span></div>`)}
+${sec('a8','Sobre downloads',`<p class="m">Enquanto o Respiro roda aqui no Claude, não existe loja de aplicativos, então "baixar" ainda não existe. "App instalado" conta quem colocou o app na tela do celular. Quando o app estiver na Play Store e na App Store, o número de downloads vem do painel de cada loja e pode ser trazido para cá.</p>`)}`}
+/* ---------- eventos ---------- */
+document.addEventListener('click',e=>{const t=e.target.closest('button,[data-open],[data-go]');if(!t)return;const D=t.dataset;
+ if(t.id==='bk')return back();if(t.id==='hm'){S.hist=[];S.v='ex';S.id=null;render();scrollTo(0,0);return}
+ if(D.go)return go(D.go);if(D.open)return go('det',{id:D.open});if(D.grp)return go('grp',{id:D.grp});if(D.prf)return go('prf',{id:D.prf});if(D.ostar){S.dr['o_s'+D.k2]=+D.ostar;return render()}if(D.otag!==undefined){const TG=D.orole==='org'?TAGSO:TAGSP,a=(S.dr['o_tg'+D.k2]||[]).slice(),t=TG[+D.otag];S.dr['o_tg'+D.k2]=a.includes(t)?a.filter(x=>x!==t):a.length<3?[...a,t]:a;return render()}if(D.cs){S.cs=D.cs;return render()}
+ if(D.c){S.c=D.c;S.cx=null;return render()}
+ if(D.tp){S.tp=S.tp.includes(D.tp)?S.tp.filter(x=>x!==D.tp):[...S.tp,D.tp];return render()}
+ if(D.f){S[D.f]=!S[D.f];return render()}
+ if(D.cd!==undefined){const a=S.cd||[6,0],i=+D.cd;S.cd=a.includes(i)?a.filter(x=>x!==i):[...a,i];const f={};document.querySelectorAll('#cf input,#cf select').forEach(el=>f[el.id]=(el.type==='checkbox'||el.type==='radio')?el.checked:el.value);render();for(const k in f){const el=$('#'+k);if(el){if(el.type==='checkbox'||el.type==='radio')el.checked=f[k];else el.value=f[k]}}const b=document.querySelector('[data-cd="'+i+'"]');if(b)b.focus();return}
+ const a=D.act;if(D.ck){S.ck=D.ck;return render()}if(D.star){S.dr.v_s=+D.star;return render()}if(!a)return;
+ if(a==='clr'){S.tp=[];S.fdu=S.fhoje=S.fk=S.fpet=false;S.fpmax=0;return render()}
+ if(a==='fav'){S.fav=S.fav.includes(D.id)?S.fav.filter(x=>x!==D.id):[...S.fav,D.id];toast(S.fav.includes(D.id)?'Salvo nos favoritos.':'Removido dos favoritos.');return render()}
+ if(a==='copy'){tk(T=>{T.ct[D.id]=(T.ct[D.id]||0)+1});const p=byId(D.id),tx=p.tel||TEL(parseInt(String(p.id).replace(/\D/g,''))||7);try{navigator.clipboard.writeText(tx).then(()=>toast('Telefone copiado.'),()=>toast('Selecione o número e copie.'))}catch(_){toast('Selecione o número e copie.')}return}
+ if(a==='site')return toast('Neste protótipo não há site real. No app, abre o site de pacotes do lugar.');
+ if(a==='err')return toast('Obrigado. No app, o aviso vai para o dono e para nós conferirmos.');
+ if(a==='siteg')return toast('Neste protótipo não há site real. No app, abre o canal de avaliação do próprio lugar.');
+ if(a==='savenick'){const er=$('#ge')||{};if(takeNick(er))render();return}
+ if(a==='join'){if(!DB||!UID||!S.nick)return;const g=gById(D.id);if(!g||membersOf(g.id).length>=g.max)return toast('Grupo lotado.');updGm(a=>a.includes(D.id)?a:[...a,D.id]).then(()=>toast(g.apv?'Pedido enviado. Aguarde o organizador.':'Você entrou no grupo.')).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='acc'||a==='rej'){if(!DB||!UID)return;const g=gById(D.id);if(!g||g.uid!==UID)return;if(a==='acc'&&membersOf(g.id).length>=g.max)return toast('Grupo lotado.');updOwn('grp',L=>L.map(x=>x.id!==D.id?x:a==='acc'?{...x,ap:[...new Set([...(x.ap||[]),D.u])],rj:(x.rj||[]).filter(u=>u!==D.u)}:{...x,rj:[...new Set([...(x.rj||[]),D.u])],ap:(x.ap||[]).filter(u=>u!==D.u)}),20).then(()=>toast(a==='acc'?'Pessoa aceita.':'Pedido recusado.')).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='leave'){if(!DB||!UID)return;updGm(a=>a.filter(x=>x!==D.id)).then(()=>toast('Você saiu do grupo.')).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='delg'){if(!DB||!UID)return;updOwn('grp',a=>a.filter(x=>x.id!==D.id),20).then(()=>{toast('Grupo apagado.');back()}).catch(()=>toast('Não foi possível apagar agora.'));return}
+ if(a==='delo'){if(!DB||!UID)return;updOwn('orr',a=>a.filter(x=>x.id!==D.id),100).then(()=>toast('Avaliação apagada.')).catch(()=>toast('Não foi possível apagar agora.'));return}
+ if(a==='delm'){if(!DB||!UID)return;updOwn('gmsg',a=>a.filter(x=>x.id!==D.id),200).then(()=>toast('Mensagem apagada.')).catch(()=>toast('Não foi possível apagar agora.'));return}
+ if(a==='postpl'){S.dr.x_p=D.id;S.dr.x_k='dica';S.op.cmp=true;return go('com')}
+ if(a==='rpto'){S.rp=S.rp===D.id?null:D.id;return render()}
+ if(a==='cobtog'){if(!ADM||!DB)return;DB.doc('config/com').set({on:comOn,cob:!cobOn}).then(()=>toast(cobOn?'Cobrança desligada. Cadastro grátis para todos.':'Cobrança ligada. Os planos aparecem no cadastro.')).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='comtog'){if(!ADM||!DB)return;DB.doc('config/com').set({on:!comOn,cob:cobOn}).then(()=>toast(comOn?'Comunidade desligada.':'Comunidade ligada.')).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='like'){if(!DB||!UID)return toast('Entre para curtir.');updReact(o=>{o.lk=o.lk.includes(D.id)?o.lk.filter(x=>x!==D.id):[...o.lk,D.id];return o}).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='rep'){if(!DB||!UID)return toast('Entre para denunciar.');updReact(o=>{if(!o.ids.includes(D.id))o.ids.push(D.id);return o}).then(()=>toast('Denúncia enviada. Obrigado por avisar.')).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='hide'){if(!ADM||!DB)return;(comX[D.id]?DB.collection('comx').doc(D.id).delete():DB.collection('comx').doc(D.id).set({h:1})).then(()=>toast(comX[D.id]?'Mostrada.':'Ocultada.')).catch(()=>toast('Não foi possível agora.'));return}
+ if(a==='delp'){if(!DB||!UID)return;updOwn('com',it=>it.filter(x=>x.id!==D.id&&x.re!==D.id),40).then(()=>toast('Publicação apagada.')).catch(()=>toast('Não foi possível apagar agora.'));return}
+ if(a==='delr'){if(!DB||!UID)return;updOwn('rev',it=>it.filter(x=>x.id!==D.id),60).then(()=>toast('Avaliação apagada.')).catch(()=>toast('Não foi possível apagar agora.'));return}
+ if(a==='del'){S.mine=S.mine.filter(x=>x.id!==D.id);S.fav=S.fav.filter(x=>x!==D.id);return render()}
+ if(a==='geo'){if(!navigator.geolocation)return toast('Não consegui usar a localização. Escolha uma região acima.');navigator.geolocation.getCurrentPosition(pos=>{const x=(pos.coords.longitude-ORIG.lon)*KX,y=(pos.coords.latitude-ORIG.lat)*KY;if(Math.hypot(x,y)>300){toast('Os exemplos do protótipo são só de Brasília. Escolha uma região acima.');return}S.cx={x,y};render()},()=>toast('Não consegui usar a localização. Escolha uma região acima.'),{timeout:8000})}});
+document.addEventListener('click',e=>{const a=e.target.closest('a[data-ct]');if(a){const id=a.dataset.ct;tk(T=>{T.ct[id]=(T.ct[id]||0)+1})}},true);
+document.addEventListener('toggle',e=>{const t=e.target;if(t.matches&&t.matches('details[data-k]'))S.op[t.dataset.k]=t.open},true);
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.dr)S.dr[t.dataset.dr]=t.type==='checkbox'?t.checked:t.value;if(t.id==='rad'){S.rad=+t.value;$('#radv').textContent=S.rad+' km'}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.dr)S.dr[t.dataset.dr]=t.type==='checkbox'?t.checked:t.value;if(t.id==='rad'){S.rad=+t.value;render()}if(t.id==='pmax'){S.fpmax=+t.value;render()}});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.pin')){e.preventDefault();go('det',{id:e.target.dataset.open})}});
+document.addEventListener('submit',async e=>{e.preventDefault();const fid=e.target.id;
+ if(fid==='pf'||fid==='rpf'||fid==='vf'){if(!DB||!UID)return;const er=$(fid==='pf'?'#xe':fid==='rpf'?'#rpe':'#ve');if(!takeNick(er))return;if(fid!=='vf'&&busy())return;
+  try{if(fid==='vf'){const pid=e.target.dataset.pid,pl=byId(pid),sc=dv('v_s',0),pg=Number(String(dv('v_pg','')).replace(',','.')||0),txt=String(dv('v_t','')).trim();
+    if(!dv('v_vis',false))return er.textContent='Marque que você visitou este lugar.';if(!(sc>=1&&sc<=5))return er.textContent='Escolha uma nota de 1 a 5.';if(pl.du&&!dv('v_du',''))return er.textContent='Diga se o day use funcionou como informado.';
+    if(isNaN(pg)||pg<0||pg>5000)return er.textContent='Confira o valor pago.';if(BAD.test(txt))return er.textContent='Por segurança, não coloque telefone nem link no texto.';
+    const it={id:nid('r'),pid,s:sc,du:pl.du?dv('v_du',''):'',pg:pg||0,mes:dv('v_mes',''),txt,sh:dv('v_sh',true)?1:0,at:Date.now()};
+    await updOwn('rev',a=>[...a.filter(x=>x.pid!==pid),it],60);S.dr.v_s=0;S.dr.v_t='';S.dr.v_pg='';S.dr.v_vis=false;S.op.rv=true;S.op.rvf=false;toast('Avaliação publicada. Obrigado!');render()}
+   else{const isR=fid==='rpf',txt=String(dv(isR?'rp_t':'x_t','')).trim(),k=isR?'':dv('x_k','dica'),pid=isR?'':dv('x_p','');
+    if(txt.length<3)return er.textContent='Escreva a mensagem.';if(BAD.test(txt))return er.textContent='Por segurança, não publique telefone nem link. Use o contato do lugar.';if(k==='aviso'&&!pid)return er.textContent='No aviso, escolha o lugar.';
+    const it=isR?{id:nid('c'),re:e.target.dataset.pid,txt,at:Date.now()}:{id:nid('c'),k,pid:pid||'',txt,at:Date.now()};
+    await updOwn('com',a=>[...a,it],40);S.dr[isR?'rp_t':'x_t']='';if(isR)S.rp=null;else S.op.cmp=false;S.last=Date.now();toast('Publicado na comunidade.');render()}}
+  catch(_){er.textContent='Não foi possível publicar agora. Tente de novo.'}return}
+ if(fid==='ngf'){if(!DB||!UID)return;const er=$('#ge');if(!takeNick(er))return;if(busy())return;const t=String(dv('g_tt','')).trim(),ds=String(dv('g_ds','')).trim(),hr=String(dv('g_h','')).trim(),dt=String(dv('g_d','')),mx=+dv('g_m',6),pid=dv('g_p','');
+  if(t.length<4)return er.textContent='Dê um nome ao grupo.';if(BAD.test(t+' '+ds+' '+hr))return er.textContent='Por segurança, não coloque telefone nem link.';if(dt&&dt<todayStr())return er.textContent='Escolha um dia de hoje em diante.';
+  const it={id:nid('g'),t,pid,dt,hr,max:mx,ds,apv:dv('g_apv',true)?1:0,at:Date.now()};try{await updOwn('grp',a=>[...a,it],20);await updGm(a=>[...a,it.id]);if(dv('g_inv',true)){const pl=pid?byId(pid):null;await updOwn('com',a=>[...a,{id:nid('c'),k:'companhia',pid,g:it.id,txt:t+(dt?' · '+fmtDate(dt):'')+(hr?' às '+hr:'')+(pl?'':' · lugar a combinar'),at:Date.now()}],40)}
+   ['g_tt','g_ds','g_h','g_d','g_p'].forEach(k=>S.dr[k]='');S.last=Date.now();S.op.ng=false;toast('Grupo criado. Você já está nele.');go('grp',{id:it.id})}catch(_){er.textContent='Não foi possível criar agora. Tente de novo.'}return}
+ if(fid.startsWith('orf_')){if(!DB||!UID)return;const k=fid.slice(4),er=$('#oe_'+k);if(!takeNick(er))return;const gid=e.target.dataset.g,to=e.target.dataset.to,role=e.target.dataset.role,g=gById(gid),sc=dv('o_s'+k,0),tg=dv('o_tg'+k,[]),txt=String(dv('o_t'+k,'')).trim();
+  const okc=g&&to!==UID&&isMem(gid)&&membersOf(gid).some(m=>m.uid===to)&&((role==='org'&&g.uid===to)||(role==='part'&&g.uid!==to));
+  if(!okc)return er.textContent='Só quem participou do mesmo grupo pode avaliar.';if(!grpEncerrado(g))return er.textContent='A avaliação abre depois do passeio.';if(!(sc>=1&&sc<=5))return er.textContent='Escolha uma nota de 1 a 5.';if(BAD.test(txt))return er.textContent='Por segurança, não coloque telefone nem link.';
+  try{await updOwn('orr',a=>[...a.filter(x=>!(x.g===gid&&x.to===to)),{id:nid('o'),to,g:gid,role,gt:g.t,s:sc,tg:tg.slice(0,3),txt,at:Date.now()}],100);delete S.dr['o_s'+k];delete S.dr['o_tg'+k];delete S.dr['o_t'+k];S.op['or_'+k]=false;toast('Avaliação publicada. Obrigado!');render()}catch(_){er.textContent='Não foi possível publicar agora.'}return}
+ if(fid==='gcf'){if(!DB||!UID||!S.nick)return;const er=$('#gme'),g=gById(S.id),txt=String(dv('g_t','')).trim();if(!g||!isMem(g.id)||!txt)return;if(BAD.test(txt))return er.textContent='Por segurança, não coloque telefone nem link.';if(Date.now()-S.lastm<1500)return;S.lastm=Date.now();
+  try{await updOwn('gmsg',a=>[...a,{id:nid('m'),g:g.id,txt,at:Date.now()}],200);S.dr.g_t='';render();const i=$('#g_t');if(i)i.focus()}catch(_){er.textContent='Não foi possível enviar agora.'}return}
+ if(fid!=='cf')return;const g=i=>$('#'+i).value.trim(),er=$('#ce'),bad=(id,m)=>{const el=$('#'+id),d=el&&el.closest('details');if(d){d.open=true;S.op[d.dataset.k]=true}if(el)el.focus();er.textContent=m};
+ if(g('a_n').length<5||!/\s/.test(g('a_n')))return bad('a_n','Passo 1: informe seu nome completo.');if(g('a_tel').replace(/\D/g,'').length<10)return bad('a_tel','Passo 1: informe seu celular com DDD.');if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(g('a_em')))return bad('a_em','Passo 1: confira seu e-mail.');
+ if(g('e_n').length<3)return bad('e_n','Passo 2: informe o nome da empresa.');if(g('e_cnpj')&&!cnpjOk(g('e_cnpj')))return bad('e_cnpj','Passo 2: este CNPJ não parece válido. Confira ou deixe em branco.');if(g('e_cid').length<3)return bad('e_cid','Passo 2: informe cidade e estado.');if(g('e_end').length<5)return bad('e_end','Passo 2: informe o endereço do lugar.');if(g('e_site')&&!/^https?:\/\/\S+\.\S+/.test(g('e_site')))return bad('e_site','Passo 2: o site deve começar com https://');
+ if(g('c_n').length<3)return bad('c_n','Passo 3: informe o nome do lugar.');const p1=Number(g('c_p1')||0),p2=Number(g('c_p2')||0);if(isNaN(p1)||isNaN(p2)||p1<0||p2<p1||p2>5000)return bad('c_p1','Passo 3: confira os preços. O máximo não pode ser menor que o mínimo.');
+ if(!(S.cd||[6,0]).length)return bad('c_h','Passo 3: marque pelo menos um dia de funcionamento.');
+ const pl=cobOn?((document.querySelector('input[name=c_pl]:checked')||{}).value||'g'):'g';if(pl==='dp'&&g('c_promo').length<5)return bad('c_promo','Passo 4: escreva o texto da promoção.');if(BAD.test(g('c_promo')))return bad('c_promo','Passo 4: na promoção, não coloque telefone nem link.');
+ if(!$('#a_ok').checked)return bad('a_ok','Marque a declaração de que você é o responsável ou tem autorização.');
+ const c=CEN[g('c_r')],h=[...g('c_n')].reduce((a,ch)=>(a*31+ch.charCodeAt(0))%997,7),ang=h/997*Math.PI*2,rd=6+(h%14);
+ const p={id:'m'+Date.now().toString(36),n:g('c_n'),t:g('c_t'),x:c[1]+Math.cos(ang)*rd,y:c[2]+Math.sin(ang)*rd,du:+g('c_du'),dias:(S.cd||[6,0]).slice(),hor:g('c_h')||'Consulte',pr:[p1,p2],k:$('#c_k').checked?1:0,pet:$('#c_pet').checked?1:0,pis:0,tri:0,est:1,ob:'Cadastrado por você neste protótipo.',tel:g('c_tel')||'Não informado',pl,promo:pl==='dp'?g('c_promo'):'',emp:{n:g('e_n'),cnpj:g('e_cnpj'),cid:g('e_cid'),end:g('e_end'),site:g('e_site')}};
+ S.anun={n:g('a_n'),tel:g('a_tel'),em:g('a_em'),fn:$('#a_fn').value};S.op.cf1=false;
+ S.mine.push(p);tk(T=>{T.cad=(T.cad||0)+1});S.cd=[6,0];toast(pl==='g'?'Cadastrado. Aparece em Explorar, na região escolhida.':'Cadastrado no plano '+PLANOS[pl][0]+'. Aparece primeiro na região.');go('det',{id:p.id})});
+render();initDb();
+</script>
+
+<script>
+/* ---- Problema ou sugestão ---- */
+(function(){
+const FBX={app:'Respiro',mail:'',toast:t=>toast(t),after:()=>fbDraw(),tela:()=>S.v};
+/* ---------- problema ou sugestão (comum aos apps) ---------- */
+const FB_T=[['bug','🐞 Algo travou'],['ideia','💡 Sugestão de melhoria'],['novo','🛠️ Serviço ou produto novo'],['elogio','👏 Elogio']],FB_S={nova:'Nova',vista:'Vista',ok:'Resolvida'};
+const FB_PH={bug:'Ex.: a tela travou quando toquei em Enviar',ideia:'Ex.: seria bom poder filtrar por cidade',novo:'Ex.: queria encontrar também serviço de jardinagem',elogio:'Ex.: achei muito fácil de usar'};
+const FBU={t:'bug',img:'',resp:true,msg:'',ft:'',fs:'',mo:false};
+const fbE=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fbTL=t=>(FB_T.find(x=>x[0]===t)||[0,'💬 Mensagem'])[1];
+const fbProt=x=>String(x.id).slice(-6);
+const fbDt=s=>{try{return new Date(s).toLocaleDateString('pt-BR')}catch(e){return ''}};
+function fbShrink(file){return new Promise((ok,no)=>{if(!file||!/^image\//.test(file.type||''))return no();const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,720/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.6))};im.onerror=()=>{URL.revokeObjectURL(u);no()};im.src=u})}
+function fbForm(){const mine=FBC.my.slice().sort((a,b)=>b.id-a.id);
+  return `<div class="card fbcard" id="fbbox"><b>💬 Enviar problema ou sugestão</b><p class="muted" style="margin:6px 0 10px">Algo travou, ficou confuso ou você teve uma ideia? Conte aqui. A mensagem vai direto para a equipe do ${FBX.app}.</p>
+<div class="fbchips" role="group" aria-label="Tipo da mensagem">${FB_T.map(([k,l])=>`<button type="button" class="fbchip" data-fbt="${k}" aria-pressed="${FBU.t===k}">${l}</button>`).join('')}</div>
+<label for="fbtx" class="fblab">Conte com suas palavras</label><textarea id="fbtx" rows="3" maxlength="800" placeholder="${FB_PH[FBU.t]}"></textarea>
+<div class="fbrow"><label class="fbbtn">📷 ${FBU.img?'Trocar o print':'Anexar print (opcional)'}<input type="file" accept="image/*" id="fbimg" class="fbsr" aria-label="Anexar print da tela"></label>${FBU.img?`<span class="fbprev"><img src="${FBU.img}" alt="Print anexado"><button type="button" data-fbx="rmimg" aria-label="Remover o print">✕</button></span>`:''}</div>
+<label class="fbchk"><input type="checkbox" id="fbresp" ${FBU.resp?'checked':''}> Quero receber resposta aqui no app</label>
+<button type="button" class="fbsend" data-fbx="send">Enviar</button><div id="fbmsg" class="fbmsg" role="status" aria-live="polite">${FBU.msg}</div>
+${mine.length?`<details class="fbmine" id="fbmine"${FBU.mo?' open':''}><summary>Minhas mensagens (${mine.length})</summary>${mine.slice(0,20).map(x=>`<div class="fbit"><div class="fbh"><span class="fbtag">${fbTL(x.tipo)}</span><span class="fbst fbst-${x.st||'nova'}">${FB_S[x.st||'nova']}</span></div><p>${fbE(String(x.text||x.tx||'').slice(0,300))}</p>${x.rep?`<p class="fbrep"><b>Resposta da equipe:</b> ${fbE(x.rep)}</p>`:''}<p class="fbsm">Protocolo ${fbProt(x)} · ${fbDt(x.at)}</p></div>`).join('')}</details>`:''}</div>`}
+function fbLink(){return `<button type="button" class="fblink" data-fbx="open"><span class="fbi" aria-hidden="true">💬</span><span class="fbx2"><b>Problema ou sugestão</b><br><span class="fbsm">Conte o que travou ou dê uma ideia para melhorar o ${FBX.app}</span></span><span class="fbar" aria-hidden="true">›</span></button>`}
+function fbAdmin(){const L=FBC.all.filter(Boolean).sort((a,b)=>b.id-a.id),f=L.filter(x=>(!FBU.ft||(x.tipo||'')===FBU.ft)&&(!FBU.fs||(x.st||'nova')===FBU.fs)),n=s=>L.filter(x=>(x.st||'nova')===s).length;
+  return `<div class="fbadm"><div class="fbchips" role="group" aria-label="Filtrar por tipo">${[['','Todos os tipos']].concat(FB_T).map(([k,l])=>`<button type="button" class="fbchip" data-fbft="${k}" aria-pressed="${FBU.ft===k}">${l}</button>`).join('')}</div><div class="fbchips" role="group" aria-label="Filtrar por situação">${[['','Todas']].concat(Object.entries(FB_S)).map(([k,l])=>`<button type="button" class="fbchip" data-fbfs="${k}" aria-pressed="${FBU.fs===k}">${l}${k?' ('+n(k)+')':''}</button>`).join('')}</div>
+${f.length?f.slice(0,60).map(x=>{const st=x.st||'nova';return `<div class="card fbit" style="padding:14px;margin-top:10px"><div class="fbh"><span class="fbtag">${fbTL(x.tipo)}</span><span class="fbst fbst-${st}">${FB_S[st]}</span>${x.resp?'<span class="fbtag">Quer resposta</span>':''}</div>${x.name?`<p><b>${fbE(x.name)}</b></p>`:''}<p>${fbE(String(x.text||x.tx||'').slice(0,800))}</p>${x.img?`<a class="fbthumb" href="${x.img}" target="_blank" rel="noopener"><img src="${x.img}" alt="Print enviado"></a>`:''}<p class="fbsm">Protocolo ${fbProt(x)} · ${fbDt(x.at)}${x.tela?' · tela: '+fbE(x.tela):''}</p>
+<div class="fbrow">${Object.entries(FB_S).map(([k,l])=>`<button type="button" data-fbst="${k}" data-id="${x.id}" data-uid="${fbE(x.uid)}" aria-pressed="${st===k}">${l}</button>`).join('')}</div>
+<label class="fblab" for="fbr-${x.id}" style="margin-top:10px">Resposta para a pessoa</label><textarea id="fbr-${x.id}" rows="2" maxlength="500" placeholder="Ex.: Obrigado! Já corrigimos.">${fbE(x.rep||'')}</textarea><div class="fbrow"><button type="button" data-fbrep="${x.id}" data-uid="${fbE(x.uid)}">${x.rep?'Atualizar resposta':'Responder'}</button></div></div>`}).join(''):'<div class="card" style="margin-top:10px"><b>Nenhuma mensagem aqui</b></div>'}</div>`}
+function fbRefresh(){const b=document.getElementById('fbbox');if(!b)return;const t=document.getElementById('fbtx'),v=t?t.value:'';b.outerHTML=fbForm();const t2=document.getElementById('fbtx');if(t2)t2.value=v}
+function fbUpd(id,fn,uid){if(!FBC.db||!FBC.adm)return;const L=FBC.all.filter(y=>y.uid===uid).map(({uid:_,...y})=>({...y})),x=L.find(y=>String(y.id)===String(id));if(!x)return;fn(x);FBC.db.doc('fb/'+uid).set({items:L}).then(()=>FBX.toast('Salvo.')).catch(()=>FBX.toast('Não foi possível salvar agora.'))}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fbt],[data-fbx],[data-fbft],[data-fbfs],[data-fbst],[data-fbrep],[data-fbtab]');if(!b)return;e.preventDefault();e.stopPropagation();const D=b.dataset;
+  if(D.fbt){FBU.t=D.fbt;FBU.msg='';fbRefresh();return}
+  if(D.fbft!==undefined){FBU.ft=D.fbft;FBX.after();return}
+  if(D.fbfs!==undefined){FBU.fs=D.fbfs;FBX.after();return}
+  if(D.fbst){fbUpd(D.id,x=>{x.st=D.fbst},D.uid);return}
+  if(D.fbrep){const t=document.getElementById('fbr-'+D.fbrep),v=t?t.value.trim().slice(0,500):'';fbUpd(D.fbrep,x=>{x.rep=v;x.repAt=new Date().toISOString();if(v&&(x.st||'nova')==='nova')x.st='vista'},D.uid);return}
+  if(D.fbx==='open'){fbOpen();return}
+  if(D.fbx==='close'){FBU.open=false;fbDraw();return}
+  if(D.fbtab){FBU.av=D.fbtab==='adm';fbDraw();return}
+  if(D.fbx==='rmimg'){FBU.img='';fbRefresh();return}
+  if(D.fbx==='send'){const t=document.getElementById('fbtx'),tx=t?t.value.trim():'',m=document.getElementById('fbmsg');if(tx.length<3){if(m)m.textContent='Escreva o que aconteceu ou a sua ideia.';if(t)t.focus();return}
+    const me={},r={id:Date.now(),app:FBX.app,tipo:FBU.t,text:tx.slice(0,800),img:FBU.img||'',resp:FBU.resp,email:me.email||'',name:me.name||'',pk:me.pk||'',tela:FBX.tela?FBX.tela():'',st:'nova',at:new Date().toISOString()};
+    if(!FBC.db||!FBC.uid){if(m)m.textContent='Para enviar, abra o app pelo Claude com a sua conta.'+(FBX.mail?' Você também pode escrever para '+FBX.mail+'.':'');return}
+    if(Date.now()-(FBU.last||0)<20000){if(m)m.textContent='Aguarde alguns segundos para enviar outra mensagem.';return}FBU.last=Date.now();
+    const items=[...FBC.my,r].slice(-30).map((x,i,A)=>i<A.length-5&&x.img?{...x,img:''}:x);if(m)m.textContent='Enviando…';
+    FBC.db.doc('fb/'+FBC.uid).set({items}).then(()=>{FBC.my=items;FBU.img='';FBU.msg='Recebemos, obrigado! Protocolo nº '+fbProt(r)+'.'+(FBU.resp?' A resposta aparece em "Minhas mensagens", aqui embaixo.':'');FBU.mo=false;const t2=document.getElementById('fbtx');if(t2)t2.value='';fbRefresh()}).catch(()=>{FBU.last=0;const m2=document.getElementById('fbmsg');if(m2)m2.textContent='Não consegui enviar agora. Tente de novo.'});return}
+},true);
+document.addEventListener('change',e=>{const t=e.target;if(!t)return;
+  if(t.id==='fbresp'){FBU.resp=t.checked;return}
+  if(t.id==='fbimg'){const f=t.files&&t.files[0];t.value='';const m=document.getElementById('fbmsg');fbShrink(f).then(u=>{FBU.img=u;FBU.msg='';fbRefresh()},()=>{if(m)m.textContent='Não consegui ler essa imagem. Tente outro print.'})}
+},true);
+document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='fbmine')FBU.mo=e.target.open},true);
+
+const FBC={my:[],all:[],uid:null,db:null,adm:false};
+function fbOpen(){let el=document.getElementById('fbsheet');if(!el){el=document.createElement('div');el.id='fbsheet';document.body.appendChild(el)}FBU.open=true;FBU.msg='';fbDraw();setTimeout(()=>{const b=el.querySelector('.fbclose');if(b)b.focus()},30)}
+function fbDraw(){const el=document.getElementById('fbsheet');if(!el)return;if(!FBU.open){el.innerHTML='';document.body.style.overflow='';return}document.body.style.overflow='hidden';
+  const t=document.getElementById('fbtx'),tx=t?t.value:'',sc=el.querySelector('.fbsh'),y=sc?sc.scrollTop:0,na=FBC.all.filter(x=>(x.st||'nova')==='nova').length;
+  el.innerHTML=`<div class="fbbg" data-fbx="close"></div><div class="fbsh" role="dialog" aria-modal="true" aria-label="Problema ou sugestão"><div class="fbtop"><button type="button" class="fbclose" data-fbx="close">← Voltar</button>${FBC.adm?`<div class="fbchips" style="margin:0"><button type="button" class="fbchip" data-fbtab="me" aria-pressed="${!FBU.av}">Enviar</button><button type="button" class="fbchip" data-fbtab="adm" aria-pressed="${!!FBU.av}">Recebidas${na?' ('+na+' novas)':''}</button></div>`:''}</div>${FBU.av&&FBC.adm?'<b style="font-size:18px">Problemas e sugestões recebidos</b>'+fbAdmin():fbForm()}</div>`;
+  const t2=document.getElementById('fbtx');if(t2)t2.value=tx;const s2=el.querySelector('.fbsh');if(s2)s2.scrollTop=y}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&FBU.open){FBU.open=false;fbDraw()}});
+async function fbInit(){try{if(!window.claude||!claude.use)return;const db=await claude.use('db'),u=await claude.use('user');if(!db)return;FBC.db=db;try{FBC.uid=u?await u.id():null}catch(_){}try{FBC.adm=u?!!(await u.canEdit()):false}catch(_){}
+  if(FBC.uid)db.doc('fb/'+FBC.uid).onSnapshot(d=>{FBC.my=d.exists&&Array.isArray(d.data().items)?d.data().items:[];if(FBU.open&&!FBU.av){const a=document.activeElement;if(!(a&&a.id==='fbtx'))fbRefresh()}},()=>{});
+  if(FBC.adm)db.collection('fb').onSnapshot(sn=>{FBC.all=[];sn.docs.forEach(d=>{const v=d.data()||{};(Array.isArray(v.items)?v.items:[]).forEach(x=>FBC.all.push({...x,uid:d.id}))});FBX.after()},()=>{})}catch(_){}}
+fbInit();
+
+const lk=document.getElementById('fblk');if(lk)lk.innerHTML=fbLink();
+})();
+</script>
+
+<script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
