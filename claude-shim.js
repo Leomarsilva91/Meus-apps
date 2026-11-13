@@ -12,6 +12,7 @@
   function erro(code, msg) { var e = new Error(msg || code); e.code = code; return e; }
   async function chamar(input, opts, json) {
     opts = opts || {};
+    if (!logado()) { if (!gastaVisita()) { entrar('Você usou as 3 consultas da IA de hoje como visitante. Entre para usar mais.'); throw erro('guest_limit', 'Limite de visitante atingido. Entre para continuar.'); } }
     var texto = typeof input === 'string' ? input : (input || []).map(function (m) { return (m.role === 'user' ? 'Usuário: ' : 'Assistente: ') + m.content; }).join('\n');
     if (json) texto += '\n\nResponda somente com JSON válido, sem markdown e sem texto fora do JSON.';
     var imagens = [];
@@ -39,12 +40,36 @@
   function ls(op, k, v) { try { return op === 'g' ? localStorage.getItem(k) : op === 's' ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return null; } }
   function isAdm() { return ls('g', K) === '1'; }
   function uid() { var u = ls('g', KI); if (!u) { u = 'l' + Math.random().toString(36).slice(2, 10); ls('s', KI, u); } return u; }
+  /* ---- conta deste aparelho (versão de teste; o login de verdade vem no lançamento) ---- */
+  function logado() { var c = ls('g', 'ia_conta'); if (c === '1') return true; if (c === '0') return false; return !!ls('g', KI); }
+  function hoje() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function gastaVisita() { var v = (ls('g', 'ia_gq') || '').split('|'), n = v[0] === hoje() ? +v[1] || 0 : 0; if (n >= 3) return false; ls('s', 'ia_gq', hoje() + '|' + (n + 1)); return true; }
+  function entrar(msg) {
+    if (document.getElementById('ia-entrar')) return;
+    var d = document.createElement('div'); d.id = 'ia-entrar';
+    d.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;font:16px system-ui,sans-serif';
+    d.innerHTML = '<form style="background:#fff;color:#111;border-radius:16px;padding:18px;max-width:360px;width:100%;display:grid;gap:10px;max-height:90vh;overflow:auto"><b style="font-size:18px">Entrar</b><span class="m" style="font-size:14px;color:#444"></span><label style="display:grid;gap:4px;font-weight:600;font-size:14px">Apelido (aparece para os outros)<input id="ia-ap" maxlength="20" autocomplete="nickname" style="font:inherit;border:1.5px solid #bbb;border-radius:10px;padding:10px"></label><label style="display:grid;gap:4px;font-weight:600;font-size:14px">E-mail (para a equipe responder você)<input id="ia-em" type="email" maxlength="80" autocomplete="email" style="font:inherit;border:1.5px solid #bbb;border-radius:10px;padding:10px"></label><span style="font-size:13px;color:#555">Nesta versão de teste, a conta fica só neste aparelho. O login definitivo chega no lançamento.</span><span class="e" style="color:#b3261e;font-size:13px;min-height:1px"></span><button style="min-height:46px;border:0;border-radius:12px;background:#222;color:#fff;font:inherit;font-weight:700">Entrar</button><button type="button" style="min-height:46px;border:1.5px solid #bbb;border-radius:12px;background:#fff;color:#111;font:inherit;font-weight:700">Fechar</button></form>';
+    d.querySelector('.m').textContent = msg || 'Entre para salvar seus dados e participar.';
+    document.body.appendChild(d);
+    var f = d.querySelector('form'), ap = f.querySelector('#ia-ap'), em = f.querySelector('#ia-em'), e = f.querySelector('.e');
+    ap.value = ls('g', 'ia_nome') || ''; em.value = ls('g', 'ia_email') || ''; ap.focus();
+    f.querySelectorAll('button')[1].onclick = function () { d.remove(); };
+    f.onsubmit = function (ev) {
+      ev.preventDefault();
+      var a = ap.value.trim(), m = em.value.trim();
+      if (a.length < 2 || /https?:|www\.|\d{8}/i.test(a)) { e.textContent = 'Escolha um apelido de 2 a 20 letras, sem telefone nem link.'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { e.textContent = 'Digite um e-mail válido.'; return; }
+      ls('s', 'ia_nome', a); ls('s', 'ia_email', m); ls('s', 'ia_conta', '1'); uid(); location.reload();
+    };
+  }
+  function sair() { ls('s', 'ia_conta', '0'); location.reload(); }
+  window.IA_AUTH = { logado: logado, entrar: entrar, sair: sair, nome: function () { return ls('g', 'ia_nome') || ''; }, email: function () { return ls('g', 'ia_email') || ''; } };
   var user = {
     isOwner: async function () { return isAdm(); },
     canEdit: async function () { return isAdm(); },
     can: async function () { return isAdm() ? true : null; },
-    id: async function () { return uid(); },
-    me: async function () { return { id: uid() }; },
+    id: async function () { return logado() ? uid() : null; },
+    me: async function () { return { id: logado() ? uid() : null }; },
     profiles: async function () { return {}; }
   };
   async function sha(t) {
@@ -83,7 +108,8 @@
     if (document.getElementById('ia-admlink')) return;
     var a = document.createElement('div'); a.id = 'ia-admlink';
     a.style.cssText = 'text-align:center;padding:18px 12px 90px;font:13px system-ui,sans-serif';
-    a.innerHTML = '<a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>';
+    a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>';
+    var q = a.querySelector('a'); q.onclick = function (ev) { ev.preventDefault(); logado() ? sair() : entrar(); };
     document.body.appendChild(a);
   }
   addEventListener('load', function () { setTimeout(rodape, 800); });

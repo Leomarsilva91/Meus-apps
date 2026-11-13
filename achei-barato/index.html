@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=2"></script><script src="../claude-shim.js?v=2"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=3"></script><script src="../claude-shim.js?v=3"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Achei Barato</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
@@ -252,7 +252,7 @@ let PHS={},PH=LS.g('ab_ph',{}),notes=LS.g('ab_ln',{}),list=LS.g('ab_list',{}),ho
 let W=LS.g('ab_want',[]);const I0=I.length;
 const syncWants=()=>{I.length=I0;W.forEach(w=>I.push({id:w.id,n:w.n,un:'',base:0,want:1}))};syncWants();
 const HASCL=typeof claude!=='undefined'&&!!claude&&typeof claude.use==='function';
-let adm=!HASCL,DB=null,shOff=[],lnk=LS.g('ab_lnk',{}),UID=null,shStores=[],newsL=LS.g('ab_news',[]),appUrl=LS.g('ab_app',''),pubL=[],subAll=[],okLgpd=LS.g('ab_ok',0);
+let AR=false,adm=!HASCL,DB=null,shOff=[],lnk=LS.g('ab_lnk',{}),UID=null,shStores=[],newsL=LS.g('ab_news',[]),appUrl=LS.g('ab_app',''),pubL=[],subAll=[],okLgpd=LS.g('ab_ok',0);
 const mySubs=()=>{const d=subAll.find(x=>x.uid===UID);return d?d.items:[]};
 const submitPub=async o=>{if(!DB||!UID)return false;try{const it={id:'s'+Date.now().toString(36),t:today(),st:'Em análise',...o};const items=[...mySubs(),it].slice(-30);await DB.collection('sub').doc(UID).set({items});return true}catch(_){return false}};
 const setSub=async(uid,id,patch)=>{const d=subAll.find(x=>x.uid===uid);if(!d)return;await DB.collection('sub').doc(uid).set({items:d.items.map(i=>i.id===id?{...i,...patch}:i)})};
@@ -301,6 +301,9 @@ const delOff=async id=>{if(DB){await DB.collection('offers').doc(id).delete()}el
 const putLnk=async v=>{lnk=v;LS.s('ab_lnk',v);if(DB){await DB.collection('config').doc('links').set({v})}};
 if(home==='g'&&!pos)home=0;
 let mem={tab:'promo',cat:'',q:'',ord:'off',open:null,err:''};
+const LKT={plan:['Roteiro de economia','Montar roteiro e salvar a sua lista de compras'],com:['Comunidade','Participar da comunidade'],tag:['Achei uma promoção','Enviar preços e promoções'],merch:['Sou comerciante','Cadastrar promoção e divulgar a sua loja']};
+const guestV=()=>AR&&!UID&&LKT[mem.tab]?`<div class="box" data-nc="1"><b>${LKT[mem.tab][0]}</b><span class="m">${LKT[mem.tab][1]} é só para quem entrou. Como visitante, você vê as promoções e pode mandar sugestão ou crítica.</span><button class="btn acc" type="button" data-entrar="1">Entrar</button></div>`:'';
+const guestBan=()=>AR&&!UID?`<div class="box" data-nc="1"><b>Você está como visitante</b><span class="m">Dá para ver as promoções e mandar sugestão ou crítica. Roteiro, lista de compras, comunidade e cadastro de comércio pedem login.</span><button class="btn acc" type="button" data-entrar="1">Entrar</button></div>`:'';
 const UF={RO:['Rondônia',7.392],RR:['Roraima',7.560],AM:['Amazonas',7.643],AC:['Acre',7.750],PA:['Pará',6.822],TO:['Tocantins',6.894],AP:['Amapá',6.465],MA:['Maranhão',6.686],PI:['Piauí',6.593],CE:['Ceará',6.905],RN:['Rio Grande do Norte',6.805],PB:['Paraíba',6.385],PE:['Pernambuco',6.807],AL:['Alagoas',6.806],SE:['Sergipe',6.925],BA:['Bahia',6.810],MG:['Minas Gerais',6.295],ES:['Espírito Santo',6.540],RJ:['Rio de Janeiro',6.697],SP:['São Paulo',6.385],RS:['Rio Grande do Sul',6.291],SC:['Santa Catarina',6.378],PR:['Paraná',6.500],MT:['Mato Grosso',6.779],MS:['Mato Grosso do Sul',6.632],GO:['Goiás',6.393],DF:['Distrito Federal',6.390]};
 const NAC={eth:4.14,die:7.36},FT={gas:'Gasolina',eth:'Etanol',die:'Diesel S10'},WEAR=0.10;
 /* Fonte: ANP. Gasolina por estado, semana de 18 a 24/10/2026. Etanol e diesel: média nacional, semana de 4 a 10/10/2026. */
@@ -314,7 +317,7 @@ fkm=()=>MD().fuel?fpx()/(fuel.kml>0?fuel.kml:12):0,wearOf=()=>MD().wear,ckmF=()=
 xtra=()=>fuel.extra>0?fuel.extra:0,vh=()=>fuel.vh>0?fuel.vh:0,fare=()=>fuel.mode==='bus'?(fuel.fare>=0&&fuel.fare!==null&&fuel.fare!==undefined?fuel.fare:5):0,rf=()=>fuel.rf>=1&&fuel.rf<=3?fuel.rf:1.3;
 function mv(km,n){const m=MD(),f=km*fkm(),w=km*wearOf(),fa=fare()*(n+1),ex=n*xtra(),dmin=km*mpkOf(),smin=n*12,tvT=dmin/60*vh(),tvS=smin/60*vh();
   const vr=f+w+tvT,fx=fa+ex+tvS;return{km,n,f,w,fa,ex,dmin:Math.round(dmin),smin,tv:tvT+tvS,total:vr+fx,lo:vr*.88+fx,hi:vr*1.19+fx}}
-const save=()=>{LS.s('ab_list',list);LS.s('ab_ln',notes);LS.s('ab_home',home);LS.s('ab_fuel',fuel);LS.s('ab_mine',mine);LS.s('ab_ust',ust);LS.s('ab_real',real);LS.s('ab_want',W);LS.s('ab_pos',pos);LS.s('ab_rev',rev);LS.s('ab_off',own);LS.s('ab_disc',disc);LS.s('ab_rep',rep)};
+const save=()=>{if(AR&&!UID)return;LS.s('ab_list',list);LS.s('ab_ln',notes);LS.s('ab_home',home);LS.s('ab_fuel',fuel);LS.s('ab_mine',mine);LS.s('ab_ust',ust);LS.s('ab_real',real);LS.s('ab_want',W);LS.s('ab_pos',pos);LS.s('ab_rev',rev);LS.s('ab_off',own);LS.s('ab_disc',disc);LS.s('ab_rep',rep)};
 let FLYF=[],TAGF=null;
 const pick=(id,label,cam,multi)=>`<label class="chip pk">${label}<input type="file" id="${id}" accept="image/*${multi?',application/pdf':''}"${cam?' capture="environment"':''}${multi?' multiple':''} aria-label="${label}"></label>`+(cam?'':`<button type="button" class="chip" data-paste="${id}" aria-label="Colar imagem copiada (${label})">Colar imagem</button>`);
 /* colar imagem da área de transferência no mesmo campo de foto */
@@ -1413,7 +1416,7 @@ function render(){
   $('#tabs').innerHTML=T.map(t=>`<button data-tab="${t[0]}" ${mem.tab===t[0]?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC[t[0]]}</svg><span class="lg">${t[1]}</span><span class="sh">${t[2]}</span></button>`).join('');
   __net=null;DET={};try{recPH()}catch(e){}try{$('#dst').innerHTML=mem.tabPick?'':destV()}catch(e){$('#dst').innerHTML=''}try{$('#alr').innerHTML=mem.tabPick?'':alrV()}catch(e){$('#alr').innerHTML=''}$('#lg').innerHTML=legalBox();
   $('#mdl').innerHTML=rvModal()+pdModal()+ulModal()+consentBar()+prefModal()+welcome();
-  $('#v').innerHTML=mem.tab==='promo'?promoV():mem.tab==='plan'?planV():mem.tab==='stores'?storesV():mem.tab==='tag'?tagV():mem.tab==='online'?onlineV():mem.tab==='com'?comV():mem.tab==='admin'?adminV():merchV();collapseBoxes();$('#mdl').insertAdjacentHTML('afterbegin',gdModal());
+  $('#v').innerHTML=guestV()||guestBan()+(mem.tab==='promo'?promoV():mem.tab==='plan'?planV():mem.tab==='stores'?storesV():mem.tab==='tag'?tagV():mem.tab==='online'?onlineV():mem.tab==='com'?comV():mem.tab==='admin'?adminV():merchV());collapseBoxes();$('#mdl').insertAdjacentHTML('afterbegin',gdModal());
   if(mem.tab==='promo'&&!mem.f0&&document.querySelector('.card .tag.off')){mem.f0=1;setTimeout(()=>boom(null,null,1),450)}
   if(mem.tab==='plan'&&__net!=null){const k=Math.round(__net*100)+'|'+JSON.stringify(list)+'|'+real;if(k!==mem.fk){mem.fk=k;setTimeout(()=>boom(null,null,1),350)}}
   if(mem.keepQ){const q=$('#q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}mem.keepQ=0}}
@@ -1541,6 +1544,8 @@ document.addEventListener('click',e=>{
   if(D.ldelno){mem.ldc=0;return render()}
   if(D.ldel){if(!mem.ldc){mem.ldc=1;return render()}mem.ldc=0;list={};notes={};mem.lt='';mem.lmsg='';save();toast('Lista excluída.');return render()}
   if(D.ledit){mem.lt=Object.keys(list).map(id=>{const i=I.find(x=>x.id===id);return i?(list[id]>1?list[id]+' ':'')+i.n:''}).filter(Boolean).join('\n');mem.lmsg='Altere o texto e toque em Analisar e montar rota.';render();const b=document.getElementById('lbx');if(b)b.scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(D.entrar){if(window.IA_AUTH)IA_AUTH.entrar();else toast('Para entrar, abra o app pelo Claude com a sua conta.');return}
+  if((D.inc||D.dec||D.basket)&&AR&&!UID){toast('Entre para montar e salvar a sua lista.');return}
   if(D.inc){list[D.inc]=(list[D.inc]||0)+1;save();return render()}
   if(D.dec){list[D.dec]=(list[D.dec]||0)-1;if(list[D.dec]<=0)delete list[D.dec];save();return render()}
   if(D.basket){list={i1:1,i2:2,i3:2,i4:2,i5:1,i6:6,i7:2,i8:2,i10:1,i14:3,i15:1,i16:1};save();toast('Cesta de exemplo adicionada.');return render()}
@@ -1737,6 +1742,7 @@ render();
   try{const u=await claude.use('user');adm=u?!!(await u.canEdit()):false}catch(_){adm=false}
   try{DB=await claude.use('db')}catch(_){DB=null}
   try{const u=await claude.use('user');UID=u?await u.id():null}catch(_){UID=null}
+  AR=true;render();
   if(DB){const cur=()=>mem.tab==='online';
     try{DB.collection('offers').onSnapshot(sn=>{shOff=sn.docs.map(d=>({...d.data(),id:d.id}));sweepExpired();rs()},()=>{});
       DB.collection('stores').onSnapshot(sn=>{shStores=sn.docs.map(d=>({...d.data(),id:d.id,pr:{}}));try{syncUst()}catch(_){}rs()},()=>{});
@@ -2029,7 +2035,7 @@ window.DM={
 <script>
 /* ---- Problema ou sugestão ---- */
 (function(){
-const FBX={app:'Achei Barato',mail:'',toast:t=>toast(t),after:()=>fbDraw()};
+const FBX={app:'Achei Barato',mail:'prumo91@yahoo.com',toast:t=>toast(t),after:()=>fbDraw()};
 /* ---------- problema ou sugestão (comum aos apps) ---------- */
 const FB_T=[['bug','🐞 Algo travou'],['ideia','💡 Sugestão de melhoria'],['novo','🛠️ Serviço ou produto novo'],['elogio','👏 Elogio']],FB_S={nova:'Nova',vista:'Vista',ok:'Resolvida'};
 const FB_PH={bug:'Ex.: a tela travou quando toquei em Enviar',ideia:'Ex.: seria bom poder filtrar por cidade',novo:'Ex.: queria encontrar também serviço de jardinagem',elogio:'Ex.: achei muito fácil de usar'};
@@ -2044,7 +2050,7 @@ function fbForm(){const mine=FBC.my.slice().sort((a,b)=>b.id-a.id);
 <div class="fbchips" role="group" aria-label="Tipo da mensagem">${FB_T.map(([k,l])=>`<button type="button" class="fbchip" data-fbt="${k}" aria-pressed="${FBU.t===k}">${l}</button>`).join('')}</div>
 <label for="fbtx" class="fblab">Conte com suas palavras</label><textarea id="fbtx" rows="3" maxlength="800" placeholder="${FB_PH[FBU.t]}"></textarea>
 <div class="fbrow"><label class="fbbtn">📷 ${FBU.img?'Trocar o print':'Anexar print (opcional)'}<input type="file" accept="image/*" id="fbimg" class="fbsr" aria-label="Anexar print da tela"></label>${FBU.img?`<span class="fbprev"><img src="${FBU.img}" alt="Print anexado"><button type="button" data-fbx="rmimg" aria-label="Remover o print">✕</button></span>`:''}</div>
-<label class="fbchk"><input type="checkbox" id="fbresp" ${FBU.resp?'checked':''}> Quero receber resposta aqui no app</label>
+${FBC.uid?`<label class="fbchk"><input type="checkbox" id="fbresp" ${FBU.resp?'checked':''}> Quero receber resposta aqui no app</label>`:'<p class="fbsm" style="margin:8px 0 0">Como visitante, a mensagem sai pelo seu e-mail e a resposta chega nele. Entre para receber resposta aqui no app.</p>'}
 <button type="button" class="fbsend" data-fbx="send">Enviar</button><div id="fbmsg" class="fbmsg" role="status" aria-live="polite">${FBU.msg}</div>
 ${mine.length?`<details class="fbmine" id="fbmine"${FBU.mo?' open':''}><summary>Minhas mensagens (${mine.length})</summary>${mine.slice(0,20).map(x=>`<div class="fbit"><div class="fbh"><span class="fbtag">${fbTL(x.tipo)}</span><span class="fbst fbst-${x.st||'nova'}">${FB_S[x.st||'nova']}</span></div><p>${fbE(String(x.text||x.tx||'').slice(0,300))}</p>${x.rep?`<p class="fbrep"><b>Resposta da equipe:</b> ${fbE(x.rep)}</p>`:''}<p class="fbsm">Protocolo ${fbProt(x)} · ${fbDt(x.at)}</p></div>`).join('')}</details>`:''}</div>`}
 function fbLink(){return `<button type="button" class="fblink" data-fbx="open"><span class="fbi" aria-hidden="true">💬</span><span class="fbx2"><b>Problema ou sugestão</b><br><span class="fbsm">Conte o que travou ou dê uma ideia para melhorar o ${FBX.app}</span></span><span class="fbar" aria-hidden="true">›</span></button>`}
@@ -2067,7 +2073,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   if(D.fbx==='rmimg'){FBU.img='';fbRefresh();return}
   if(D.fbx==='send'){const t=document.getElementById('fbtx'),tx=t?t.value.trim():'',m=document.getElementById('fbmsg');if(tx.length<3){if(m)m.textContent='Escreva o que aconteceu ou a sua ideia.';if(t)t.focus();return}
     const me={},r={id:Date.now(),app:FBX.app,tipo:FBU.t,text:tx.slice(0,800),img:FBU.img||'',resp:FBU.resp,email:me.email||'',name:me.name||'',pk:me.pk||'',tela:FBX.tela?FBX.tela():'',st:'nova',at:new Date().toISOString()};
-    if(!FBC.db||!FBC.uid){if(m)m.textContent='Para enviar, abra o app pelo Claude com a sua conta.'+(FBX.mail?' Você também pode escrever para '+FBX.mail+'.':'');return}
+    if(!FBC.db||!FBC.uid){if(FBX.mail){if(Date.now()-(FBU.last||0)<20000){if(m)m.textContent='Aguarde alguns segundos para enviar outra mensagem.';return}FBU.last=Date.now();location.href='mailto:'+FBX.mail+'?subject='+encodeURIComponent(FBX.app+': '+fbTL(FBU.t))+'&body='+encodeURIComponent(tx+'\n\n(tela: '+r.tela+')');if(m)m.textContent='Abrimos o seu e-mail com a mensagem pronta. É só enviar.'}else if(m)m.textContent='Para enviar, entre com a sua conta.';return}
     if(Date.now()-(FBU.last||0)<20000){if(m)m.textContent='Aguarde alguns segundos para enviar outra mensagem.';return}FBU.last=Date.now();
     const items=[...FBC.my,r].slice(-30).map((x,i,A)=>i<A.length-5&&x.img?{...x,img:''}:x);if(m)m.textContent='Enviando…';
     FBC.db.doc('fb/'+FBC.uid).set({items}).then(()=>{FBC.my=items;FBU.img='';FBU.msg='Recebemos, obrigado! Protocolo nº '+fbProt(r)+'.'+(FBU.resp?' A resposta aparece em "Minhas mensagens", aqui embaixo.':'');FBU.mo=false;const t2=document.getElementById('fbtx');if(t2)t2.value='';fbRefresh()}).catch(()=>{FBU.last=0;const m2=document.getElementById('fbmsg');if(m2)m2.textContent='Não consegui enviar agora. Tente de novo.'});return}

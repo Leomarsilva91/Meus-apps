@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=2"></script><script src="../claude-shim.js?v=2"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=3"></script><script src="../claude-shim.js?v=3"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Prumo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,10 +354,11 @@ function demoGoals(){const dm=k=>iso(new Date(Y,M+k,10)),pm=iso(new Date(Y,M-1,1
    {id:uid(),nome:'Escada e furadeira novas',tipo:'negocio',alvo:1200,guardado:1200,prazo:dm(0),aportes:[{d:pm,v:600}]}]}
 function empty(){return{demo:false,mei:{act:'serv',open:'',nome:'',cnpj:'',cidade:'',rev:[],exp:[],das:{}},debts:[],budget:0,metodo:'rec',goals:[],orc:null}}
 function load(){try{const t=localStorage.getItem(K);if(t){const o=JSON.parse(t);if(o&&o.mei&&o.debts){if(!o.goals){if(o.demo)return null;o.goals=[]}if(o.demo&&(!o.orc||!o.orc.gastos))return null;if(o.orc===undefined)o.orc=null;if(o.orc&&!o.orc.gastos)o.orc.gastos=[];return o}}}catch(e){}return null}
-let S=load()||demo();
+const GUEST=!!(window.IA_AUTH&&!IA_AUTH.logado());
+let S=(GUEST?null:load())||demo();
 const SYNC={db:null,ref:null,st:'local',tm:null,warn:false,
   label(){return this.st==='cloud'?'Salvo na conta':this.st==='busy'?'Salvando…':''}};
-function save(){S.t=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}cloudPush()}
+function save(){S.t=Date.now();if(GUEST)return;try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}cloudPush()}
 function cloudPush(now){if(!SYNC.ref||S.demo)return;clearTimeout(SYNC.tm);SYNC.st='busy';paintWho();
   SYNC.tm=setTimeout(cloudFlush,now?0:1200)}
 async function cloudFlush(){if(!SYNC.ref||S.demo)return;let j;try{j=JSON.stringify(S)}catch(e){return}
@@ -1979,7 +1980,7 @@ function ctInit(){const db=PT.db;if(!db)return;
   if(PT.adm)db.collection('contato').onSnapshot(sn=>{CTT.all=sn.docs.map(d=>({uid:d.id,items:Array.isArray(d.data().items)?d.data().items:[]}));ctRR()},()=>{})}
 function ctView(){
   const back='<button class="btn ghost sm" data-go="mais" style="justify-self:start">← Voltar</button>';
-  if(!PT.db||!PT.uid)return `<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card"><h3>Fale com a gente</h3><p class="muted small">O contato pelo app funciona conectado e identificado. Tente de novo em instantes ou escreva para <a href="mailto:prumo91@yahoo.com">prumo91@yahoo.com</a>.</p></div></div>`;
+  if(!GUEST&&(!PT.db||!PT.uid))return `<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card"><h3>Fale com a gente</h3><p class="muted small">O contato pelo app funciona conectado e identificado. Tente de novo em instantes ou escreva para <a href="mailto:prumo91@yahoo.com">prumo91@yahoo.com</a>.</p></div></div>`;
   try{localStorage.setItem(ctSeenK,String(Date.now()))}catch(_){}
   const mine=CTT.my.length?CTT.my.slice().reverse().map(x=>`<div class="card" style="gap:6px"><div class="fbh"><span class="fbtag">${ptE(ctK[x.k]||'Mensagem')}</span>${ctStPill(x)}</div><span class="muted small">Protocolo ${ctProt(x)} · ${ctD(x.ts)}</span><span>${ptE(x.txt)}</span>${x.re?`<div style="border-left:3px solid var(--brand,#2563eb);padding-left:10px"><b class="small">Resposta da equipe</b> <span class="muted small">· ${ctD(x.rt)}</span><br>${ptE(x.re)}</div>`:'<span class="muted small">Aguardando resposta da equipe.</span>'}</div>`).join(''):'<p class="muted small">Você ainda não enviou mensagens.</p>';
   let adm='';
@@ -1990,7 +1991,7 @@ function ctView(){
     <div class="fbchips" role="group" aria-label="Filtrar por tipo">${[['','Todos os tipos']].concat(Object.entries(ctK)).map(([k,l])=>`<button type="button" class="fbchip" data-ctft="${k}" aria-pressed="${ft===k}">${l}</button>`).join('')}</div>
     ${L.length?L.slice(0,60).map(x=>`<form class="card" data-ctr="${ptE(x.uid)}" data-id="${ptE(x.id)}" novalidate style="gap:6px"><div class="fbh"><span class="fbtag">${ptE(ctK[x.k]||'Mensagem')}</span>${ctStPill(x)}${x.resp===false?'':'<span class="fbtag">Quer resposta</span>'}</div><span class="muted small">Protocolo ${ctProt(x)} · ${ctD(x.ts)}</span><span>${ptE(x.txt)}</span>${x.img?`<a class="fbthumb" href="${x.img}" target="_blank" rel="noopener"><img src="${x.img}" alt="Print enviado"></a>`:''}${x.re?`<span class="small"><b>Sua resposta:</b> ${ptE(x.re)}</span>`:''}<div class="fbrow">${Object.entries(ctS).map(([k,l])=>`<button type="button" data-ctst="${k}" data-uid="${ptE(x.uid)}" data-id="${ptE(x.id)}" aria-pressed="${stOf(x)===k}">${l}</button>`).join('')}</div><label>Resposta<textarea rows="3" maxlength="800" required>${ptE(x.re||'')}</textarea></label><button class="btn sm" type="submit">${x.re?'Atualizar resposta':'Responder'}</button></form>`).join(''):'<p class="muted small">Nenhuma mensagem neste filtro.</p>'}</div></details>`}
   return `<div style="display:grid;gap:12px;max-width:640px">${back}
-  <form class="card fbcard" id="ctf" novalidate style="gap:8px"><h3>💬 Problema ou sugestão</h3><p class="muted small">Algo travou, ficou confuso ou você teve uma ideia? Conte aqui. A mensagem vai direto para a equipe do Prumo e a resposta aparece nesta tela. Não envie senha, CPF nem número de cartão. Se preferir, escreva para <a href="mailto:prumo91@yahoo.com">prumo91@yahoo.com</a>.</p>
+  <form class="card fbcard" id="ctf" novalidate style="gap:8px"><h3>💬 Problema ou sugestão</h3><p class="muted small">Algo travou, ficou confuso ou você teve uma ideia? Conte aqui. ${GUEST?'Como visitante, a mensagem sai pelo seu e-mail e a resposta chega nele.':'A mensagem vai direto para a equipe do Prumo e a resposta aparece nesta tela.'} Não envie senha, CPF nem número de cartão. Se preferir, escreva para <a href="mailto:prumo91@yahoo.com">prumo91@yahoo.com</a>.</p>
     <input type="hidden" id="ct_k" value="${UI.ctk||'problema'}"><div class="fbchips" role="group" aria-label="Tipo da mensagem">${Object.keys(ctK).map(k=>`<button type="button" class="fbchip" data-ctk="${k}" aria-pressed="${(UI.ctk||'problema')===k}">${ctK[k]}</button>`).join('')}</div>
     <label for="ct_t">Conte com suas palavras<textarea id="ct_t" rows="4" maxlength="600" placeholder="${ctPH[UI.ctk||'problema']}"></textarea></label>
     <div class="fbrow"><label class="fbbtn">📷 Anexar print (opcional)<input type="file" accept="image/*" id="ct_img" class="fbsr" aria-label="Anexar print da tela"></label><span id="ct_prev">${ctPrev()}</span></div>
@@ -2010,12 +2011,12 @@ document.addEventListener('change',e=>{const t=e.target;if(!t)return;if(t.id==='
 const _viFb=VIEWS.inicio;VIEWS.inicio=function(){const h=_viFb(),l=`<button type="button" class="fblink" data-go="contato"><span class="fbi" aria-hidden="true">💬</span><span class="fbx2"><b>Problema ou sugestão</b><br><span class="fbsm">Conte o que travou ou dê uma ideia para melhorar o Prumo</span></span><span class="fbar" aria-hidden="true">›</span></button>`,k='<p class="muted small">O Prumo organiza e orienta.';return h.includes(k)?h.replace(k,l+k):h+l};
 document.addEventListener('submit',e=>{const f=e.target;
   if(f.id==='ctf'){e.preventDefault();e.stopImmediatePropagation();const er=t=>{const x=document.getElementById('ct_e');if(x){x.style.color='';x.textContent=t}};
-    if(!PT.db||!PT.uid)return er('Sem conexão agora. Tente de novo.');
+    if(!GUEST&&(!PT.db||!PT.uid))return er('Sem conexão agora. Tente de novo.');
     const txt=document.getElementById('ct_t').value.trim().replace(/\s+/g,' '),k=document.getElementById('ct_k').value;
     if(!ctK[k])return er('Escolha o assunto.');if(txt.length<10)return er('Escreva um pouco mais (mínimo 10 letras).');if(txt.length>600)return er('Máximo de 600 letras.');
     if(CTT.bad.test(txt))return er('Parece que há senha, CPF ou número de cartão. Tire isso da mensagem, por segurança.');
     if(Date.now()-CTT.last<30000)return er('Aguarde alguns segundos para enviar outra mensagem.');
-    CTT.last=Date.now();er('');const rr=document.getElementById('ct_r'),it={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),k,txt,ts:Date.now(),st:'nova',resp:rr?rr.checked:true};if(UI.ctimg)it.img=UI.ctimg;const keep=[...CTT.my,it].slice(-30).map((x,i,A)=>i<A.length-5&&x.img?{...x,img:''}:x);
+    CTT.last=Date.now();if(GUEST){location.href='mailto:prumo91@yahoo.com?subject='+encodeURIComponent('Prumo: '+(ctK[k]||'mensagem'))+'&body='+encodeURIComponent(txt);const m0=document.getElementById('ct_e');if(m0){m0.style.color='var(--ok)';m0.textContent='Abrimos o seu e-mail com a mensagem pronta. É só enviar.'}return}er('');const rr=document.getElementById('ct_r'),it={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),k,txt,ts:Date.now(),st:'nova',resp:rr?rr.checked:true};if(UI.ctimg)it.img=UI.ctimg;const keep=[...CTT.my,it].slice(-30).map((x,i,A)=>i<A.length-5&&x.img?{...x,img:''}:x);
     PT.db.doc('contato/'+PT.uid).set({items:keep}).then(()=>{document.getElementById('ct_t').value='';UI.ctimg='';const p=document.getElementById('ct_prev');if(p)p.innerHTML='';er('');const m=document.getElementById('ct_e');if(m){m.style.color='var(--ok)';m.textContent='Recebemos, obrigado! Protocolo nº '+ctProt(it)+'.'+(it.resp?' A resposta aparece em "Minhas mensagens".':'')}toast('Mensagem enviada.')}).catch(()=>{CTT.last=0;er('Não foi possível enviar agora.')});return}
   if(f.dataset&&f.dataset.ctr){e.preventDefault();e.stopImmediatePropagation();if(!PT.adm||!PT.db)return;
     const re=f.querySelector('textarea').value.trim();if(re.length<2)return toast('Escreva a resposta.');
@@ -2895,5 +2896,18 @@ document.addEventListener('submit',e=>{const f=e.target;if(f.id!=='msj'&&f.id!==
   putJ({pay:[...(myJ().pay||[]),p].slice(-200)}).then(()=>toast('Aviso enviado. Agora é só esperar a confirmação.')).catch(()=>{MS.T=0;toast('Não foi possível enviar agora.')});render(true)},true);
 })();
 
+</script>
+<script>
+/* ---- visitante: só olha e simula; nada é salvo; comunidade e pontos pedem login ---- */
+(function(){if(!GUEST)return;
+const lock=(t,x)=>`<div class="card"><h3>${t}</h3><p class="muted">${x}</p><button class="btn" type="button" data-entrar="1">Entrar</button></div>`;
+const ban=`<div class="card" style="gap:8px"><h3>Você está como visitante</h3><p class="muted small">Dá para ver as propostas dos parceiros, simular tudo e mandar sugestão ou crítica, mas nada do que você digitar fica guardado. Comunidade, pontos e resposta no app pedem login.</p><button class="btn" type="button" data-entrar="1">Entrar</button></div>`;
+const W=(k,f)=>{const o=VIEWS[k];if(o)VIEWS[k]=()=>f(o)};
+W('comunidade',()=>lock('Comunidade','Participar da comunidade é só para quem entrou.'));
+W('pontos',()=>lock('Pontos','O programa de pontos é só para quem entrou.'));
+W('inicio',o=>ban+o());
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-entrar]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();IA_AUTH.entrar('Entre para salvar seus dados e participar da comunidade.')},true);
+try{render(true)}catch(_){}
+})();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
