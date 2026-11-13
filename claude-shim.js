@@ -41,7 +41,7 @@
   function isAdm() { return ls('g', K) === '1'; }
   function uid() { var u = ls('g', KI); if (!u) { u = 'l' + Math.random().toString(36).slice(2, 10); ls('s', KI, u); } return u; }
   /* ---- conta deste aparelho (versão de teste; o login de verdade vem no lançamento) ---- */
-  function logado() { var c = ls('g', 'ia_conta'); if (c === '1') return true; if (c === '0') return false; return !!ls('g', KI); }
+  function logado() { if (window.IA_LOGIN_PROPRIO) return true; var c = ls('g', 'ia_conta'); if (c === '1') return true; if (c === '0') return false; return !!ls('g', KI); }
   function hoje() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   function gastaVisita() { var v = (ls('g', 'ia_gq') || '').split('|'), n = v[0] === hoje() ? +v[1] || 0 : 0; if (n >= 3) return false; ls('s', 'ia_gq', hoje() + '|' + (n + 1)); return true; }
   function entrar(msg) {

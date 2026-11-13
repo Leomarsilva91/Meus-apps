@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
-<head><script src="../config.js?v=3"></script><script src="../claude-shim.js?v=3"></script>
+<head><script src="../config.js?v=2"></script><script>window.IA_LOGIN_PROPRIO=1</script><script src="../claude-shim.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tasko</title>
@@ -3138,14 +3138,6 @@ function after(){try{if(!S.user)return;if(!vinit){vinit=1;const d=raw().find(x=>
   document.querySelectorAll('[data-dvid]').forEach(el=>{const id=el.dataset.dvid;if(id&&!SEEN.has(id)){SEEN.add(id);bump(id,'v')}})}catch(_){}}
 const _r=render;render=function(){const r=_r.apply(this,arguments);after();return r};
 try{render()}catch(e){}
-})();
-</script>
-<script>
-/* ---- Tasko só com login: visitante vê só a tela de entrada ---- */
-(function(){if(!(window.IA_AUTH&&!IA_AUTH.logado()))return;
-const d=document.createElement('div');d.id='tk-wall';d.style.cssText='position:fixed;inset:0;z-index:2147482000;display:grid;place-items:center;padding:20px;background:#f4f6fb;color:#111;font:16px system-ui,sans-serif;overflow:auto';
-d.innerHTML='<div style="max-width:380px;width:100%;display:grid;gap:14px;text-align:center"><h1 style="margin:0;font-size:30px">Tasko</h1><p style="margin:0">Para ver prestadores, pedir serviço ou oferecer o seu trabalho, é preciso entrar com a sua conta.</p><button id="tk-in" style="min-height:50px;border:0;border-radius:14px;background:#2457d6;color:#fff;font:inherit;font-weight:700">Entrar</button><a href="mailto:prumo91@yahoo.com?subject=Tasko" style="color:#2457d6;font-size:14px">Quer mandar uma sugestão ou crítica? Escreva para prumo91@yahoo.com</a></div>';
-document.body.appendChild(d);document.getElementById('tk-in').onclick=()=>IA_AUTH.entrar('Entre para usar o Tasko.');
 })();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body>
