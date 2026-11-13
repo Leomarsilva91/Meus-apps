@@ -2110,10 +2110,13 @@ const actAds=()=>{const t=stamp(),L=(DB?ADS:LA).filter(a=>a&&a.ad&&a.from<=t&&t<
 const stOf=i=>i.st==='No ar'&&i.to&&i.to<stamp()?'Encerrada':i.st;
 const sums=()=>{const m={};ADVALL.forEach(d=>{const o=d.m||{};Object.keys(o).forEach(id=>{const x=m[id]=m[id]||{v:0,c:0};x.v+=o[id].v||0;x.c+=o[id].c||0})});Object.keys(MYV).forEach(id=>{if(!ADVALL.length){const x=m[id]=m[id]||{v:0,c:0};x.v+=MYV[id].v||0;x.c+=MYV[id].c||0}});return m};
 const waNum=s=>{let d=String(s||'').replace(/\D/g,'');if(d.length<10||d.length>13)return '';if(d.length<=11)d='55'+d;return d};
+const noImg=a=>{const o={...a};delete o.img;return o};
+const IMGOK=d=>typeof d==='string'&&d.length<95000&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(d);
+function shrink(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{try{for(const m of [640,480,360]){let w=im.naturalWidth,h=im.naturalHeight;const r=Math.min(1,m/Math.max(w,h));w=Math.max(1,Math.round(w*r));h=Math.max(1,Math.round(h*r));const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);let q=.78,d=c.toDataURL('image/jpeg',q);while(d.length>60000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}if(IMGOK(d)){URL.revokeObjectURL(u);return res(d)}}URL.revokeObjectURL(u);rej()}catch(e){rej(e)}};im.onerror=()=>{URL.revokeObjectURL(u);rej()};im.src=u})}
 const ST=mem=>mem.ad||(mem.ad={s:'',k:'',dr:{}});
 function adCard(a,o){o=o||{};const wa=waNum(a.wa),ln=/^https:\/\/[^\s]+$/i.test(a.ln||'')?a.ln:'',id=esc(o.id||'');
   const cta=wa?`<a class="btn acc" ${o.pv?'':`data-adc="${id}" target="_blank" rel="noopener noreferrer" href="https://wa.me/${wa}"`} style="text-decoration:none;text-align:center">Chamar no WhatsApp</a>`:ln?`<a class="btn acc" ${o.pv?'':`data-adc="${id}" target="_blank" rel="noopener noreferrer" href="${esc(ln)}"`} style="text-decoration:none;text-align:center">Abrir o link</a>`:'';
-  return `<div class="card" data-nc="1" ${o.pv?'':`data-adid="${id}"`} style="border-top-color:var(--c-merch)"><div class="row sp"><span class="tag warn">Patrocinado</span><span class="tag">${esc(TX[a.tp]||'Comércio')}</span></div><div class="t">${esc(a.tt||'Título do anúncio')}</div><div class="m">${esc(a.loja||'Nome do comércio')}${a.bairro?' · '+esc(a.bairro):''}</div><div>${esc(a.tx||'Texto do anúncio.')}</div>${cta}</div>`}
+  return `<div class="card" data-nc="1" ${o.pv?'':`data-adid="${id}"`} style="border-top-color:var(--c-merch)"><div class="row sp"><span class="tag warn">Patrocinado</span><span class="tag">${esc(TX[a.tp]||'Comércio')}</span></div>${IMGOK(a.img)?`<img src="${a.img}" alt="Foto do anúncio de ${esc(a.loja||'comércio')}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--soft)">`:''}<div class="t">${esc(a.tt||'Título do anúncio')}</div><div class="m">${esc(a.loja||'Nome do comércio')}${a.bairro?' · '+esc(a.bairro):''}</div><div>${esc(a.tx||'Texto do anúncio.')}</div>${cta}</div>`}
 /* ---------- comerciante ---------- */
 function adsMerch(){
   if(!adsOn()&&!adm)return '';
@@ -2128,6 +2131,7 @@ function adsMerch(){
 <label for="dv_bairro">Bairro ou cidade<input id="dv_bairro" maxlength="40" value="${esc(d.bairro||'')}"></label>
 <label for="dv_wa">WhatsApp com DDD (opcional)<input id="dv_wa" type="tel" inputmode="numeric" maxlength="16" value="${esc(d.wa||'')}"></label>
 <label for="dv_ln">Link do site ou rede social (opcional, começa com https://)<input id="dv_ln" type="url" inputmode="url" maxlength="200" value="${esc(d.ln||'')}"></label>
+<div class="row"><label class="chip pk">${d.img?'Trocar foto':'Escolher foto (opcional)'}<input type="file" id="dv_img" accept="image/*" aria-label="Escolher foto do anúncio"></label>${d.img?'<button class="chip" type="button" data-adact="noimg">Remover foto</button>':''}</div><div class="err" id="dv_ie" role="alert">${esc(A.ierr||'')}</div><span class="m">A foto é reduzida automaticamente. Use foto do seu comércio ou produto, sem pessoas identificáveis sem autorização e sem textos de preço. A equipe confere antes de publicar.</span>
 <span class="m">Informe pelo menos o WhatsApp ou o link. Não escreva preço ou promoção que você não vá cumprir; se citar preço, ele precisa estar no app com validade. Sem dados pessoais de terceiros.</span>
 <div class="m"><b>Como vai aparecer:</b></div><div id="dvprev">${adCard(d,{pv:1})}</div>
 <div class="err" id="dv_e" role="alert">${esc(A.err||'')}</div><button class="btn acc" type="submit">Continuar para o pagamento</button></form>`;
@@ -2137,25 +2141,29 @@ function adsMerch(){
   else{
     body=`<span class="m">Seu anúncio aparece com a etiqueta <b>Patrocinado</b>. Ele nunca muda os preços, a ordem das promoções nem o “mais barato”.</span>
 <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${KS.map(k=>`<button type="button" class="card" data-adk="${k}" style="text-align:left;cursor:pointer;color:inherit;font:inherit;border-top-color:var(--c-merch)"><span class="t">${esc(AK[k].n)}</span><span class="price" style="color:var(--c-merch)">${brl(price(k))}</span><span class="m">${AK[k].d} dias</span><span class="m">${esc(AK[k].t)}</span><span class="tag ok" style="justify-self:start">Escolher</span></button>`).join('')}</div>
-${dtl('dvrl','Regras da divulgação',`<span class="m">• A equipe analisa o anúncio antes de publicar. O prazo conta a partir da aprovação.<br>• Anúncio recusado: o valor é devolvido (simulado neste protótipo).<br>• O anúncio precisa ser verdadeiro e do seu comércio. Preço citado precisa estar no app com validade.<br>• Anúncio que descumprir as regras pode ser retirado, com devolução proporcional.<br>• Não há garantia de quantidade de toques ou clientes. Você acompanha as aparições e os toques aqui.<br>• Sem imagens por enquanto: o anúncio é só texto.</span>`)}
+${dtl('dvrl','Regras da divulgação',`<span class="m">• A equipe analisa o anúncio antes de publicar. O prazo conta a partir da aprovação.<br>• Anúncio recusado: o valor é devolvido (simulado neste protótipo).<br>• O anúncio precisa ser verdadeiro e do seu comércio. Preço citado precisa estar no app com validade.<br>• Anúncio que descumprir as regras pode ser retirado, com devolução proporcional.<br>• Não há garantia de quantidade de toques ou clientes. Você acompanha as aparições e os toques aqui.<br>• Foto: opcional, uma por anúncio. A equipe confere a foto antes de publicar.</span>`)}
 ${L.length?dtl('dvmy','Minhas divulgações ('+L.length+')',L.map(i=>{const st=stOf(i),m=S[i.id]||{v:0,c:0},tg=st==='No ar'?'ok':st==='Em análise'?'warn':'';return dtl('dvi'+i.id,`<span>${esc(i.ad.loja)} · ${esc(AK[i.k]?AK[i.k].n:'')} <span class="tag ${tg}">${esc(st)}</span></span>`,`${adCard(i.ad,{pv:1})}<span class="m">Valor: ${brl(i.price)} (simulado) · pedido em ${fdl(i.t)}${i.from?' · no ar de '+fdl(i.from)+' a '+fdl(i.to):''}</span>${i.st==='No ar'||i.st==='Encerrada'?`<span class="m">Aparições: ${m.v} · Toques: ${m.c}</span>`:''}${i.why?`<span class="m">Motivo: ${esc(i.why)}</span>`:''}${i.st==='Em análise'?`<button class="chip" type="button" data-adact="cancel" data-id="${esc(i.id)}">Cancelar pedido (valor devolvido, simulado)</button>`:''}`)}).join('')):''}`}
   return `<div class="box" data-nc="1" style="border-left-color:var(--c-merch)"><b>Divulgue seu comércio aqui</b>${adsOn()?'':'<span class="tag warn" style="justify-self:start">Venda desligada pelo administrador</span>'}${body}</div>`}
 /* ---------- gravação ---------- */
 function persistLocal(){LS.s('ab_adq',LQ);LS.s('ab_ads',LA)}
 async function saveMine(items){items=items.slice(-30);if(DB&&UID)await DB.doc('adq/'+UID).set({items});else{LQ=items;persistLocal()}}
-async function submitOrder(){const A=ST(mem),k=A.k,d=A.dr,it={id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),k,days:AK[k].d,price:price(k),t:stamp(),st:'Em análise',ad:{loja:d.loja,tp:d.tp,tt:d.tt,tx:d.tx,bairro:d.bairro||'',wa:d.wa||'',ln:d.ln||''}};
+async function submitOrder(){const A=ST(mem),k=A.k,d=A.dr;if(mineL().filter(i=>i.st==='Em análise').length>=3){A.err='Você já tem 3 pedidos em análise. Espere a aprovação ou cancele um.';A.s='form';toast(A.err);render();return}const it={id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),k,days:AK[k].d,price:price(k),t:stamp(),st:'Em análise',ad:{loja:d.loja,tp:d.tp,tt:d.tt,tx:d.tx,bairro:d.bairro||'',wa:d.wa||'',ln:d.ln||'',...(IMGOK(d.img)?{img:d.img}:{})}};
   try{await saveMine([...mineL(),it]);A.s='';A.k='';A.dr={};A.err='';toast('Pedido enviado para análise (pagamento simulado).');render()}catch(_){A.err='Não consegui enviar agora. Tente de novo.';toast(A.err)}}
-function readDraft(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};return{loja:g('dv_loja'),tp:g('dv_tp')||'mercado',tt:g('dv_tt'),tx:g('dv_tx'),bairro:g('dv_bairro'),wa:g('dv_wa'),ln:g('dv_ln')}}
+function readDraft(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};return{loja:g('dv_loja'),tp:g('dv_tp')||'mercado',tt:g('dv_tt'),tx:g('dv_tx'),bairro:g('dv_bairro'),wa:g('dv_wa'),ln:g('dv_ln'),img:(mem.ad&&mem.ad.dr&&mem.ad.dr.img)||''}}
 function validate(d){if(d.loja.length<3)return 'Informe o nome do comércio.';if(d.tt.length<4)return 'Informe o título.';if(d.tx.length<10)return 'O texto precisa ter pelo menos 10 letras.';if(d.bairro.length<2)return 'Informe o bairro ou a cidade.';if(d.wa&&!waNum(d.wa))return 'WhatsApp inválido. Use DDD e número.';if(d.ln&&!/^https:\/\/[^\s]{4,}$/i.test(d.ln))return 'O link precisa começar com https://';if(!d.wa&&!d.ln)return 'Informe o WhatsApp ou o link.';if(/(cpf|senha|cart[aã]o)/i.test(d.tx))return 'Não coloque dados pessoais ou sensíveis no anúncio.';return ''}
 document.addEventListener('input',e=>{if(!e.target.closest||!e.target.closest('#dvf'))return;const A=ST(mem);A.dr=readDraft();const p=document.getElementById('dvprev');if(p)p.innerHTML=adCard(A.dr,{pv:1})});
+document.addEventListener('change',async e=>{if(!e.target||e.target.id!=='dv_img')return;const f=e.target.files&&e.target.files[0];if(!f)return;const A=ST(mem);A.dr=readDraft();A.ierr='';
+  if(!/^image\//.test(f.type)||f.size>15e6){A.ierr='Escolha uma imagem de até 15 MB.';render();return}
+  try{A.dr.img=await shrink(f)}catch(_){A.ierr='Não consegui usar essa imagem. Tente outra foto.'}render()});
 document.addEventListener('submit',e=>{if(e.target.id!=='dvf')return;e.preventDefault();const A=ST(mem);A.dr=readDraft();const er=validate(A.dr);A.err=er;if(er){const x=document.getElementById('dv_e');if(x)x.textContent=er;return}A.s='pay';render();scrollTo(0,0)});
 document.addEventListener('click',async e=>{
   const c=e.target.closest&&e.target.closest('a[data-adc]');if(c){bump(c.dataset.adc,'c');return}
   const b=e.target.closest&&e.target.closest('[data-adk],[data-adact],[data-aga],[data-adtg]');if(!b)return;e.preventDefault();e.stopPropagation();const A=ST(mem),D=b.dataset;
   if(D.adk){A.k=D.adk;A.s='form';A.err='';render();return}
+  if(D.adact==='noimg'){A.dr=readDraft();A.dr.img='';render();return}
   if(D.adact==='back'){A.s=A.s==='pay'?'form':'';A.err='';render();return}
   if(D.adact==='pay'){b.disabled=true;await submitOrder();return}
-  if(D.adact==='cancel'){const L=mineL().map(i=>i.id===D.id&&i.st==='Em análise'?{...i,st:'Cancelada',why:'Cancelado por você. Valor devolvido (simulado).'}:i);try{await saveMine(L);toast('Pedido cancelado.');render()}catch(_){toast('Não consegui cancelar agora.')}return}
+  if(D.adact==='cancel'){const L=mineL().map(i=>i.id===D.id&&i.st==='Em análise'?{...i,st:'Cancelada',why:'Cancelado por você. Valor devolvido (simulado).',ad:noImg(i.ad)}:i);try{await saveMine(L);toast('Pedido cancelado.');render()}catch(_){toast('Não consegui cancelar agora.')}return}
   if(D.adtg){CFG={...CFG,on:!adsOn()};try{if(DB)await DB.doc('config/ads').set({on:CFG.on,p:CFG.p||{}});else LS.s('ab_adcfg',CFG)}catch(_){toast('Não consegui salvar.')}render();return}
   if(D.aga){const [act,uid,id]=D.aga.split('|'),why=(document.getElementById('dvw_'+id)||{value:''}).value.trim();
     if(act!=='ok'&&why.length<4){toast('Escreva o motivo (pelo menos 4 letras).');return}
@@ -2168,7 +2176,7 @@ async function admDo(act,uid,id,why){
   const g=allQ().find(x=>x.uid===uid),it=g&&g.items.find(i=>i.id===id);if(!it)throw 0;let n;
   if(act==='ok'){const from=stamp(),to=addDs(from,it.days-1);n={...it,st:'No ar',from,to,why:''};const ad={id,uid,k:it.k,from,to,ad:it.ad};
     if(DB){await DB.doc('ads/'+id).set(ad)}else{LA=[...LA.filter(x=>x.id!==id),ad]}}
-  else{n={...it,st:act==='no'?'Recusada':'Retirada',why:why+' Valor devolvido (simulado).'};if(DB){try{await DB.doc('ads/'+id).delete()}catch(_){}}else LA=LA.filter(x=>x.id!==id)}
+  else{n={...it,st:act==='no'?'Recusada':'Retirada',why:why+' Valor devolvido (simulado).',ad:noImg(it.ad)};if(DB){try{await DB.doc('ads/'+id).delete()}catch(_){}}else LA=LA.filter(x=>x.id!==id)}
   const items=g.items.map(i=>i.id===id?n:i);
   if(DB)await DB.doc('adq/'+uid).set({items});else{LQ=items}
   persistLocal()}
