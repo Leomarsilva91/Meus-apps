@@ -532,7 +532,7 @@ ${sp.obra.length?`<div class="card"><b>Por obra ou serviço</b>${sp.obra.map(c=>
 <p class="muted" style="margin:0">Controle interno. Não substitui folha de pagamento nem contabilidade oficial.</p></main>`},
 company:()=>{const e=S.user.emp||{razao:'',cnpj:''};return `${head('Dados da empresa','home')}<main>
 <p class="muted" style="margin:0">Estes dados aparecem nos pedidos, nas propostas e nos comprovantes do perfil ${ROLE[S.user.pk].toLowerCase()}.</p>
-${fld('razao2','Razão social','type="text" value="'+esc(e.razao)+'"')}${fld('cnpj2','CNPJ','type="text" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" value="'+esc(cnpjFmt(e.cnpj))+'"')}
+${compFlds(e)}
 <button class="btn" data-act="savecomp">Salvar</button><div id="cmsg" class="muted" role="status" aria-live="polite"></div></main>`},
 settings:()=>{const r=plRec(),pf=r.prefs||{},m=r.plan!=='free',pro=S.user.role==='pro';
 return `${head('Configurações','home')}<main>
@@ -772,8 +772,10 @@ function applyTheme(){let id='pad';try{if(S.user){const r=plRec();id=(r.themes||
  m=dk?{'--pri':t[7],'--link':t[8],'--head':t[9],'--accbg':t[9],'--bg':t[11]}:{'--pri':t[3],'--link':t[3],'--head':t[4],'--acc':t[5],'--accbg':t[6],'--bg':t[10]};
  V.forEach(v=>{if(m[v])r.style.setProperty(v,m[v]);else r.style.removeProperty(v)})}
 try{if(window.matchMedia)matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>applyTheme())}catch(e){}
-function compCard(){const e=S.user.emp||{razao:'',cnpj:''};return `<div class="card"><b>Dados da empresa</b><p class="muted" style="margin:6px 0 10px">Aparecem nos pedidos, nas propostas e nos comprovantes do perfil ${esc(ROLE[S.user.pk].toLowerCase())}. Só nome e CNPJ podem ser alterados.</p>
-${fld('razao2','Razão social','type="text" value="'+esc(e.razao)+'"')}${fld('cnpj2','CNPJ','type="text" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" value="'+esc(cnpjFmt(e.cnpj))+'"')}
+function compFlds(e){const a=e.addr||{};return `<p class="muted" style="margin:6px 0 0">Mesma conta e mesmo CPF: ${esc(S.user.name)} · ID ${uidOf(S.user.email)}</p>${fld('razao2','Razão social','type="text" value="'+esc(e.razao)+'"')}${fld('cnpj2','CNPJ','type="text" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" value="'+esc(cnpjFmt(e.cnpj))+'"')}
+<p class="muted" style="margin:4px 0 0">Contato e endereço da empresa (opcionais). Em branco, usamos o e-mail e o telefone da sua conta.</p>${fld('cemail2','E-mail da empresa','type="email" inputmode="email" autocomplete="off" maxlength="90" value="'+esc(e.email||'')+'"')}${fld('cphone2','Telefone da empresa com DDD','type="tel" inputmode="numeric" maxlength="15" autocomplete="off" value="'+esc(e.phone?fmtPhone(String(e.phone)):'')+'"')}${fld('crua2','Endereço (rua e número)','type="text" maxlength="90" autocomplete="off" value="'+esc(a.rua||'')+'"')}${fld('cbairro2','Bairro','type="text" maxlength="50" autocomplete="off" value="'+esc(a.bairro||'')+'"')}${fld('ccidade2','Cidade','type="text" maxlength="50" autocomplete="off" value="'+esc(a.cidade||'')+'"')}${fld('cuf2','UF','type="text" maxlength="2" autocomplete="off" style="text-transform:uppercase" value="'+esc(a.uf||'')+'"')}`}
+function compCard(){const e=S.user.emp||{razao:'',cnpj:''};return `<div class="card"><b>Dados da empresa</b><p class="muted" style="margin:6px 0 10px">Aparecem nos pedidos, nas propostas e nos comprovantes do perfil ${esc(ROLE[S.user.pk].toLowerCase())}. Você pode alterar tudo; o CPF e a conta continuam os mesmos.</p>
+${compFlds(e)}
 <button class="btn" style="margin-top:12px" data-act="savecomp">Salvar dados da empresa</button><div id="cmsg" class="muted" role="status" aria-live="polite" style="margin-top:6px"></div></div>`}
 function pwCard(){return `<div class="card"><b>Senha</b><p class="muted" style="margin:6px 0 10px">Para o navegador guardar a senha, aceite o aviso "Salvar senha" ao entrar.</p>
 <details class="mm"><summary class="chip fill" style="display:inline-flex;width:auto">Alterar senha</summary><form class="pf" autocomplete="on" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"><input type="email" name="username" autocomplete="username" value="${esc(S.user.email)}" hidden>
@@ -2585,8 +2587,12 @@ document.addEventListener('click',e=>{
   if(D.act==='addemp')return addEmp();
   if(D.act==='savecomp'){const rz=$('#razao2').value.trim(),cn=$('#cnpj2').value,m=$('#cmsg'),E={};
     if(rz.length<3)E.razao2='Informe a razão social.';if(!cnpjOk(cn))E.cnpj2='Informe um CNPJ válido.';else if(cnpjDup(cn,S.user.email))E.cnpj2='Este CNPJ já está cadastrado em outra conta.';
+    const g=i=>String(($('#'+i)||{}).value||'').replace(/[<>]/g,'').trim(),ce=g('cemail2').toLowerCase(),cp=g('cphone2').replace(/\D/g,''),ar=g('crua2'),ab=g('cbairro2'),ac=g('ccidade2'),au=g('cuf2').toUpperCase();
+    if(ce&&!EMAIL.test(ce))E.cemail2='Informe um e-mail válido ou deixe em branco.';
+    if(cp&&(cp.length<10||cp.length>11))E.cphone2='Informe o telefone com DDD ou deixe em branco.';
+    if(ar||ab||ac||au){if(ar.length<3)E.crua2='Informe a rua e o número.';if(ac.length<2)E.ccidade2='Informe a cidade.';if(!/^[A-Z]{2}$/.test(au))E.cuf2='Informe a UF com 2 letras.'}
     if(showErrors(E))return;
-    const l=users(),u=l.find(x=>x.email===S.user.email),k=S.user.pk;if(!u||!u.roles[k])return;u.roles[k]={...u.roles[k],razao:rz,cnpj:cnpjDig(cn)};
+    const l=users(),u=l.find(x=>x.email===S.user.email),k=S.user.pk;if(!u||!u.roles[k])return;const nr={...u.roles[k],razao:rz,cnpj:cnpjDig(cn)};delete nr.email;delete nr.phone;delete nr.addr;if(ce)nr.email=ce;if(cp)nr.phone=cp;if(ar||ab||ac||au)nr.addr={rua:ar.slice(0,90),bairro:ab.slice(0,50),cidade:ac.slice(0,50),uf:au};u.roles[k]=nr;
     saveUsers(l);S.user=view(u,k);m.textContent='Dados da empresa salvos.';return}
   if(D.act==='saveprof2'){const tt=$('#ptitle').value.trim().slice(0,40),cc=$('#pcat2').value,cy=$('#pcity2').value.trim(),m=$('#pmsg2');if(cy.length<2){m.textContent='Informe sua cidade.';return}const ar=cc===OUT?$('#pcat2ar').value.trim().slice(0,60):'';if(cc===OUT&&ar.length<3){m.textContent='Informe sua área de atuação.';return}
     const l=users(),u=l.find(x=>x.email===S.user.email);const k=S.user.pk,kd=$('#pkind')?$('#pkind').value:undefined;if(!u||!u.roles[k]||S.user.role!=='pro')return;if(k==='pro'&&!kd){m.textContent='Escolha como você atua.';return}u.roles[k]={...u.roles[k],cat:cc,city:cy,title:tt,area:ar,...(k==='pro'?{kind:kd}:{})};saveUsers(l);S.user=view(u,k);m.textContent='Profissão atualizada.';return}
