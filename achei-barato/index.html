@@ -2093,4 +2093,126 @@ fbInit();
 const lk=document.getElementById('fblk');if(lk)lk.innerHTML=fbLink();
 })();
 </script>
+<script>
+/* ---- Divulgação paga: pacotes, pedido, pagamento simulado, aprovação e faixa "Patrocinado" ---- */
+(()=>{
+const AK={sem:{n:'Destaque da semana',d:7,p:29.9,t:'Faixa “Patrocinado” na aba Promoções.'},quin:{n:'Vitrine da quinzena',d:15,p:59.9,t:'Promoções + Comunidade.'},mes:{n:'Mês completo',d:30,p:99.9,t:'Promoções + Comunidade, com prioridade na rotação.'}};
+const KS=['sem','quin','mes'],TX={...(typeof TN!=='undefined'?TN:{}),servico:'Serviços',outro:'Outro'};
+let CFG={on:true,p:{}},ADS=[],ADQM=[],ADQ=[],MYV={},ADVALL=[],LQ=LS.g('ab_adq',[]),LA=LS.g('ab_ads',[]),SEEN=new Set(),vt=null,started=0,advAll=0;
+const adsOn=()=>CFG.on!==false;
+const price=k=>CFG.p&&CFG.p[k]>0?CFG.p[k]:AK[k].p;
+const stamp=()=>todayS();
+const addDs=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fdl=s=>s?new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'';
+const mineL=()=>DB?ADQM:LQ;
+const allQ=()=>DB?ADQ:[{uid:'local',items:LQ}];
+const actAds=()=>{const t=stamp(),L=(DB?ADS:LA).filter(a=>a&&a.ad&&a.from<=t&&t<=a.to);const h=String(t)+Math.floor(Date.now()/36e5);return L.map(a=>({a,o:(a.k==='mes'?0:1)+hs(h+a.id)})).sort((x,y)=>x.o-y.o).map(x=>x.a)};
+const stOf=i=>i.st==='No ar'&&i.to&&i.to<stamp()?'Encerrada':i.st;
+const sums=()=>{const m={};ADVALL.forEach(d=>{const o=d.m||{};Object.keys(o).forEach(id=>{const x=m[id]=m[id]||{v:0,c:0};x.v+=o[id].v||0;x.c+=o[id].c||0})});Object.keys(MYV).forEach(id=>{if(!ADVALL.length){const x=m[id]=m[id]||{v:0,c:0};x.v+=MYV[id].v||0;x.c+=MYV[id].c||0}});return m};
+const waNum=s=>{let d=String(s||'').replace(/\D/g,'');if(d.length<10||d.length>13)return '';if(d.length<=11)d='55'+d;return d};
+const ST=mem=>mem.ad||(mem.ad={s:'',k:'',dr:{}});
+function adCard(a,o){o=o||{};const wa=waNum(a.wa),ln=/^https:\/\/[^\s]+$/i.test(a.ln||'')?a.ln:'',id=esc(o.id||'');
+  const cta=wa?`<a class="btn acc" ${o.pv?'':`data-adc="${id}" target="_blank" rel="noopener noreferrer" href="https://wa.me/${wa}"`} style="text-decoration:none;text-align:center">Chamar no WhatsApp</a>`:ln?`<a class="btn acc" ${o.pv?'':`data-adc="${id}" target="_blank" rel="noopener noreferrer" href="${esc(ln)}"`} style="text-decoration:none;text-align:center">Abrir o link</a>`:'';
+  return `<div class="card" data-nc="1" ${o.pv?'':`data-adid="${id}"`} style="border-top-color:var(--c-merch)"><div class="row sp"><span class="tag warn">Patrocinado</span><span class="tag">${esc(TX[a.tp]||'Comércio')}</span></div><div class="t">${esc(a.tt||'Título do anúncio')}</div><div class="m">${esc(a.loja||'Nome do comércio')}${a.bairro?' · '+esc(a.bairro):''}</div><div>${esc(a.tx||'Texto do anúncio.')}</div>${cta}</div>`}
+/* ---------- comerciante ---------- */
+function adsMerch(){
+  if(!adsOn()&&!adm)return '';
+  const A=ST(mem),L=mineL().slice().reverse(),S=sums();
+  let body='';
+  if(A.s==='form'||A.s==='pay'){const k=A.k,P=AK[k],d=A.dr||{};
+    body=`<div class="row"><button class="chip" type="button" data-adact="back">← ${A.s==='pay'?'Voltar e editar':'Trocar pacote'}</button><span class="tag ok">${esc(P.n)} · ${P.d} dias · ${brl(price(k))}</span></div>`;
+    if(A.s==='form')body+=`<form class="f" id="dvf" novalidate><label for="dv_loja">Nome do comércio<input id="dv_loja" maxlength="40" value="${esc(d.loja||'')}" autocomplete="organization"></label>
+<label for="dv_tp">Tipo<select id="dv_tp">${Object.keys(TX).map(x=>`<option value="${x}"${(d.tp||'mercado')===x?' selected':''}>${esc(TX[x])}</option>`).join('')}</select></label>
+<label for="dv_tt">Título (até 40 letras)<input id="dv_tt" maxlength="40" value="${esc(d.tt||'')}"></label>
+<label for="dv_tx">Texto (até 120 letras)<textarea id="dv_tx" rows="3" maxlength="120" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%">${esc(d.tx||'')}</textarea></label>
+<label for="dv_bairro">Bairro ou cidade<input id="dv_bairro" maxlength="40" value="${esc(d.bairro||'')}"></label>
+<label for="dv_wa">WhatsApp com DDD (opcional)<input id="dv_wa" type="tel" inputmode="numeric" maxlength="16" value="${esc(d.wa||'')}"></label>
+<label for="dv_ln">Link do site ou rede social (opcional, começa com https://)<input id="dv_ln" type="url" inputmode="url" maxlength="200" value="${esc(d.ln||'')}"></label>
+<span class="m">Informe pelo menos o WhatsApp ou o link. Não escreva preço ou promoção que você não vá cumprir; se citar preço, ele precisa estar no app com validade. Sem dados pessoais de terceiros.</span>
+<div class="m"><b>Como vai aparecer:</b></div><div id="dvprev">${adCard(d,{pv:1})}</div>
+<div class="err" id="dv_e" role="alert">${esc(A.err||'')}</div><button class="btn acc" type="submit">Continuar para o pagamento</button></form>`;
+    else body+=`<div class="box" data-nc="1"><b>Resumo do pedido</b><div class="line"><span>Pacote</span><span>${esc(P.n)}</span></div><div class="line"><span>Período</span><span>${P.d} dias a partir da aprovação</span></div><div class="line"><span>Onde aparece</span><span>${esc(P.t)}</span></div><div class="line tot"><span>Total</span><span>${brl(price(k))}</span></div></div>${adCard(d,{pv:1})}
+<div class="box" data-nc="1" style="border-left-color:var(--acc)"><b>Pagamento simulado</b><span class="m">Neste protótipo nenhuma cobrança é feita e nenhum Pix é gerado. Ao confirmar, o pedido vai para análise da equipe e só entra no ar depois de aprovado. Se for recusado, o valor é devolvido (simulado).</span></div>
+<button class="btn acc" type="button" data-adact="pay">Confirmar pagamento simulado de ${brl(price(k))}</button>`}
+  else{
+    body=`<span class="m">Seu anúncio aparece com a etiqueta <b>Patrocinado</b>. Ele nunca muda os preços, a ordem das promoções nem o “mais barato”.</span>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${KS.map(k=>`<button type="button" class="card" data-adk="${k}" style="text-align:left;cursor:pointer;color:inherit;font:inherit;border-top-color:var(--c-merch)"><span class="t">${esc(AK[k].n)}</span><span class="price" style="color:var(--c-merch)">${brl(price(k))}</span><span class="m">${AK[k].d} dias</span><span class="m">${esc(AK[k].t)}</span><span class="tag ok" style="justify-self:start">Escolher</span></button>`).join('')}</div>
+${dtl('dvrl','Regras da divulgação',`<span class="m">• A equipe analisa o anúncio antes de publicar. O prazo conta a partir da aprovação.<br>• Anúncio recusado: o valor é devolvido (simulado neste protótipo).<br>• O anúncio precisa ser verdadeiro e do seu comércio. Preço citado precisa estar no app com validade.<br>• Anúncio que descumprir as regras pode ser retirado, com devolução proporcional.<br>• Não há garantia de quantidade de toques ou clientes. Você acompanha as aparições e os toques aqui.<br>• Sem imagens por enquanto: o anúncio é só texto.</span>`)}
+${L.length?dtl('dvmy','Minhas divulgações ('+L.length+')',L.map(i=>{const st=stOf(i),m=S[i.id]||{v:0,c:0},tg=st==='No ar'?'ok':st==='Em análise'?'warn':'';return dtl('dvi'+i.id,`<span>${esc(i.ad.loja)} · ${esc(AK[i.k]?AK[i.k].n:'')} <span class="tag ${tg}">${esc(st)}</span></span>`,`${adCard(i.ad,{pv:1})}<span class="m">Valor: ${brl(i.price)} (simulado) · pedido em ${fdl(i.t)}${i.from?' · no ar de '+fdl(i.from)+' a '+fdl(i.to):''}</span>${i.st==='No ar'||i.st==='Encerrada'?`<span class="m">Aparições: ${m.v} · Toques: ${m.c}</span>`:''}${i.why?`<span class="m">Motivo: ${esc(i.why)}</span>`:''}${i.st==='Em análise'?`<button class="chip" type="button" data-adact="cancel" data-id="${esc(i.id)}">Cancelar pedido (valor devolvido, simulado)</button>`:''}`)}).join('')):''}`}
+  return `<div class="box" data-nc="1" style="border-left-color:var(--c-merch)"><b>Divulgue seu comércio aqui</b>${adsOn()?'':'<span class="tag warn" style="justify-self:start">Venda desligada pelo administrador</span>'}${body}</div>`}
+/* ---------- gravação ---------- */
+function persistLocal(){LS.s('ab_adq',LQ);LS.s('ab_ads',LA)}
+async function saveMine(items){items=items.slice(-30);if(DB&&UID)await DB.doc('adq/'+UID).set({items});else{LQ=items;persistLocal()}}
+async function submitOrder(){const A=ST(mem),k=A.k,d=A.dr,it={id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),k,days:AK[k].d,price:price(k),t:stamp(),st:'Em análise',ad:{loja:d.loja,tp:d.tp,tt:d.tt,tx:d.tx,bairro:d.bairro||'',wa:d.wa||'',ln:d.ln||''}};
+  try{await saveMine([...mineL(),it]);A.s='';A.k='';A.dr={};A.err='';toast('Pedido enviado para análise (pagamento simulado).');render()}catch(_){A.err='Não consegui enviar agora. Tente de novo.';toast(A.err)}}
+function readDraft(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};return{loja:g('dv_loja'),tp:g('dv_tp')||'mercado',tt:g('dv_tt'),tx:g('dv_tx'),bairro:g('dv_bairro'),wa:g('dv_wa'),ln:g('dv_ln')}}
+function validate(d){if(d.loja.length<3)return 'Informe o nome do comércio.';if(d.tt.length<4)return 'Informe o título.';if(d.tx.length<10)return 'O texto precisa ter pelo menos 10 letras.';if(d.bairro.length<2)return 'Informe o bairro ou a cidade.';if(d.wa&&!waNum(d.wa))return 'WhatsApp inválido. Use DDD e número.';if(d.ln&&!/^https:\/\/[^\s]{4,}$/i.test(d.ln))return 'O link precisa começar com https://';if(!d.wa&&!d.ln)return 'Informe o WhatsApp ou o link.';if(/(cpf|senha|cart[aã]o)/i.test(d.tx))return 'Não coloque dados pessoais ou sensíveis no anúncio.';return ''}
+document.addEventListener('input',e=>{if(!e.target.closest||!e.target.closest('#dvf'))return;const A=ST(mem);A.dr=readDraft();const p=document.getElementById('dvprev');if(p)p.innerHTML=adCard(A.dr,{pv:1})});
+document.addEventListener('submit',e=>{if(e.target.id!=='dvf')return;e.preventDefault();const A=ST(mem);A.dr=readDraft();const er=validate(A.dr);A.err=er;if(er){const x=document.getElementById('dv_e');if(x)x.textContent=er;return}A.s='pay';render();scrollTo(0,0)});
+document.addEventListener('click',async e=>{
+  const c=e.target.closest&&e.target.closest('a[data-adc]');if(c){bump(c.dataset.adc,'c');return}
+  const b=e.target.closest&&e.target.closest('[data-adk],[data-adact],[data-aga],[data-adtg]');if(!b)return;e.preventDefault();e.stopPropagation();const A=ST(mem),D=b.dataset;
+  if(D.adk){A.k=D.adk;A.s='form';A.err='';render();return}
+  if(D.adact==='back'){A.s=A.s==='pay'?'form':'';A.err='';render();return}
+  if(D.adact==='pay'){b.disabled=true;await submitOrder();return}
+  if(D.adact==='cancel'){const L=mineL().map(i=>i.id===D.id&&i.st==='Em análise'?{...i,st:'Cancelada',why:'Cancelado por você. Valor devolvido (simulado).'}:i);try{await saveMine(L);toast('Pedido cancelado.');render()}catch(_){toast('Não consegui cancelar agora.')}return}
+  if(D.adtg){CFG={...CFG,on:!adsOn()};try{if(DB)await DB.doc('config/ads').set({on:CFG.on,p:CFG.p||{}});else LS.s('ab_adcfg',CFG)}catch(_){toast('Não consegui salvar.')}render();return}
+  if(D.aga){const [act,uid,id]=D.aga.split('|'),why=(document.getElementById('dvw_'+id)||{value:''}).value.trim();
+    if(act!=='ok'&&why.length<4){toast('Escreva o motivo (pelo menos 4 letras).');return}
+    try{await admDo(act,uid,id,why);toast(act==='ok'?'Anúncio aprovado e no ar.':act==='no'?'Pedido recusado (valor devolvido, simulado).':'Anúncio retirado.');render()}catch(_){toast('Não consegui salvar agora.')}}
+},true);
+document.addEventListener('submit',async e=>{if(e.target.id!=='dvpf')return;e.preventDefault();const p={};for(const k of KS){const v=Number(String((document.getElementById('dvp_'+k)||{}).value||'').replace(/\./g,'').replace(',','.'));if(!(v>0&&v<100000))return toast('Informe um valor válido para cada pacote.');p[k]=Math.round(v*100)/100}
+  CFG={...CFG,p};try{if(DB)await DB.doc('config/ads').set({on:adsOn(),p});else LS.s('ab_adcfg',CFG);toast('Preços salvos.');render()}catch(_){toast('Não consegui salvar.')}});
+/* ---------- administrador ---------- */
+async function admDo(act,uid,id,why){
+  const g=allQ().find(x=>x.uid===uid),it=g&&g.items.find(i=>i.id===id);if(!it)throw 0;let n;
+  if(act==='ok'){const from=stamp(),to=addDs(from,it.days-1);n={...it,st:'No ar',from,to,why:''};const ad={id,uid,k:it.k,from,to,ad:it.ad};
+    if(DB){await DB.doc('ads/'+id).set(ad)}else{LA=[...LA.filter(x=>x.id!==id),ad]}}
+  else{n={...it,st:act==='no'?'Recusada':'Retirada',why:why+' Valor devolvido (simulado).'};if(DB){try{await DB.doc('ads/'+id).delete()}catch(_){}}else LA=LA.filter(x=>x.id!==id)}
+  const items=g.items.map(i=>i.id===id?n:i);
+  if(DB)await DB.doc('adq/'+uid).set({items});else{LQ=items}
+  persistLocal()}
+function adsAdmin(){
+  const Q=[];allQ().forEach(g=>g.items.forEach(i=>Q.push({...i,uid:g.uid})));Q.sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+  const S=sums(),pend=Q.filter(i=>i.st==='Em análise'),on=Q.filter(i=>stOf(i)==='No ar'),old=Q.filter(i=>!['Em análise','No ar'].includes(stOf(i)));
+  const paid=Q.filter(i=>['No ar','Encerrada'].includes(stOf(i))).reduce((a,i)=>a+(i.price||0),0);
+  const actRow=(i,acts)=>`<div class="box" data-nc="1"><b>${esc(i.ad.loja)} · ${esc(AK[i.k]?AK[i.k].n:'')} · ${brl(i.price)}</b>${adCard(i.ad,{pv:1})}<span class="m">Pedido em ${fdl(i.t)}${i.from?' · no ar de '+fdl(i.from)+' a '+fdl(i.to):''} · Aparições ${(S[i.id]||{v:0}).v} · Toques ${(S[i.id]||{c:0}).c}</span>${i.why?`<span class="m">Motivo: ${esc(i.why)}</span>`:''}${acts?`<label class="fl" for="dvw_${esc(i.id)}">Motivo (obrigatório para recusar ou retirar)<input id="dvw_${esc(i.id)}" maxlength="140"></label><div class="row">${acts.map(a=>`<button type="button" class="chip" data-aga="${a[0]}|${esc(i.uid)}|${esc(i.id)}">${a[1]}</button>`).join('')}</div>`:''}</div>`;
+  return `<div class="box" data-nc="1"><b>Venda de divulgação: ${adsOn()?'ligada':'desligada'}</b><span class="m">Desligada, a área “Divulgue seu comércio” some para os comerciantes e a faixa de anúncios deixa de aparecer. Os pedidos continuam guardados.</span><div class="row"><button type="button" class="chip" data-adtg="1" aria-pressed="${adsOn()}">${adsOn()?'Desligar venda':'Ligar venda'}</button></div></div>
+<form class="f box" id="dvpf" novalidate data-nc="1"><b>Preços dos pacotes (R$)</b>${KS.map(k=>`<label for="dvp_${k}">${esc(AK[k].n)} · ${AK[k].d} dias<input id="dvp_${k}" inputmode="decimal" value="${String(price(k).toFixed(2)).replace('.',',')}"></label>`).join('')}<button class="btn" type="submit">Salvar preços</button></form>
+<div class="box" data-nc="1"><b>Resumo (simulado)</b><div class="line"><span>Pedidos em análise</span><b>${pend.length}</b></div><div class="line"><span>No ar agora</span><b>${on.length}</b></div><div class="line"><span>Valor dos pedidos aprovados</span><b>${brl(paid)}</b></div></div>
+${dtl('dvpd','Pedidos em análise ('+pend.length+')',pend.length?pend.map(i=>actRow(i,[['ok','Aprovar e publicar'],['no','Recusar']])).join(''):'<span class="m">Nenhum pedido em análise.</span>',pend.length>0)}
+${dtl('dvon','No ar agora ('+on.length+')',on.length?on.map(i=>actRow(i,[['rm','Retirar do ar']])).join(''):'<span class="m">Nenhum anúncio no ar.</span>')}
+${dtl('dvhs','Histórico ('+old.length+')',old.length?old.map(i=>actRow(i,null)).join(''):'<span class="m">Sem histórico ainda.</span>')}`}
+/* ---------- vitrine ---------- */
+function stripPromo(){
+  if(!adsOn())return '';const L=actAds().slice(0,2);
+  if(!L.length)return `<div class="box" data-nc="1" style="border-style:dashed;margin-bottom:12px"><div class="row sp"><span class="m">Espaço para o seu comércio aparecer aqui.</span><button type="button" class="chip" data-adgo="1">Divulgar meu comércio</button></div></div>`;
+  return `<div style="display:grid;gap:8px;margin-bottom:12px"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${L.map(a=>adCard(a.ad,{id:a.id})).join('')}</div><span class="m">Anúncios pagos por comércios. Não mudam preços nem a ordem das promoções.</span></div>`}
+function stripCom(){
+  if(!adsOn())return '';const a=actAds().filter(x=>x.k!=='sem')[0];
+  return a?adCard(a.ad,{id:a.id}):`<div class="box" data-nc="1" style="border-style:dashed"><div class="row sp"><span class="m">Espaço para comércios locais anunciarem aqui.</span><button type="button" class="chip" data-adgo="1">Divulgar meu comércio</button></div></div>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-adgo]');if(!b)return;e.preventDefault();e.stopPropagation();mem.tab='merch';render();scrollTo(0,0)},true);
+/* ---------- contagem de aparições e toques ---------- */
+function bump(id,w){if(!id||!DB&&!UID&&0)return;const x=MYV[id]=MYV[id]||{v:0,c:0};x[w]++;clearTimeout(vt);vt=setTimeout(flush,1500)}
+async function flush(){try{if(DB&&UID)await DB.doc('adv/'+UID).set({m:MYV})}catch(_){}}
+function after(){try{document.querySelectorAll('#v [data-adid]').forEach(el=>{const id=el.dataset.adid;if(id&&!SEEN.has(id)){SEEN.add(id);bump(id,'v')}});
+  if(DB&&!advAll&&(adm||mineL().length)){advAll=1;DB.collection('adv').onSnapshot(sn=>{ADVALL=sn.docs.map(d=>({uid:d.id,m:(d.data()||{}).m||{}}));rs()},()=>{})}}catch(_){}}
+const rs=()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;render()};
+/* ---------- encaixe no app ---------- */
+const _m=merchV;merchV=function(){const h=_m();return h.replace('</div>','</div>'+adsMerch())};
+const _a=adminV;adminV=function(){const h=_a();if(!adm)return h;const sec=`<details class="adm" data-adm="ads"${(mem.adm||{}).ads?' open':''}><summary style="font-weight:700;font-size:16px;cursor:pointer;min-height:44px;display:flex;align-items:center">Divulgação paga (${allQ().reduce((a,g)=>a+g.items.filter(i=>i.st==='Em análise').length,0)} em análise)</summary><div style="display:grid;gap:12px;padding:6px 0 12px">${adsAdmin()}</div></details>`;return h.replace('<details class="adm" data-adm="mod"',sec+'<details class="adm" data-adm="mod"')};
+const _p=promoV;promoV=function(){const h=_p();return h.replace('<div class="bar">',stripPromo()+'<div class="bar">')};
+const _c=comV;comV=function(){const h=_c();return h.replace(/<div class="box" data-nc="1" style="border-style:dashed"><b[^>]*>Publicidade<\/b>[\s\S]*?<\/div>/,stripCom())};
+const _r=render;render=function(){_r();after()};
+/* ---------- dados compartilhados ---------- */
+try{const c=LS.g('ab_adcfg',null);if(c&&typeof c==='object')CFG=c}catch(_){}
+let tries=0;const iv=setInterval(()=>{if(started)return;if(typeof HASCL==='undefined'||!HASCL){started=1;clearInterval(iv);return}
+  if(!DB||!(UID||++tries>8))return;started=1;clearInterval(iv);
+  try{DB.doc('config/ads').onSnapshot(d=>{if(d.exists){const v=d.data()||{};CFG={on:v.on!==false,p:v.p&&typeof v.p==='object'?v.p:{}};rs()}},()=>{});
+    DB.collection('ads').onSnapshot(sn=>{ADS=sn.docs.map(d=>({...d.data(),id:d.id}));if(adm){const t=stamp();ADS.filter(a=>a.to&&a.to<t).forEach(a=>DB.doc('ads/'+a.id).delete().catch(()=>{}))}rs()},()=>{});
+    if(UID){DB.doc('adq/'+UID).onSnapshot(d=>{ADQM=d.exists&&Array.isArray(d.data().items)?d.data().items:[];rs()},()=>{});
+      DB.doc('adv/'+UID).onSnapshot(d=>{if(d.exists&&d.data().m&&typeof d.data().m==='object'){const m=d.data().m;Object.keys(m).forEach(id=>{const x=MYV[id]=MYV[id]||{v:0,c:0};x.v=Math.max(x.v,m[id].v||0);x.c=Math.max(x.c,m[id].c||0)})}},()=>{})}
+    if(adm)DB.collection('adq').onSnapshot(sn=>{ADQ=sn.docs.map(d=>({uid:d.id,items:Array.isArray(d.data().items)?d.data().items:[]}));rs()},()=>{})}catch(_){}},500);
+})();
+</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
