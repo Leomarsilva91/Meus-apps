@@ -138,7 +138,7 @@ function locCity(c){const P=locParts(c);return P.length?P[P.length-1]:''}
 
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const _store=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return localStorage}catch(e){const m={};return{getItem:k=>m[k]??null,setItem:(k,v)=>{m[k]=v},removeItem:k=>{delete m[k]}}}})();
-const SYNCK={ms_fb:1,ms_requests:1,ms_proposals:1,ms_msgs:1,ms_users:1,ms_plans:1,ms_jobs:1,ms_rec:1,ms_lists:1,ms_rates:1,ms_cfg:1,ms_reports:1};
+const SYNCK={ms_fb:1,ms_requests:1,ms_proposals:1,ms_msgs:1,ms_users:1,ms_plans:1,ms_jobs:1,ms_rec:1,ms_lists:1,ms_rates:1,ms_cfg:1,ms_reports:1,ms_adq:1};
 const SY={db:null,on:false,sent:{},q:Promise.resolve(),tm:{}};
 const rawSet=(k,v)=>_store.setItem(k,v);
 const syId=(k,x)=>String(k==='ms_users'||k==='ms_plans'?x.email:x.id).replace(/[^A-Za-z0-9_\-.~:@+]/g,'_').slice(0,180);
@@ -744,7 +744,7 @@ function hmDefs(pro){const un=unreadTotal(),cb=campOn().length?' · '+campOn().l
  X=(id,l,go)=>({id,l,x:1,go,h:`<button class="btn ghost" data-go="${go}">${l}</button>`}),
  chat=`<button class="btn" data-go="chats">Conversas${un?' ('+un+(un>1?' novas':' nova')+')':''}</button>`,
  B=(id,l,h)=>({id,l,h}),nm={id:'nums',l:'Telefones de emergência',h:null};
-const ex=[X('reports','Relatórios, '+(pro?'ganhos':'gastos')+' e impostos','reports'),...(E?[X('staff','Funcionários e gastos da equipe','staff')]:[]),X('done','Pedidos atendidos',pro?'inboxdone':'minedone'),X('hist','Histórico e estatísticas','hist'),...(pro?[X('spot','Destacar meus vídeos','spot'),X('plans','Planos, pontos e vantagens'+cb,'plans')]:[X('cplans','Planos do contratante','cplans'),X('cperks','Pontos, prêmios e vantagens'+cb,'cperks')]),X('legal','Termos, políticas e privacidade','legal')];
+const ex=[X('reports','Relatórios, '+(pro?'ganhos':'gastos')+' e impostos','reports'),...(E?[X('staff','Funcionários e gastos da equipe','staff')]:[]),X('done','Pedidos atendidos',pro?'inboxdone':'minedone'),X('hist','Histórico e estatísticas','hist'),...(pro?[X('spot','Destacar meus vídeos','spot'),X('pdest','Destacar meu perfil','pdest'),X('plans','Planos, pontos e vantagens'+cb,'plans')]:[X('cplans','Planos do contratante','cplans'),X('cperks','Pontos, prêmios e vantagens'+cb,'cperks')]),X('adv','Divulgar meu negócio','adv'),X('legal','Termos, políticas e privacidade','legal')];
 return[...(pro?[B('inbox','Ver pedidos recebidos','<button class="btn" data-go="inbox">Ver pedidos recebidos'+(newReqCount()?' ('+newReqCount()+' novos)':'')+'</button>'),B('feed','Vídeos da plataforma e filmar meu serviço','<button class="btn" data-go="feed">Vídeos da plataforma</button>')]:[B('request','Pedir um serviço','<button class="btn" data-go="request">Pedir um serviço</button>'),B('mine','Meus pedidos','<button class="btn" data-go="mine">Meus pedidos</button>'),B('feedmenu','Vídeos de serviços','<button class="btn" data-go="feedmenu">Vídeos de serviços</button>')]),B('chats','Conversas',chat),nm,...ex]}
 function hmCfg(){const r=plRec(),c=(r.hm||{})[S.user.role]||{},D=hmDefs(S.user.role==='pro'),ids=D.map(x=>x.id),o=(c.o||[]).filter(x=>ids.includes(x));return{o:[...o,...ids.filter(x=>!o.includes(x))],h:(c.h||[]).filter(x=>ids.includes(x)),p:(c.p||[]).filter(x=>ids.includes(x)),D}}
 function hmSave(c){const r=plRec();r.hm=r.hm||{};r.hm[S.user.role]={o:c.o,h:c.h,p:c.p};plSave(r)}
@@ -2691,7 +2691,7 @@ document.addEventListener('click',e=>{
   if(D.act==='pay')return pay();
   if(D.act==='wipe'){
     if(!S.wipe){S.wipe=1;t.textContent='Toque de novo para apagar tudo';return}
-    S.wipe=0;['ms_rates','ms_lists','ms_fb','ms_msgs','ms_users','ms_session','ms_requests','ms_proposals','ms_posts','ms_jobs','ms_projects','ms_expenses','ms_staff','ms_pay','ms_inc','ms_alloc','ms_consents','ms_reports','ms_refunds','ms_plans'].forEach(k=>store.removeItem(k));
+    S.wipe=0;['ms_rates','ms_lists','ms_fb','ms_msgs','ms_users','ms_session','ms_requests','ms_proposals','ms_posts','ms_jobs','ms_projects','ms_expenses','ms_staff','ms_pay','ms_inc','ms_alloc','ms_consents','ms_reports','ms_refunds','ms_plans','ms_adq'].forEach(k=>store.removeItem(k));
     S.user=null;S.role=null;S.req=newReq();S.q=newQ();S.rec=newRec();S.aid++;S.qaid++;return render();
   }
   if(D.act==='pay2')return payUnlock();
@@ -2902,8 +2902,8 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
  if(a==='favtog'){const r=plRec(),em=t.dataset.em;r.fav=(r.fav||[]).includes(em)?r.fav.filter(x=>x!==em):[...(r.fav||[]),em];plSave(r);return keep()}
  if(a==='rehire'){const q=jget('ms_requests').find(x=>x&&x.id===+t.dataset.qid&&x.email===S.user.email);if(!q)return;const p=jget('ms_proposals').find(x=>x&&x.id===q.acc);const r=newReq();r.desc=String(q.desc||'');r.city=q.city||'';r.sel=Array.isArray(q.cats)?q.cats.slice():[];r.pref=t.dataset.em||(p&&p.email)||'';r.prefName=(p&&p.name)||'';S.req=r;S.aid=(S.aid||0)+1;return go('request')}
 },true);
-V.admin=()=>{if(!isAdmin())return V.home();const t=S.adm||'geral',T=[['geral','Painel'],['users','Usuários'],['reqs','Pedidos'],['mod','Moderação'],['cfg','Ajustes']];
-  return `${head('Administração','home')}<main><div class="row" role="tablist">${T.map(x=>`<button class="chip" role="tab" data-act="admtab" data-t="${x[0]}" aria-pressed="${t===x[0]}">${x[1]}</button>`).join('')}</div>${t==='geral'?admGeral():t==='users'?admUsers():t==='reqs'?admReqs():t==='mod'?admMod():admCfg()}<p class="muted" style="margin:0;font-size:13px">Protótipo: a área de administração só é escondida na tela. Antes de lançar de verdade, o controle de acesso precisa ficar no servidor.</p></main>`};
+V.admin=()=>{if(!isAdmin())return V.home();const t=S.adm||'geral',T=[['geral','Painel'],['users','Usuários'],['reqs','Pedidos'],['mod','Moderação'],['adv','Divulgação'],['cfg','Ajustes']];
+  return `${head('Administração','home')}<main><div class="row" role="tablist">${T.map(x=>`<button class="chip" role="tab" data-act="admtab" data-t="${x[0]}" aria-pressed="${t===x[0]}">${x[1]}</button>`).join('')}</div>${t==='geral'?admGeral():t==='users'?admUsers():t==='reqs'?admReqs():t==='mod'?admMod():t==='adv'?admAdv():admCfg()}<p class="muted" style="margin:0;font-size:13px">Protótipo: a área de administração só é escondida na tela. Antes de lançar de verdade, o controle de acesso precisa ficar no servidor.</p></main>`};
 function admAct(D){
   if(!isAdmin())return;
   const conf=k=>{if(S.admc!==k){S.admc=k;render();return false}S.admc=null;return true};
@@ -2996,6 +2996,149 @@ document.addEventListener('change',e=>{const t=e.target;if(!t)return;
   if(t.id==='fbimg'){const f=t.files&&t.files[0];t.value='';const m=document.getElementById('fbmsg');fbShrink(f).then(u=>{FBU.img=u;FBU.msg='';fbRefresh()},()=>{if(m)m.textContent='Não consegui ler essa imagem. Tente outro print.'})}
 },true);
 document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='fbmine')FBU.mo=e.target.open},true);
+</script>
+<script>
+/* ---- Divulgação: anúncios de lojas e empresas (ms_adq) e destaque do perfil do profissional (ms_plans.pf) ---- */
+(()=>{
+const AK={sem:{n:'Destaque da semana',d:7,p:29.9},quin:{n:'Vitrine da quinzena',d:15,p:59.9},mes:{n:'Mês completo',d:30,p:99.9}},KS=['sem','quin','mes'];
+const AUD={all:'Contratantes e profissionais',cli:'Só contratantes',pro:'Só profissionais'};
+const TX={loja:'Loja',material:'Material de construção',ferramentas:'Ferramentas e equipamentos',curso:'Curso ou treinamento',servico:'Serviços',outro:'Outro'};
+const PF_PKG=[[1,290],[7,1490],[30,4490]],SEEN=new Set();let MYV={},vt=null,vinit=0;
+const hsh=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0)/4294967296};
+const tdy=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const addDs=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fdl=s=>s?new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'';
+const raw=()=>jget('ms_adq').filter(x=>x&&x.id);
+const cfgI=()=>raw().find(x=>x.cfg)||{id:'adcfg',cfg:1};
+const orders=()=>raw().filter(x=>!x.cfg&&!x.vw&&x.ad&&x.uid);
+const adsOn=()=>cfgI().on!==false;
+const price=k=>{const p=(cfgI().p||{})[k];return p>0?p:AK[k].p};
+const saveRaw=L=>spSaveAll('ms_adq',L);
+const putOrd=o=>saveRaw([...raw().filter(x=>x.id!==o.id),o]);
+const me=()=>uidOf(S.user.email);
+const mineO=()=>orders().filter(x=>x.uid===me()).sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+const stOf=i=>i.st==='No ar'&&i.to&&i.to<tdy()?'Encerrada':i.st;
+const sums=()=>{const m={};raw().filter(x=>x.vw&&x.m).forEach(d=>Object.keys(d.m).forEach(id=>{const x=m[id]=m[id]||{v:0,c:0};x.v+=d.m[id].v||0;x.c+=d.m[id].c||0}));return m};
+const waNum=s=>{let d=String(s||'').replace(/\D/g,'');if(d.length<10||d.length>13)return '';if(d.length<=11)d='55'+d;return d};
+const noImg=a=>{const o={...a};delete o.img;return o};
+const IMGOK=d=>typeof d==='string'&&d.length<95000&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(d);
+function shrink(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{try{for(const m of [640,480,360]){let w=im.naturalWidth,h=im.naturalHeight;const r=Math.min(1,m/Math.max(w,h));w=Math.max(1,Math.round(w*r));h=Math.max(1,Math.round(h*r));const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);let q=.78,d=c.toDataURL('image/jpeg',q);while(d.length>60000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}if(IMGOK(d)){URL.revokeObjectURL(u);return res(d)}}URL.revokeObjectURL(u);rej()}catch(e){rej(e)}};im.onerror=()=>{URL.revokeObjectURL(u);rej()};im.src=u})}
+const DV=()=>S.dv||(S.dv={s:'',k:'',dr:{aud:'all',tp:'loja'},err:'',msg:''});
+const det=(k,t,b,def)=>{S.dvo=S.dvo||{};const o=k in S.dvo?S.dvo[k]:!!def;return `<details data-dvk="${esc(k)}"${o?' open':''}><summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">${t}</summary><div style="display:flex;flex-direction:column;gap:10px;padding-top:6px">${b}</div></details>`};
+document.addEventListener('toggle',e=>{const k=e.target&&e.target.dataset&&e.target.dataset.dvk;if(k){S.dvo=S.dvo||{};S.dvo[k]=e.target.open}},true);
+const TAG='<span class="tag" style="background:var(--accbg);border:1px solid var(--acc);font-weight:700">Patrocinado</span>';
+function adCard(a,o){o=o||{};const wa=waNum(a.wa),ln=/^https:\/\/[^\s]+$/i.test(a.ln||'')?a.ln:'',id=esc(o.id||''),at=h=>o.pv?'':`data-dvc="${id}" target="_blank" rel="noopener noreferrer" href="${h}"`;
+  const cta=wa?`<a class="btn" ${at('https://wa.me/'+wa)} style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:6px">Chamar no WhatsApp</a>`:ln?`<a class="btn" ${at(esc(ln))} style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:6px">Abrir o link</a>`:'';
+  return `<div class="card" ${o.pv?'':`data-dvid="${id}"`} style="display:flex;flex-direction:column;gap:6px;border-color:var(--acc)"><div class="sum" style="margin:0">${TAG}<span class="tag">${esc(TX[a.tp]||'Negócio')}</span></div>${IMGOK(a.img)?`<img src="${a.img}" alt="Foto do anúncio de ${esc(a.loja||'negócio')}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--line)">`:''}<b>${esc(a.tt||'Título do anúncio')}</b><span class="muted">${esc(a.loja||'Nome do negócio')}${a.bairro?' · '+esc(a.bairro):''}</span><span>${esc(a.tx||'Texto do anúncio.')}</span>${cta}</div>`}
+/* ---------- comprador (loja ou empresa) ---------- */
+V.adv=()=>{const A=DV(),L=mineO(),S0=sums();let b='';
+  if(A.s==='form'||A.s==='pay'){const k=A.k,P=AK[k],d=A.dr||{};
+    b=`<div class="row"><button class="chip" type="button" data-dvx="back">← ${A.s==='pay'?'Voltar e editar':'Trocar pacote'}</button><span class="tag">${esc(P.n)} · ${P.d} dias · ${brl2(price(k))}</span></div>`;
+    if(A.s==='form')b+=`<form class="pf" id="dvf" style="display:flex;flex-direction:column;gap:12px" novalidate>${fld('dv_loja','Nome do negócio','type="text" maxlength="40" autocomplete="organization" value="'+esc(d.loja||'')+'"')}
+<div><label for="dv_tp">Tipo de negócio</label><select id="dv_tp">${Object.keys(TX).map(x=>`<option value="${x}"${(d.tp||'loja')===x?' selected':''}>${esc(TX[x])}</option>`).join('')}</select></div>
+<div><label for="dv_aud">Quem vai ver</label><select id="dv_aud">${Object.keys(AUD).map(x=>`<option value="${x}"${(d.aud||'all')===x?' selected':''}>${esc(AUD[x])}</option>`).join('')}</select></div>
+${fld('dv_tt','Título (até 40 letras)','type="text" maxlength="40" value="'+esc(d.tt||'')+'"')}
+<div><label for="dv_tx">Texto (até 120 letras)</label><textarea id="dv_tx" rows="3" maxlength="120" style="min-height:90px">${esc(d.tx||'')}</textarea></div>
+${fld('dv_bairro','Bairro ou cidade','type="text" maxlength="40" value="'+esc(d.bairro||'')+'"')}
+${fld('dv_wa','WhatsApp com DDD (opcional)','type="tel" inputmode="numeric" maxlength="16" value="'+esc(d.wa||'')+'"')}
+${fld('dv_ln','Link do site ou rede social (opcional, começa com https://)','type="url" inputmode="url" maxlength="200" value="'+esc(d.ln||'')+'"')}
+<div class="row"><label class="chip" style="position:relative;overflow:hidden;display:inline-flex;align-items:center;margin:0">${d.img?'Trocar foto':'Escolher foto (opcional)'}<input type="file" id="dv_img" accept="image/*" aria-label="Escolher foto do anúncio" style="position:absolute;inset:0;opacity:0;min-height:0;cursor:pointer"></label>${d.img?'<button class="chip" type="button" data-dvx="noimg">Remover foto</button>':''}</div><div class="err" id="dv_ie" role="alert">${esc(A.ierr||'')}</div>
+<p class="muted" style="margin:0">A foto é reduzida automaticamente. Use foto do seu negócio ou produto, sem pessoas identificáveis sem autorização e sem textos de preço. Informe pelo menos o WhatsApp ou o link. Se citar preço, ele precisa ser real. A equipe confere tudo antes de publicar.</p>
+<b>Como vai aparecer</b><div id="dvprev">${adCard(d,{pv:1})}</div>
+<div class="err" id="dv_e" role="alert">${esc(A.err||'')}</div><button class="btn" type="submit">Continuar para o pagamento</button></form>`;
+    else b+=`<div class="card"><b>Resumo do pedido</b><div class="sum"><span>Pacote</span><span>${esc(P.n)}</span></div><div class="sum"><span>Período</span><span>${P.d} dias a partir da aprovação</span></div><div class="sum"><span>Quem vê</span><span>${esc(AUD[d.aud||'all'])}</span></div><div class="sum" style="font-size:18px"><b>Total</b><b>${brl2(price(k))}</b></div></div>${adCard(d,{pv:1})}
+<div class="card" style="border-color:var(--acc)"><b>Pagamento simulado</b><p class="muted" style="margin:6px 0 0">Neste protótipo nenhuma cobrança é feita e nenhum Pix é gerado. Ao confirmar, o pedido vai para análise da equipe e só entra no ar depois de aprovado. Se for recusado, o valor é devolvido (simulado).</p></div>
+<button class="btn" type="button" data-dvx="pay">Confirmar pagamento simulado de ${brl2(price(k))}</button>`}
+  else{
+    b=`<p class="muted" style="margin:0">Seu anúncio aparece na tela inicial do Tasko, com a etiqueta <b>Patrocinado</b>. Ele nunca se mistura com pedidos, propostas ou avaliações.</p>
+${KS.map(k=>`<button type="button" class="pick" data-dvk2="${k}"><b>${esc(AK[k].n)} · ${brl2(price(k))}</b><span class="muted">${AK[k].d} dias na tela inicial</span></button>`).join('')}
+${det('rl','Regras da divulgação',`<p class="muted" style="margin:0">• A equipe analisa o anúncio antes de publicar. O prazo conta a partir da aprovação.<br>• Anúncio recusado: o valor é devolvido (simulado neste protótipo).<br>• O anúncio precisa ser verdadeiro e do seu negócio. Preço citado precisa ser real.<br>• Anúncio que descumprir as regras pode ser retirado, com devolução proporcional.<br>• Não há garantia de quantidade de toques ou clientes. Você acompanha as aparições e os toques aqui.<br>• Uma foto opcional por anúncio, conferida pela equipe.</p>`)}
+${L.length?det('my','Minhas divulgações ('+L.length+')',L.map(i=>{const st=stOf(i),m=S0[i.id]||{v:0,c:0};return det('i'+i.id,`<span>${esc(i.ad.loja)} · ${esc(AK[i.k]?AK[i.k].n:'')} <span class="tag">${esc(st)}</span></span>`,`${adCard(i.ad,{pv:1})}<span class="muted">Valor: ${brl2(i.price)} (simulado) · pedido em ${fdl(i.t)}${i.from?' · no ar de '+fdl(i.from)+' a '+fdl(i.to):''} · ${esc(AUD[i.aud||'all'])}</span>${i.st==='No ar'||st==='Encerrada'?`<span class="muted">Aparições: ${m.v} · Toques: ${m.c}</span>`:''}${i.why?`<span class="muted">Motivo: ${esc(i.why)}</span>`:''}${i.st==='Em análise'?`<button class="chip" type="button" data-dvx="cancel" data-id="${esc(i.id)}">Cancelar pedido (valor devolvido, simulado)</button>`:''}`)}).join('')):''}`}
+  return `${head('Divulgar meu negócio','home')}<main>${adsOn()?'':'<div class="card"><b>Venda de divulgação desligada</b><p class="muted" style="margin:6px 0 0">No momento não estamos aceitando novos pedidos.</p></div>'}${A.msg?`<div class="card" role="status" style="border-color:var(--link)"><b>${esc(A.msg)}</b></div>`:''}<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>Anuncie para quem usa o Tasko</b>${adsOn()||L.length?b:''}</div></main>`};
+function readDraft(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};return{loja:g('dv_loja'),tp:g('dv_tp')||'loja',aud:g('dv_aud')||'all',tt:g('dv_tt'),tx:g('dv_tx'),bairro:g('dv_bairro'),wa:g('dv_wa'),ln:g('dv_ln'),img:(S.dv&&S.dv.dr&&S.dv.dr.img)||''}}
+function validate(d){if(d.loja.length<3)return 'Informe o nome do negócio.';if(d.tt.length<4)return 'Informe o título.';if(d.tx.length<10)return 'O texto precisa ter pelo menos 10 letras.';if(d.bairro.length<2)return 'Informe o bairro ou a cidade.';if(d.wa&&!waNum(d.wa))return 'WhatsApp inválido. Use DDD e número.';if(d.ln&&!/^https:\/\/[^\s]{4,}$/i.test(d.ln))return 'O link precisa começar com https://';if(!d.wa&&!d.ln)return 'Informe o WhatsApp ou o link.';if(/(cpf|senha|cart[aã]o)/i.test(d.tx))return 'Não coloque dados pessoais ou sensíveis no anúncio.';return ''}
+document.addEventListener('input',e=>{if(!e.target.closest||!e.target.closest('#dvf'))return;const A=DV();A.dr=readDraft();const p=document.getElementById('dvprev');if(p)p.innerHTML=adCard(A.dr,{pv:1})},true);
+document.addEventListener('change',async e=>{if(!e.target||e.target.id!=='dv_img')return;const f=e.target.files&&e.target.files[0];if(!f)return;const A=DV();A.dr=readDraft();A.ierr='';
+  if(!/^image\//.test(f.type)||f.size>15e6){A.ierr='Escolha uma imagem de até 15 MB.';render();return}
+  try{A.dr.img=await shrink(f)}catch(_){A.ierr='Não consegui usar essa imagem. Tente outra foto.'}render()},true);
+document.addEventListener('submit',e=>{if(e.target.id!=='dvf')return;e.preventDefault();e.stopPropagation();const A=DV();A.dr=readDraft();const er=validate(A.dr);A.err=er;if(er){const x=document.getElementById('dv_e');if(x)x.textContent=er;return}A.s='pay';render();scrollTo(0,0)},true);
+/* ---------- administrador ---------- */
+function admDo(act,id,why){const it=orders().find(x=>x.id===id);if(!it)return;
+  if(act==='ok'){const from=tdy();putOrd({...it,st:'No ar',from,to:addDs(from,it.days-1),why:''})}
+  else putOrd({...it,st:act==='no'?'Recusada':'Retirada',why:why+' Valor devolvido (simulado).',ad:noImg(it.ad)})}
+window.admAdv=function(){
+  const Q=orders().sort((a,b)=>String(b.t).localeCompare(String(a.t))),S0=sums(),pend=Q.filter(i=>i.st==='Em análise'),on=Q.filter(i=>stOf(i)==='No ar'),old=Q.filter(i=>!['Em análise','No ar'].includes(stOf(i)));
+  const paid=Q.filter(i=>['No ar','Encerrada'].includes(stOf(i))).reduce((a,i)=>a+(i.price||0),0);
+  const row=(i,acts)=>`<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>${esc(i.ad.loja)} · ${esc(AK[i.k]?AK[i.k].n:'')} · ${brl2(i.price)}</b>${adCard(i.ad,{pv:1})}<span class="muted">${esc(AUD[i.aud||'all'])} · pedido em ${fdl(i.t)}${i.from?' · no ar de '+fdl(i.from)+' a '+fdl(i.to):''} · Aparições ${(S0[i.id]||{v:0}).v} · Toques ${(S0[i.id]||{c:0}).c}</span>${i.why?`<span class="muted">Motivo: ${esc(i.why)}</span>`:''}${acts?`<div><label for="dvw_${esc(i.id)}">Motivo (obrigatório para recusar ou retirar)</label><input id="dvw_${esc(i.id)}" maxlength="140"></div><div class="row">${acts.map(a=>`<button type="button" class="chip" data-dvx="adm" data-a="${a[0]}" data-id="${esc(i.id)}">${a[1]}</button>`).join('')}</div>`:''}</div>`;
+  const PF=pfAll();
+  return `<div class="card"><b>Anúncios de lojas e empresas: ${adsOn()?'ligados':'desligados'}</b><p class="muted" style="margin:6px 0 10px">Desligados, a compra some e os anúncios deixam de aparecer. Os pedidos continuam guardados.</p><button type="button" class="chip" data-dvx="tg" aria-pressed="${adsOn()}">${adsOn()?'Desligar venda':'Ligar venda'}</button></div>
+<form class="card pf" id="dvpf" style="display:flex;flex-direction:column;gap:10px" novalidate><b>Preços dos pacotes (R$)</b>${KS.map(k=>fld('dvp_'+k,esc(AK[k].n)+' · '+AK[k].d+' dias','type="text" inputmode="decimal" value="'+String(price(k).toFixed(2)).replace('.',',')+'"')).join('')}<button class="btn" type="submit">Salvar preços</button></form>
+<div class="card"><b>Resumo (simulado)</b><div class="sum"><span>Pedidos em análise</span><b>${pend.length}</b></div><div class="sum"><span>No ar agora</span><b>${on.length}</b></div><div class="sum"><span>Valor dos pedidos aprovados</span><b>${brl2(paid)}</b></div><div class="sum"><span>Perfis de profissionais em destaque</span><b>${PF.length}</b></div></div>
+<div class="card">${det('apd','Pedidos em análise ('+pend.length+')',pend.length?pend.map(i=>row(i,[['ok','Aprovar e publicar'],['no','Recusar']])).join(''):'<span class="muted">Nenhum pedido em análise.</span>',pend.length>0)}</div>
+<div class="card">${det('aon','No ar agora ('+on.length+')',on.length?on.map(i=>row(i,[['rm','Retirar do ar']])).join(''):'<span class="muted">Nenhum anúncio no ar.</span>')}</div>
+<div class="card">${det('apf','Perfis em destaque ('+PF.length+')',PF.length?PF.map(x=>`<div class="sum" style="align-items:center"><span><b>${esc(fnm((users().find(u=>u.email===x.email)||{}).name)||'Profissional')}</b> · ${esc(x.cat)} · ${esc(x.city)}<br><span class="muted">até ${dd(new Date(x.to))}</span></span><button class="chip" type="button" data-dvx="pfend" data-em="${esc(x.email)}" data-id="${x.id}">Encerrar</button></div>`).join(''):'<span class="muted">Nenhum perfil em destaque.</span>')}</div>
+<div class="card">${det('ahs','Histórico ('+old.length+')',old.length?old.map(i=>row(i,null)).join(''):'<span class="muted">Sem histórico ainda.</span>')}</div>`};
+document.addEventListener('submit',e=>{if(e.target.id!=='dvpf')return;e.preventDefault();e.stopPropagation();const p={};for(const k of KS){const v=Number(String((document.getElementById('dvp_'+k)||{}).value||'').replace(/\./g,'').replace(',','.'));if(!(v>0&&v<100000)){const x=document.getElementById('e-dvp_'+k);if(x)x.textContent='Informe um valor válido.';return}p[k]=Math.round(v*100)/100}
+  putOrd({...cfgI(),p});render()},true);
+/* ---------- destaque do perfil do profissional ---------- */
+const spC=em=>{const u=users().find(x=>x.email===em),p=u&&u.roles&&(u.roles.pro||u.roles.proE);return p&&typeof p==='object'?String(p.city||''):''};
+const spK=(c,t)=>nrm(String(c||'')+'|'+String(t||''));
+function pfAll(){const now=new Date().toISOString(),out=[];jget('ms_plans').forEach(r=>(r&&Array.isArray(r.pf)?r.pf:[]).forEach(x=>{if(x&&x.from<=now&&now<x.to){const u=users().find(z=>z.email===r.email);if(u&&!u.susp)out.push({...x,email:r.email})}}));return out}
+const pfBusy=(cat,city)=>pfAll().filter(x=>spK(x.cat,x.city)===spK(cat,city));
+function pfInfo(){const st=S.pfs=S.pfs||{days:7,pay:''},cat=S.user.cat||'',city=spC(S.user.email),busy=pfBusy(cat,city),n=busy.length,r=plRec(),pkg=PF_PKG.find(x=>x[0]===st.days)||PF_PKG[1],pr=spPrice(pkg[1],n),full=n>=SP_SLOTS,own=pfAll().find(x=>x.email===S.user.email),next=busy.map(x=>x.to).sort()[0];
+  const opts=[];if((r.spotDays||0)>=st.days)opts.push('bonus');if((r.cred||0)>=pr)opts.push('credit');opts.push('pix','card');
+  return{st,cat,city,busy,n,r,pkg,price:pr,full,own,next,opts,pay:opts.includes(st.pay)?st.pay:opts[0]}}
+function pfBuy(){const I=pfInfo();if(!I.cat||!I.city||I.full||I.own)return;const r=I.r,days=I.pkg[0],now=new Date(),to=new Date(+now+days*864e5);
+  if(I.pay==='bonus'){if((r.spotDays||0)<days)return;r.spotDays-=days}else if(I.pay==='credit'){if((r.cred||0)<I.price)return;r.cred-=I.price}
+  r.pf=[...(r.pf||[]),{id:Date.now(),cat:I.cat,city:I.city,days,from:now.toISOString(),to:to.toISOString(),src:I.pay,cents:['pix','card','credit'].includes(I.pay)?I.price:0}];plSave(r);DV().msg='Perfil em destaque até '+dd(to)+'. Simulado: nada foi cobrado.'}
+V.pdest=()=>{if(S.user.role!=='pro')return V.home();const I=pfInfo(),r=I.r;
+  return `${head('Destacar meu perfil','home')}<main>
+<div class="card"><b>Como funciona</b><ul class="inc" style="margin:8px 0 0"><li>Seu perfil aparece na tela inicial dos contratantes da sua cidade, com a etiqueta <b>Destaque</b>.</li><li>Aparecem seu primeiro nome, categoria, cidade, avaliação e o botão “Pedir orçamento”.</li><li>Quem tocar no botão cria um pedido já dirigido a você.</li><li>Há ${SP_SLOTS} vagas por categoria e cidade. Quanto mais procura, mais o preço sobe um pouco.</li></ul></div>
+${DV().msg?`<div class="card" role="status" style="border-color:var(--link)"><b>${esc(DV().msg)}</b></div>`:''}
+${!I.cat||!I.city?`<div class="card"><b>Complete seu perfil</b><p class="muted" style="margin:6px 0 0">Para destacar, informe a categoria e a cidade de atuação no seu perfil.</p></div>`:`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>${esc(I.cat)} · ${esc(I.city)}</b>
+<p style="margin:4px 0 0"><b>Por quanto tempo?</b></p><div class="row">${PF_PKG.map(k=>`<button class="chip" data-dvx="pfd" data-d="${k[0]}" aria-pressed="${I.st.days===k[0]}">${k[0]===1?'1 dia':k[0]+' dias'} · ${brl2(spPrice(k[1],I.n)/100)}</button>`).join('')}</div>
+<p class="muted" style="margin:0">Vagas em ${esc(I.cat)} · ${esc(I.city)}: <b>${I.n} de ${SP_SLOTS}</b> ocupadas.${I.n?' O preço já inclui o ajuste pela procura.':''}</p>
+${I.own?`<p style="margin:0"><span class="tag">Em destaque até ${dd(new Date(I.own.to))}</span></p>`:I.full?`<p class="alert" style="margin:0">Sem vagas agora nesta categoria e cidade. A próxima vaga abre em ${dd(new Date(I.next))}.</p>`:`<p style="margin:4px 0 0"><b>Como pagar?</b></p><div class="row">${I.opts.map(o=>`<button class="chip" data-dvx="pfp" data-o="${o}" aria-pressed="${I.pay===o}">${SPL[o]}${o==='bonus'?' ('+(r.spotDays||0)+' d)':o==='credit'?' ('+brl2((r.cred||0)/100)+')':''}</button>`).join('')}</div>
+<div class="sum" style="font-size:18px"><b>Total</b><b>${I.pay==='bonus'?'Sem custo':brl2(I.price/100)}</b></div>
+<p class="muted" style="margin:0">Ao destacar, você autoriza mostrar seu primeiro nome, categoria, cidade, avaliação e título do perfil aos contratantes da cidade.</p>
+<button class="btn" data-dvx="pfgo">Destacar meu perfil (simulado)</button>`}</div>`}
+<p class="muted" style="margin:0">Valores de exemplo, ainda serão testados com profissionais.</p></main>`};
+/* ---------- vitrine na tela inicial ---------- */
+function actAds(){const t=tdy(),role=S.user&&S.user.role==='pro'?'pro':'cli',h=t+Math.floor(Date.now()/36e5);return orders().filter(a=>a.st==='No ar'&&a.from<=t&&t<=a.to&&(a.aud==='all'||!a.aud||a.aud===role)).map(a=>({a,o:(a.k==='mes'?0:1)+hsh(h+a.id)})).sort((x,y)=>x.o-y.o).map(x=>x.a)}
+function pfStrip(){if(!S.user||S.user.role==='pro')return '';const c=nrm(locCity(lastCity())||'');if(!c)return '';const h=Math.floor(Date.now()/36e5)+'';
+  const L=pfAll().filter(x=>nrm(locCity(x.city)||x.city)===c||nrm(x.city)===c).map(x=>({x,o:hsh(h+x.email)})).sort((a,b)=>a.o-b.o).slice(0,2).map(z=>z.x);if(!L.length)return '';
+  return `<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>Profissionais em destaque na sua cidade</b>${L.map(x=>{const u=users().find(z=>z.email===x.email)||{},pr=u.roles&&(u.roles.pro||u.roles.proE),kd=u.roles&&u.roles.pro&&pr&&pr.kind?` <span class="tag">${esc(KL[pr.kind]||'')}</span>`:u.roles&&u.roles.proE&&!u.roles.pro?' <span class="tag">Empresa</span>':'';
+    return `<div class="card" style="display:flex;flex-direction:column;gap:6px;border-color:var(--acc)"><div class="sum" style="margin:0"><span class="tag" style="background:var(--accbg);border:1px solid var(--acc);font-weight:700">Destaque</span><span class="tag">${esc(x.cat)}</span></div><b>${esc(fnm(u.name)||'Profissional')}${rateTag(x.email,'pro')}${kd}</b>${pr&&pr.title?`<span>${esc(pr.title)}</span>`:''}<span class="muted">${esc(x.city)}</span><button class="btn" data-dvx="pfreq" data-em="${esc(x.email)}" data-nm="${esc(fnm(u.name))}">Pedir orçamento para ${esc(fnm(u.name)||'este profissional')}</button></div>`}).join('')}<p class="muted" style="margin:0">Perfis em destaque são pagos pelos profissionais. A etiqueta mostra isso.</p></div>`}
+function adStrip(){if(!S.user||!adsOn())return '';const L=actAds().slice(0,2);if(!L.length)return '';return `<div style="display:flex;flex-direction:column;gap:8px">${L.map(a=>adCard(a.ad,{id:a.id})).join('')}<p class="muted" style="margin:0">Anúncios pagos por lojas e empresas. Não têm relação com pedidos, propostas ou avaliações.</p></div>`}
+const _h=V.home;V.home=function(){const h=_h.apply(this,arguments),i=h.lastIndexOf('</main>');if(i<0)return h;let add='';try{add=pfStrip()+adStrip()}catch(e){}return h.slice(0,i)+add+h.slice(i)};
+/* ---------- cliques ---------- */
+document.addEventListener('click',e=>{
+  const c=e.target.closest&&e.target.closest('a[data-dvc]');if(c){bump(c.dataset.dvc,'c');return}
+  const b=e.target.closest&&e.target.closest('[data-dvx],[data-dvk2]');if(!b)return;e.preventDefault();e.stopPropagation();const D=b.dataset,A=DV();
+  if(D.dvk2){A.k=D.dvk2;A.s='form';A.err='';A.dr={aud:'all',tp:'loja'};render();return}
+  const x=D.dvx;
+  if(x==='back'){if(A.s==='form')A.dr=readDraft();A.s=A.s==='pay'?'form':'';A.err='';render();return}
+  if(x==='noimg'){A.dr=readDraft();A.dr.img='';render();return}
+  if(x==='pay'){if(mineO().filter(i=>i.st==='Em análise').length>=3){A.err='Você já tem 3 pedidos em análise. Espere a aprovação ou cancele um.';A.s='form';render();return}
+    const k=A.k,d=A.dr;putOrd({id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),uid:me(),k,days:AK[k].d,price:price(k),t:tdy(),st:'Em análise',aud:d.aud||'all',ad:{loja:d.loja,tp:d.tp,tt:d.tt,tx:d.tx,bairro:d.bairro||'',wa:d.wa||'',ln:d.ln||'',...(IMGOK(d.img)?{img:d.img}:{})}});
+    A.s='';A.k='';A.dr={aud:'all',tp:'loja'};A.err='';A.msg='Pedido enviado para análise (pagamento simulado).';render();scrollTo(0,0);return}
+  if(x==='cancel'){const i=orders().find(z=>z.id===D.id&&z.uid===me()&&z.st==='Em análise');if(i)putOrd({...i,st:'Cancelada',why:'Cancelado por você. Valor devolvido (simulado).',ad:noImg(i.ad)});A.msg='Pedido cancelado.';render();return}
+  if(x==='tg'&&isAdmin()){putOrd({...cfgI(),on:!adsOn()});render();return}
+  if(x==='adm'&&isAdmin()){const why=(document.getElementById('dvw_'+D.id)||{value:''}).value.trim();if(D.a!=='ok'&&why.length<4){const w=document.getElementById('dvw_'+D.id);if(w){w.setAttribute('aria-invalid','true');w.focus()}return}admDo(D.a,D.id,why);render();return}
+  if(x==='pfend'&&isAdmin()){const L=jget('ms_plans'),r=L.find(z=>z&&z.email===D.em);if(r&&Array.isArray(r.pf)){r.pf=r.pf.map(z=>String(z.id)===D.id?{...z,to:new Date().toISOString()}:z);spSaveAll('ms_plans',L)}render();return}
+  if(x==='pfd'){S.pfs=S.pfs||{days:7,pay:''};S.pfs.days=+D.d;DV().msg='';render();return}
+  if(x==='pfp'){S.pfs=S.pfs||{days:7,pay:''};S.pfs.pay=D.o;render();return}
+  if(x==='pfgo'){pfBuy();render();scrollTo(0,0);return}
+  if(x==='pfreq'){const r=newReq();r.pref=D.em;r.prefName=D.nm||'';r.city=lastCity();S.req=r;S.aid=(S.aid||0)+1;go('request');return}
+},true);
+/* ---------- aparições e toques ---------- */
+function bump(id,w){if(!id||!S.user)return;const x=MYV[id]=MYV[id]||{v:0,c:0};x[w]++;clearTimeout(vt);vt=setTimeout(flush,1500)}
+function flush(){try{if(!S.user)return;const id='v-'+me();saveRaw([...raw().filter(x=>x.id!==id),{id,vw:1,m:MYV}])}catch(_){}}
+function after(){try{if(!S.user)return;if(!vinit){vinit=1;const d=raw().find(x=>x.id==='v-'+me());if(d&&d.m)MYV={...d.m}}
+  document.querySelectorAll('[data-dvid]').forEach(el=>{const id=el.dataset.dvid;if(id&&!SEEN.has(id)){SEEN.add(id);bump(id,'v')}})}catch(_){}}
+const _r=render;render=function(){const r=_r.apply(this,arguments);after();return r};
+try{render()}catch(e){}
+})();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body>
 </html>
