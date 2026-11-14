@@ -2905,7 +2905,7 @@ const ban=`<div class="card" style="gap:8px"><h3>Você está como visitante</h3>
 const W=(k,f)=>{const o=VIEWS[k];if(o)VIEWS[k]=()=>f(o)};
 W('comunidade',()=>lock('Comunidade','Participar da comunidade é só para quem entrou.'));
 W('pontos',()=>lock('Pontos','O programa de pontos é só para quem entrou.'));
-W('inicio',o=>ban+o());
+Object.keys(VIEWS).forEach(k=>{if(k!=='comunidade'&&k!=='pontos')W(k,o=>ban+o())});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-entrar]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();IA_AUTH.entrar('Entre para salvar seus dados e participar da comunidade.')},true);
 try{render(true)}catch(_){}
 })();
