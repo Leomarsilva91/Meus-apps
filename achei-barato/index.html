@@ -206,7 +206,7 @@ header.top>*{position:relative;z-index:1}
 <div id="dst"></div><div id="alr"></div>
 <main id="v"></main>
 <div id="lg"></div>
-<div id="fblk" style="margin-top:18px"></div>
+<div id="fblk" style="margin-top:18px"></div><div data-stlk></div>
 <details class="legal"><summary>Antes de lançar de verdade</summary><ul>
 <li>De onde vêm os preços: comerciantes cadastrando as próprias promoções, leitura de encartes por IA, e avisos de clientes com foto da etiqueta. Preço desatualizado é o maior risco do app. Cada oferta precisa ter data de validade e um aviso “confira no local”.</li>
 <li>Oferta publicada vincula quem anunciou (Código de Defesa do Consumidor). Defina regras para o comerciante corrigir ou retirar uma oferta com erro de preço.</li>
@@ -235,6 +235,59 @@ const S=[
  {id:'c1',n:'Casa & Obra Materiais',t:'construcao',lat:-18.5900,lng:-46.5230,end:'Av. Obras, 1.200',h:'7h às 18h'},
  {id:'p1',n:'Pet Feliz',t:'pet',lat:-18.5740,lng:-46.5090,end:'Rua dos Bichos, 33',h:'8h às 19h'}];
 const TN={mercado:'Mercado',farmacia:'Farmácia',construcao:'Construção',pet:'Pet shop',posto:'Posto de combustível'};
+/* Mais opções de tipo de comércio (botão ⋯ na barra de cima) */
+const CATX={curso:['🎓','Cursos','Curso'],mecanica:['🔧','Mecânica','Mecânica'],autopecas:['🚗','Autopeças','Autopeças'],restaurante:['🍽️','Restaurantes','Restaurante'],padaria:['🥖','Padarias','Padaria'],acougue:['🥩','Açougues','Açougue'],hortifruti:['🥬','Hortifrúti','Hortifrúti'],bebidas:['🍺','Bebidas','Bebidas'],roupas:['👕','Roupas e calçados','Roupas e calçados'],beleza:['💇','Beleza e salão','Beleza e salão'],eletronicos:['📱','Eletrônicos','Eletrônicos'],moveis:['🛋️','Móveis','Móveis'],papelaria:['✏️','Papelaria','Papelaria'],academia:['🏋️','Academias','Academia'],otica:['👓','Óticas','Ótica'],lavanderia:['🧺','Lavanderias','Lavanderia'],servicos:['🛠️','Outros serviços','Serviços']};
+Object.keys(CATX).forEach(k=>{TN[k]=CATX[k][2]});
+function catModal(){if(!mem.cmo)return '';const c=mem.cat||'',cnt={};try{allPromos().forEach(x=>{cnt[x.s.t]=(cnt[x.s.t]||0)+1})}catch(_){}
+  const b=(k,ic,nm)=>`<button type="button" class="chip" data-cat="${k}" aria-pressed="${c===k}" style="display:flex;align-items:center;gap:8px;justify-content:flex-start;min-height:48px;text-align:left"><span aria-hidden="true" style="font-size:20px">${ic}</span><span style="flex:1">${esc(nm)}</span>${cnt[k]?`<span class="m" style="color:inherit">${cnt[k]}</span>`:''}</button>`;
+  return `<div class="mdl-bg" data-catx="1"></div><div class="mdl" role="dialog" aria-modal="true" aria-labelledby="cmt" style="grid-template-columns:minmax(0,1fr)"><div class="row sp"><b id="cmt" style="font-family:var(--f-d);font-size:19px">Mais opções</b><button class="chip" data-catx="1" type="button">Fechar</button></div>
+  <div class="box" style="gap:8px;grid-template-columns:minmax(0,1fr)"><b>Digite o que procura</b><div class="row" style="flex-wrap:nowrap"><label class="sr" for="cq">O que você procura</label><input id="cq" type="search" value="${esc(mem.q)}" placeholder="Ex.: troca de óleo, curso de inglês, pizza" autocomplete="off" style="flex:1 1 0;width:100%;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--card)"><button class="btn acc" type="button" data-catq="1" style="flex:none;padding:10px 14px">Buscar</button></div></div>
+  <div class="box" style="gap:8px"><b>Ou escolha um tipo</b><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(130px,100%),1fr));gap:6px">${Object.keys(CATX).map(k=>b(k,CATX[k][0],CATX[k][1])).join('')}</div><span class="m">O número mostra quantas promoções há agora. Tipo sem número ainda não tem promoção cadastrada.</span></div>
+  ${c?'<button class="btn ghost" type="button" data-cat="">Ver todos os comércios de novo</button>':''}</div>`}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mem.cmo){mem.cmo=0;render()}else if(e.key==='Enter'&&e.target&&e.target.id==='cq'){e.preventDefault();const b=document.querySelector('[data-catq]');if(b)b.click()}});
+/* Características específicas da promoção (relâmpago, unitária etc.) */
+const MODC={online:['💻','Online ao vivo','Curso online ao vivo'],ead:['▶️','EAD (aulas gravadas)','Curso EAD (aulas gravadas)'],presencial:['🏫','Presencial','Curso presencial'],hibrido:['🔀','Híbrido (online e presencial)','Curso híbrido (online e presencial)']};
+function mmodSync(){const t=document.getElementById('mt'),l=document.getElementById('mmodl');if(t&&l)l.style.display=t.value==='curso'?'grid':'none'}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='mt')mmodSync()});
+const mfEditing=()=>!!((mem.medit!=null&&mine[mem.medit])||(mem.mepub&&pubL.some(o=>o.id===mem.mepub)));
+function mfBanner(){if(!mfEditing())return '';const o=mem.mepub?pubL.find(x=>x.id===mem.mepub):mine[mem.medit];
+  return `<div class="row sp" style="flex-wrap:nowrap;gap:8px;background:var(--warnbg);color:var(--ink);border-radius:12px;padding:8px 10px"><span style="min-width:0;overflow-wrap:anywhere"><b>Editando:</b> ${esc(o.n)}${mem.mepub?' <span class="m">(promoção publicada para todos)</span>':''}</span><button class="chip" type="button" data-meditx="1" style="flex:none">Cancelar edição</button></div>`}
+function editBtn(x){if(x.mk!=null&&mine[x.mk])return `<button class="chip" type="button" data-medit="${x.mk}" style="justify-self:start;font-weight:800">✏️ Editar promoção</button>`;
+  if(adm&&DB&&x.pid)return `<button class="chip" type="button" data-pedit="${esc(x.pid)}" style="justify-self:start;font-weight:800">✏️ Editar promoção</button>`;return ''}
+function featL(ft){if(!ft||typeof ft!=='object')return [];const L=[];if(ft.mod&&MODC[ft.mod])L.push([MODC[ft.mod][0],MODC[ft.mod][2]]);
+  if(ft.rel){const h=[ft.rel.de?'das '+ft.rel.de:'',ft.rel.ate?'até '+ft.rel.ate:''].filter(Boolean).join(' ');L.push(['⚡','Relâmpago'+(h?' · '+h:''),1])}
+  if(ft.uni>0)L.push(['1️⃣',ft.uni===1?'Unitária: 1 por cliente':'Limite de '+ft.uni+' por cliente']);
+  if(ft.est)L.push(['📦','Até acabar o estoque'+(ft.est>1?' ('+ft.est+' un)':'')]);
+  if(ft.hoje)L.push(['📅','Só hoje',1]);if(ft.pix)L.push(['💳','Só no Pix ou dinheiro']);
+  if(Array.isArray(ft.lp))L.push(['🎁','Leve '+ft.lp[0]+' pague '+ft.lp[1]]);
+  if(ft.clube)L.push(['🏷️','Só para clientes cadastrados']);if(ft.loja)L.push(['🏬','Só na loja (não vale na entrega)']);return L}
+function featTags(x){const L=featL(x.ft),o=x.ft&&typeof x.ft.obs==='string'?x.ft.obs:'';if(!L.length&&!o)return '';
+  return `${L.length?`<div class="row" style="gap:4px">${L.map(f=>`<span class="tag${f[2]?' warn':''}">${f[0]} ${esc(f[1])}</span>`).join('')}</div>`:''}${o?`<span class="m"><b style="color:var(--ink)">Condições:</b> ${esc(o)}</span>`:''}`}
+function featIc(x){const L=featL(x.ft);return L.length?` <span role="img" aria-label="${esc(L.map(f=>f[1]).join(', '))}">${L.map(f=>f[0]).join('')}</span>`:''}
+function featForm(){const ck=(id,t)=>`<label class="fbchk" for="${id}"><input type="checkbox" id="${id}"> ${t}</label>`;
+  return `<details class="box" id="mfx" style="gap:8px"><summary style="cursor:pointer;font-weight:800;min-height:44px;display:flex;align-items:center">Características da promoção (opcional)</summary>
+  <span class="m">Marque o que vale para esta promoção. Aparece em destaque no cartão para o cliente.</span>
+  ${ck('fx_rel','⚡ Relâmpago (instantânea, por pouco tempo)')}<div class="row"><label for="fx_rd" style="flex:1">Começa às<input id="fx_rd" type="time"></label><label for="fx_ra" style="flex:1">Termina às<input id="fx_ra" type="time"></label></div>
+  ${ck('fx_uni','1️⃣ Unitária (limite por cliente)')}<label for="fx_un">Quantas cada cliente pode levar<input id="fx_un" inputmode="numeric" placeholder="1"></label>
+  ${ck('fx_est','📦 Até acabar o estoque')}<label for="fx_eq">Quantidade disponível (opcional)<input id="fx_eq" inputmode="numeric"></label>
+  ${ck('fx_hoje','📅 Só hoje')}${ck('fx_pix','💳 Só no Pix ou dinheiro')}
+  ${ck('fx_lp','🎁 Leve mais, pague menos')}<div class="row"><label for="fx_l" style="flex:1">Leve<input id="fx_l" inputmode="numeric" placeholder="3"></label><label for="fx_p" style="flex:1">Pague<input id="fx_p" inputmode="numeric" placeholder="2"></label></div>
+  ${ck('fx_cl','🏷️ Só para clientes cadastrados ou do clube')}${ck('fx_lj','🏬 Só na loja (não vale na entrega)')}
+  <label for="fx_o">Outras condições (até 140 letras)<textarea id="fx_o" rows="2" maxlength="140" placeholder="Ex.: só na primeira compra; cores sortidas" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%"></textarea></label></details>`}
+function fillMf(o){const set=(id,v)=>{const e=document.getElementById(id);if(!e||v==null)return;if(e.type==='checkbox')e.checked=!!v;else e.value=v},fm=x=>x>0?String(x).replace('.',','):'',ft=o.ft||{};
+  set('ml',o.loja||'');set('mt',TN[o.tc]?o.tc:'mercado');set('mn',o.n||'');set('mp',fm(o.p));set('mo',fm(o.old));set('ma',o.ate||'');
+  set('fx_rel',!!ft.rel);set('fx_rd',ft.rel&&ft.rel.de||'');set('fx_ra',ft.rel&&ft.rel.ate||'');set('fx_uni',ft.uni>0);set('fx_un',ft.uni>0?String(ft.uni):'');set('fx_est',!!ft.est);set('fx_eq',ft.est>1?String(ft.est):'');
+  set('mmod',ft.mod||'');mmodSync();set('fx_hoje',!!ft.hoje);set('fx_pix',!!ft.pix);const lp=Array.isArray(ft.lp);set('fx_lp',lp);set('fx_l',lp?String(ft.lp[0]):'');set('fx_p',lp?String(ft.lp[1]):'');set('fx_cl',!!ft.clube);set('fx_lj',!!ft.loja);set('fx_o',ft.obs||'');
+  const d=document.getElementById('mfx');if(d)d.open=Object.keys(ft).length>0}
+function readFeat(){const v=id=>{const e=document.getElementById(id);return e?(e.type==='checkbox'?e.checked:String(e.value).trim()):''},ni=s=>{const n=parseInt(s,10);return n>0?n:0},ft={};
+  if(v('fx_rel')||v('fx_rd')||v('fx_ra')){ft.rel={};if(v('fx_rd'))ft.rel.de=v('fx_rd');if(v('fx_ra'))ft.rel.ate=v('fx_ra');if(ft.rel.de&&ft.rel.ate&&ft.rel.ate<=ft.rel.de)return{err:'Na promoção relâmpago, a hora de terminar precisa ser depois da hora de começar.'}}
+  if(v('fx_uni')||v('fx_un')){const u=v('fx_un')?ni(v('fx_un')):1;if(!u||u>99)return{err:'Informe quantas unidades cada cliente pode levar (de 1 a 99).'};ft.uni=u}
+  if(v('fx_est')||v('fx_eq'))ft.est=v('fx_eq')?(ni(v('fx_eq'))||1):1;
+  if(v('fx_hoje'))ft.hoje=1;if(v('fx_pix'))ft.pix=1;
+  if(v('fx_lp')||v('fx_l')||v('fx_p')){const l=ni(v('fx_l')),p=ni(v('fx_p'));if(!(p>0&&l>p&&l<=99))return{err:'Em “Leve mais, pague menos”, informe quanto leva e quanto paga (o leve precisa ser maior).'};ft.lp=[l,p]}
+  if(v('fx_cl'))ft.clube=1;if(v('fx_lj'))ft.loja=1;
+  const o=v('fx_o').replace(/\s+/g,' ').slice(0,140);if(o){if(/https?:|www\.|@/i.test(o)||/\d{8,}/.test(o.replace(/[\s.\-()]/g,'')))return{err:'Em “Outras condições”, não coloque links, e-mail ou telefone.'};ft.obs=o}
+  return{ft:Object.keys(ft).length?ft:null}}
 const PLACES=[['Ponto de exemplo em Minas Gerais (não é você)',-18.5790,-46.5170],['Ponto de exemplo 2 (não é você)',-18.5520,-46.5080],['Ponto de exemplo 3 (não é você)',-18.6130,-46.5290],['Ponto de exemplo 4 (não é você)',-18.5700,-46.5400]];
 const I=[['i1','Arroz tipo 1','5 kg',26],['i2','Feijão carioca','1 kg',7.5],['i3','Óleo de soja','900 ml',7.2],['i4','Açúcar','1 kg',4.6],['i5','Café torrado','500 g',17.5],['i6','Leite integral','1 L',5.2],['i7','Macarrão espaguete','500 g',4.4],['i8','Peito de frango','1 kg',16.9],['i9','Carne moída','1 kg',33],['i10','Ovos brancos','dúzia',11.5],['i11','Banana prata','1 kg',6.8],['i12','Tomate','1 kg',7.9],['i13','Pão francês','1 kg',16],['i14','Detergente','500 ml',2.5],['i15','Papel higiênico','12 rolos',19.9],['i16','Sabão em pó','1 kg',12.9]].map(a=>({id:a[0],n:a[1],un:a[2],base:a[3]}));
 const OUT=[
@@ -382,8 +435,8 @@ function allPromos(){
   const L=[];
   MER.forEach(s=>{if(s.real)return;I.forEach(i=>{const x=PRICE[s.id][i.id];if(x.promo){const c=cheapest(i.id);L.push({s,n:i.n+' '+i.un,p:x.p,old:x.old,ate:x.ate,low:!!c&&c.s.id===s.id})}})});
   if(!real)OUT.forEach(o=>L.push({s:sid(o.s),n:o.n,p:o.p,old:o.old,ate:addD(o.d)}));
-  pubL.forEach(o=>L.push({s:findUst(o.loja)||findSh(o.loja)||{id:'u',n:o.loja,t:'mercado',lat:hp().lat,lng:hp().lng},n:o.n,p:o.p,old:o.old||null,ate:new Date(o.ate),user:1,crowd:1,src:o.src||'tag',reg:o.t,rl:o.rl,pid:o.id}));
-  mine.forEach(o=>L.push({s:findUst(o.loja)||findSh(o.loja)||{id:'u',n:o.loja,t:'mercado',lat:hp().lat,lng:hp().lng},n:o.n,p:o.p,old:o.old,ate:new Date(o.ate),user:1,crowd:o.crowd,src:o.src,reg:o.reg}));
+  pubL.forEach(o=>L.push({s:findUst(o.loja)||findSh(o.loja)||{id:'u',n:o.loja,t:TN[o.tc]?o.tc:'mercado',lat:hp().lat,lng:hp().lng},n:o.n,p:o.p,old:o.old||null,ate:new Date(o.ate),user:1,crowd:1,src:o.src||'tag',reg:o.t,rl:o.rl,pid:o.id,ft:o.ft||null}));
+  mine.forEach((o,k)=>L.push({s:findUst(o.loja)||findSh(o.loja)||{id:'u',n:o.loja,t:TN[o.tc]?o.tc:'mercado',lat:hp().lat,lng:hp().lng},n:o.n,p:o.p,old:o.old,ate:new Date(o.ate),user:1,crowd:o.crowd,src:o.src,reg:o.reg,ft:o.ft||null,mk:k}));
   L.forEach(x=>{if(x.rl===0)return;const sh=PHS[phid(x)];if(sh&&sh.h&&sh.h.length){x.h=sh.h;x.hs=1;return}const a=PH[phk(x)];if(a&&a.length&&!x.h)x.h=a});
   return L;
 }
@@ -411,7 +464,7 @@ function promoCard(x){
   const m=kn?mv(d*2,1):null;
   const pk=x.s.n+'|'+x.n,po=(mem.pco&&pk in mem.pco)?!!mem.pco[pk]:(mem.pv==='enc'||!!mem.fback);
   const src=x.src==='enc'?'Encarte':x.crowd?'Etiqueta enviada por usuário, ainda não confirmada':x.user?'Enviado por comerciante':'Preço de exemplo';
-  return `<div class="card" data-t="${x.s.t}"><div class="row sp"><span class="tag">${esc(TN[x.s.t]||'Comércio')}</span>${x.low?'<span class="tag ok">Mais barato da cidade</span>':''}${dl<=2?`<span class="tag warn">${dl<=0?'Termina hoje':dl===1?'Falta 1 dia':'Faltam 2 dias'}</span>`:''}${shBtn(shTxt(x.n,x.p,x.old,x.s.n,x.ate))}</div><span class="t">${esc(x.n)}</span><div class="row" style="align-items:baseline"><span class="price">${brl(x.p)}</span>${x.old?`<span class="old">${brl(x.old)}</span><span class="tag off">−${off}%</span>`:""}</div>${econLine(x)}${up?`<span class="m">${brl(up.v)} por ${up.u}</span>`:''}<span class="m"><b>${esc(x.s.n)}</b>${kn?' · '+km1(d):''}</span>${kn?`<span class="m">Total${q>1?' para '+q+' un':''} com deslocamento: <b style="color:var(--ink)">${brl(finalOf(x))}</b></span>`:'<span class="m">Local não marcado: sem cálculo de deslocamento.</span>'} ${mem.pv==='enc'&&!mem.fback?'':`<button type="button" class="chip" data-pco="${esc(pk)}" data-pcur="${po?1:0}" aria-expanded="${po}" style="justify-self:start">${po?'−  Ver menos':'+  Ver mais'}</button>`}<div style="display:${po?'grid':'none'};gap:6px">${econBox(x)}${dlBox(x.s,x.p)}${kn?`<details><summary class="m" style="cursor:pointer;min-height:28px">Ver a conta</summary><div style="display:grid;gap:3px;padding-top:4px">${conta(m,x.p*q*dd.tot,q>1?q+'× produto':'Produto')}</div></details>`:''}${dd.dec>0?`<span class="m" style="color:var(--ok)"><b>Desconto da loja para quem compra lá: ${dd.parts.join(' + ')}</b> (informado pelo comerciante)${dd.note?'. '+esc(dd.note):''}. Você paga ${brl(x.p*(1-dd.dec))} por unidade.</span>`:''}${dd.ep>0?`<span class="m">${dd.epUsed?'Já incluído no total: ':'Possível desconto extra: '}cerca de ${Math.round(dd.ep*100)}% (estimativa de ${dd.nrep} relatos de clientes, sem garantia).</span>`:''}<span class="m">${src}${x.reg?' · registrado em '+fd(x.reg):''} · válido até ${fd(x.ate)}</span>${rev.some(r=>r.st==='Em análise'&&r.s===x.s.n&&r.n===x.n)?'<span class="tag warn" style="justify-self:start">Aviso de preço em análise pela equipe</span>':''}<button class="chip" data-rep="1" data-rs="${esc(x.s.n)}" data-rn="${esc(x.n)}" data-rp="${x.p}" style="justify-self:start">Preço mudou? Avise</button></div></div>`}
+  return `<div class="card" data-t="${x.s.t}"><div class="row sp"><span class="tag">${esc(TN[x.s.t]||'Comércio')}</span>${x.low?'<span class="tag ok">Mais barato da cidade</span>':''}${dl<=2?`<span class="tag warn">${dl<=0?'Termina hoje':dl===1?'Falta 1 dia':'Faltam 2 dias'}</span>`:''}${shBtn(shTxt(x.n,x.p,x.old,x.s.n,x.ate))}</div><span class="t">${esc(x.n)}</span><div class="row" style="align-items:baseline"><span class="price">${brl(x.p)}</span>${x.old?`<span class="old">${brl(x.old)}</span><span class="tag off">−${off}%</span>`:""}</div>${featTags(x)}${econLine(x)}${up?`<span class="m">${brl(up.v)} por ${up.u}</span>`:''}<span class="m"><b>${esc(x.s.n)}</b>${kn?' · '+km1(d):''}</span>${kn?`<span class="m">Total${q>1?' para '+q+' un':''} com deslocamento: <b style="color:var(--ink)">${brl(finalOf(x))}</b></span>`:'<span class="m">Local não marcado: sem cálculo de deslocamento.</span>'}${editBtn(x)} ${mem.pv==='enc'&&!mem.fback?'':`<button type="button" class="chip" data-pco="${esc(pk)}" data-pcur="${po?1:0}" aria-expanded="${po}" style="justify-self:start">${po?'−  Ver menos':'+  Ver mais'}</button>`}<div style="display:${po?'grid':'none'};gap:6px">${econBox(x)}${dlBox(x.s,x.p)}${kn?`<details><summary class="m" style="cursor:pointer;min-height:28px">Ver a conta</summary><div style="display:grid;gap:3px;padding-top:4px">${conta(m,x.p*q*dd.tot,q>1?q+'× produto':'Produto')}</div></details>`:''}${dd.dec>0?`<span class="m" style="color:var(--ok)"><b>Desconto da loja para quem compra lá: ${dd.parts.join(' + ')}</b> (informado pelo comerciante)${dd.note?'. '+esc(dd.note):''}. Você paga ${brl(x.p*(1-dd.dec))} por unidade.</span>`:''}${dd.ep>0?`<span class="m">${dd.epUsed?'Já incluído no total: ':'Possível desconto extra: '}cerca de ${Math.round(dd.ep*100)}% (estimativa de ${dd.nrep} relatos de clientes, sem garantia).</span>`:''}<span class="m">${src}${x.reg?' · registrado em '+fd(x.reg):''} · válido até ${fd(x.ate)}</span>${rev.some(r=>r.st==='Em análise'&&r.s===x.s.n&&r.n===x.n)?'<span class="tag warn" style="justify-self:start">Aviso de preço em análise pela equipe</span>':''}<button class="chip" data-rep="1" data-rs="${esc(x.s.n)}" data-rn="${esc(x.n)}" data-rp="${x.p}" style="justify-self:start">Preço mudou? Avise</button></div></div>`}
 let OFERL=[],OFERI=0,OFERP=0;['pointerdown','touchstart','mouseenter','focusin'].forEach(ev=>document.addEventListener(ev,x=>{if(x.target&&x.target.closest&&x.target.closest('#ofer'))OFERP=Date.now()+20000},true));
 function oferIn(){const cand=OFERL[OFERI];if(!cand)return '';
   return `<button type="button" class="ofer-a" data-fogos="1" data-fq="${esc(cand.n)}" aria-label="Ver esta oferta: ${esc(cand.n)}"><span class="ofer-t">Oferta do momento${OFERL.length>1?' · '+(OFERI+1)+' de '+OFERL.length:''}</span><b class="ofer-n">${esc(cand.n)}</b><span class="m" style="color:inherit;opacity:.9">${esc(cand.s.n)} · ${km1(dist(hp(),cand.s))} · até ${fd(cand.ate)}</span></button><div class="ofer-p"><span class="tag off">−${Math.round((1-cand.p/cand.old)*100)}%</span><b>${brl(cand.p)}</b><button class="btn acc" data-fogos="1" data-fq="${esc(cand.n)}">Aproveitar</button></div>${OFERL.length>1?`<div class="ofer-d" role="group" aria-label="Escolher a oferta">${OFERL.map((_,i)=>`<button type="button" data-ofi="${i}" aria-label="Oferta ${i+1}" aria-pressed="${i===OFERI}"></button>`).join('')}</div>`:''}`}
@@ -420,6 +473,7 @@ try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(()=>{
 function promoV(){
   let L=allPromos();
   if(mem.cat)L=L.filter(x=>x.s.t===mem.cat);
+  if(mem.cat==='curso'&&mem.cmod)L=L.filter(x=>x.ft&&x.ft.mod===mem.cmod);
   const q=mem.q.trim().toLowerCase();if(q)L=L.filter(x=>(x.n+' '+x.s.n).toLowerCase().includes(q));
   const o=mem.ord;
   let ofer='';
@@ -435,7 +489,7 @@ function promoV(){
   ${ess()?'':newsBox()}
   ${best}
   ${ess()?'':ofer}
-  <p class="m" style="margin-bottom:10px">${L.length} promoç${L.length===1?'ão':'ões'} </p>
+  ${mem.cat==='curso'?`<div class="row" role="group" aria-label="Como é o curso" style="margin-bottom:10px">${[['','Todos'],...Object.keys(MODC).map(k=>[k,MODC[k][0]+' '+MODC[k][1]])].map(c=>`<button class="chip" type="button" data-cmod="${c[0]}" aria-pressed="${(mem.cmod||'')===c[0]}">${c[1]}</button>`).join('')}</div>`:''}<p class="m" style="margin-bottom:10px">${L.length} promoç${L.length===1?'ão':'ões'} </p>
   ${!L.length?'<div class="box"><b>Nada encontrado</b><span class="m">Tente outra busca.</span></div>':ess()?essList(L,0):mem.grp?groupedV(L):promoList(L)}`}
 const PZ=[0.85,1,1.25,1.5,1.8],pzI=()=>Math.min(PZ.length-1,Math.max(0,mem.pz==null?0:mem.pz));
 let PREF=LS.g('ab_pref',{});if(!PREF||typeof PREF!=='object')PREF={};
@@ -468,7 +522,7 @@ function storeBar(){if(mem.tab!=='online')return '';const mk=mem.mk||'';
   return `<div class="nb-mid" role="group" aria-label="Filtrar por loja online">${t('','<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>','Todas as lojas','Todas')}${Object.keys(MK).map(k=>t(k,MKG[k]||MK[k].n.slice(0,2).toUpperCase(),MK[k].n)).join('')}</div>`}
 const CATI={'':'🗂️',mercado:'🛒',farmacia:'💊',construcao:'🧱',pet:'🐾',posto:'⛽'},CATN={'':'Tudo',mercado:'Mercados',farmacia:'Farmácias',construcao:'Construção',pet:'Pet shops',posto:'Postos'};
 function catBar(){if(mem.tab!=='promo')return '';const c=mem.cat||'';
-  return `<div class="nb-mid" role="group" aria-label="Filtrar por tipo de comércio">${Object.keys(CATN).map(k=>`<button type="button" data-cat="${k}" aria-pressed="${c===k}" aria-label="${k?TN[k]+'s':'Todos os comércios'}" title="${k?TN[k]+'s':'Todos os comércios'}"><span class="mkt" aria-hidden="true">${CATI[k]}</span><span class="mkn" aria-hidden="true">${CATN[k]}</span></button>`).join('')}</div>${subBar()}`}
+  return `<div class="nb-mid" role="group" aria-label="Filtrar por tipo de comércio">${Object.keys(CATN).map(k=>`<button type="button" data-cat="${k}" aria-pressed="${c===k}" aria-label="${k?TN[k]+'s':'Todos os comércios'}" title="${k?TN[k]+'s':'Todos os comércios'}"><span class="mkt" aria-hidden="true">${CATI[k]}</span><span class="mkn" aria-hidden="true">${CATN[k]}</span></button>`).join('')}${(()=>{const xc=CATX[c];return `<button type="button" data-catmore="1" aria-pressed="${!!xc}" aria-haspopup="dialog" aria-label="${xc?'Filtrando: '+xc[1]+'. Toque para outras opções':'Mais opções: cursos, mecânica e outros, ou digitar'}" title="Mais opções"><span class="mkt" aria-hidden="true"${xc?'':' style="font-size:18px"'}>${xc?xc[0]:'⋯'}</span><span class="mkn" aria-hidden="true">${xc?esc(xc[1]):'Mais'}</span></button>`})()}</div>${subBar()}`}
 function subBar(){const ps=`<button type="button" data-pv="res" aria-pressed="${mem.pv!=='enc'}">Resumido</button><button type="button" data-pv="enc" aria-pressed="${mem.pv==='enc'}">Como no encarte</button>${mem.pv==='enc'?'':`<button type="button" data-pz="-1" aria-label="Diminuir letras"${pzI()===0?' disabled':''}>A−</button><button type="button" data-pz="1" aria-label="Aumentar letras"${pzI()===PZ.length-1?' disabled':''}>A+</button>`}`;
   const gp=ess()?'':`<button type="button" data-grp="" aria-pressed="${!mem.grp}">Todas em lista</button><button type="button" data-grp="1" aria-pressed="${!!mem.grp}">Agrupar por comércio</button>${mem.grp?`<label class="sr" for="gord">Ordenar os comércios</label><select id="gord"><option value="near"${mem.gord==='near'||!mem.gord?' selected':''}>Comércios mais perto</option><option value="cnt"${mem.gord==='cnt'?' selected':''}>Mais promoções</option><option value="off"${mem.gord==='off'?' selected':''}>Maior desconto</option><option value="az"${mem.gord==='az'?' selected':''}>Ordem alfabética</option></select>`:''}`;
   return `<i class="nb-br" aria-hidden="true"></i><div class="nb-sub" role="group" aria-label="Como ver a lista">${ps}${gp}</div>`}
@@ -610,7 +664,7 @@ const viewBtns=()=>`<button type="button" data-pv="res" aria-pressed="${mem.pv!=
 const viewSub=()=>`<i class="nb-br" aria-hidden="true"></i><div class="nb-sub" role="group" aria-label="Como ver a lista">${viewBtns()}</div>`;
 function viewTog(){if(mem.tab==='online'||mem.tab==='stores')return '';return `<div class="row"><button class="chip" data-pv="res" aria-pressed="${mem.pv!=='enc'}">Resumido</button><button class="chip" data-pv="enc" aria-pressed="${mem.pv==='enc'}">Completo</button>${mem.pv==='enc'?'':`<span class="row" style="gap:6px;margin-left:auto" role="group" aria-label="Tamanho das letras"><button class="chip" data-pz="-1" aria-label="Diminuir letras"${pzI()===0?' disabled':''}>A−</button><button class="chip" data-pz="1" aria-label="Aumentar letras"${pzI()===PZ.length-1?' disabled':''}>A+</button></span>`}</div>`}
 function promoRow(x){const e=econ(x),off=e&&!e.none?e.pct:0,f=pzI(),fs=(12.5*PZ[f]).toFixed(1);
-  return `<button type="button" data-pdk="${esc(x.s.n+'|'+x.n)}" aria-label="Ver a promoção completa: ${esc(x.n)}, ${esc(x.s.n)}" style="display:inline-block;text-align:left;cursor:pointer;color:inherit;font-family:inherit;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:${3+f}px ${7+f}px;background:var(--card);font-size:${fs}px;line-height:1.25"><b>${esc(x.n)}</b> <b style="color:var(--pri)">${brl(x.p)}</b><br><span class="m" style="font-size:${(fs*0.86).toFixed(1)}px">${esc(x.s.n)}${off>0?` · <span style="color:var(--ok);font-weight:700">−${off}%</span>`:''}</span></button>`}
+  return `<button type="button" data-pdk="${esc(x.s.n+'|'+x.n)}" aria-label="Ver a promoção completa: ${esc(x.n)}, ${esc(x.s.n)}" style="display:inline-block;text-align:left;cursor:pointer;color:inherit;font-family:inherit;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:${3+f}px ${7+f}px;background:var(--card);font-size:${fs}px;line-height:1.25"><b>${esc(x.n)}</b>${featIc(x)} <b style="color:var(--pri)">${brl(x.p)}</b><br><span class="m" style="font-size:${(fs*0.86).toFixed(1)}px">${esc(x.s.n)}${off>0?` · <span style="color:var(--ok);font-weight:700">−${off}%</span>`:''}</span></button>`}
 let DET={},onlineCard=null;
 const PGREG=[];
 function pager(id,L,per,one,wrap){mem.pg=mem.pg||{};const sg=[mem.q,mem.cat,mem.ord,mem.pv,mem.grp,mem.mk,mem.ord2].join('|')+L.length,P=mem.pg[id]||(mem.pg[id]={g:sg,o:0});if(P.g!==sg){P.g=sg;P.o=0}
@@ -931,8 +985,8 @@ function merchV(){
   <div class="row"><label for="dl_f" style="flex:1">Taxa (R$, 0 = grátis)<input id="dl_f" inputmode="decimal" placeholder="Ex.: 8,90"></label><label for="dl_m" style="flex:1">Pedido mínimo (R$)<input id="dl_m" inputmode="decimal"></label></div>
   <div class="row"><label for="dl_g" style="flex:1">Frete grátis acima de (R$)<input id="dl_g" inputmode="decimal"></label><label for="dl_e" style="flex:1">Prazo<input id="dl_e" placeholder="Ex.: 40 a 90 min" maxlength="30"></label></div>
   <div class="err" id="dl_er" role="alert"></div><button class="btn acc" type="submit">Enviar para conferência</button></form>
-  <form class="f box" id="mf" novalidate><label for="ml">Nome do comércio<input id="ml" autocomplete="organization"></label><label for="mn">Produto e quantidade<input id="mn" placeholder="Ex.: Arroz tipo 1, 5 kg"></label><div class="row"><label for="mp" style="flex:1">Preço da promoção (R$)<input id="mp" inputmode="decimal"></label><label for="mo" style="flex:1">Preço normal (R$)<input id="mo" inputmode="decimal"></label></div><label for="ma">Válido até<input id="ma" type="date"></label><div class="err" id="me" role="alert">${esc(mem.err)}</div><button class="btn acc" type="submit">Publicar promoção</button></form>
-  ${mine.length?`<div class="box"><b>Suas promoções (${mine.length})</b>${pager('mine',mine.map((o,k)=>({o,k})),30,({o,k})=>chipB('mi'+k,o.n,esc(o.loja||'Sua loja')+' · até '+fd(o.ate),brl(o.p),{t:o.n,b:()=>`<div class="line"><span class="m">Preço</span><b>${brl(o.p)}</b></div>${o.old?`<div class="line"><span class="m">Preço normal</span><span>${brl(o.old)}</span></div>`:''}<div class="line"><span class="m">Válido até</span><span>${fd(o.ate)}</span></div><button class="btn ghost" data-del="${k}" type="button">Remover esta promoção</button>`}),CHW)}</div>`:''}</div>`}
+  <form class="f box" id="mf" novalidate>${mfBanner()}<label for="ml">Nome do comércio<input id="ml" autocomplete="organization"></label><label for="mt">Tipo de comércio<select id="mt">${Object.keys(TN).map(k=>`<option value="${k}">${esc(TN[k])}</option>`).join('')}</select></label><label for="mmod" id="mmodl" style="display:none">Como é o curso<select id="mmod"><option value="">Escolha…</option>${Object.keys(MODC).map(k=>`<option value="${k}">${MODC[k][0]} ${MODC[k][1]}</option>`).join('')}</select></label><label for="mn">Produto e quantidade<input id="mn" placeholder="Ex.: Arroz tipo 1, 5 kg"></label><div class="row"><label for="mp" style="flex:1">Preço da promoção (R$)<input id="mp" inputmode="decimal"></label><label for="mo" style="flex:1">Preço normal (R$)<input id="mo" inputmode="decimal"></label></div><label for="ma">Válido até<input id="ma" type="date"></label><span class="m">Marcando “Só hoje” nas características, a validade fica a data de hoje.</span>${featForm()}<div class="err" id="me" role="alert">${esc(mem.err)}</div><button class="btn acc" type="submit">${mfEditing()?'Salvar alterações':'Publicar promoção'}</button></form>
+  ${mine.length?`<div class="box"><b>Suas promoções (${mine.length})</b>${pager('mine',mine.map((o,k)=>({o,k})),30,({o,k})=>chipB('mi'+k,o.n,esc(o.loja||'Sua loja')+' · até '+fd(o.ate),brl(o.p),{t:o.n,b:()=>`<div class="line"><span class="m">Preço</span><b>${brl(o.p)}</b></div>${o.old?`<div class="line"><span class="m">Preço normal</span><span>${brl(o.old)}</span></div>`:''}<div class="line"><span class="m">Válido até</span><span>${fd(o.ate)}</span></div><button class="btn ghost" data-del="${k}" type="button">Remover esta promoção</button><button class="btn acc" data-medit="${k}" type="button">Editar esta promoção</button>`}),CHW)}</div>`:''}</div>`}
 function tagV(){
   const t=mem.tag,pl=mem.tgPlace||'';
   return `<div style="display:grid;gap:12px;max-width:560px">${hereBox()}${repBox()}<div class="box"><b>Achou um preço bom? Compartilhe</b><span class="m">Fotografe a etiqueta ou a placa de preço. A IA lê o produto e o valor, você confere e envia para outras pessoas verem.</span></div>
@@ -1416,7 +1470,7 @@ function render(){
   $('#gst').innerHTML=guestBan();$('#pfb').innerHTML=prefBar(T.map(t=>t[0]));try{$('#locb').innerHTML=locBar()}catch(_){}
   $('#tabs').innerHTML=T.map(t=>`<button data-tab="${t[0]}" ${mem.tab===t[0]?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC[t[0]]}</svg><span class="lg">${t[1]}</span><span class="sh">${t[2]}</span></button>`).join('')+(window.IA_AUTH?`<button type="button" data-iaauth="1" data-${IA_AUTH.logado()?'sair':'entrar'}="1" aria-label="${IA_AUTH.logado()?'Sair da conta':'Entrar na conta'}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span class="lg">${IA_AUTH.logado()?'Sair da conta':'Entrar'}</span><span class="sh">${IA_AUTH.logado()?'Sair':'Entrar'}</span></button>`:'');
   __net=null;DET={};try{recPH()}catch(e){}try{$('#dst').innerHTML=mem.tabPick?'':destV()}catch(e){$('#dst').innerHTML=''}try{$('#alr').innerHTML=mem.tabPick?'':alrV()}catch(e){$('#alr').innerHTML=''}$('#lg').innerHTML=legalBox();
-  $('#mdl').innerHTML=rvModal()+pdModal()+ulModal()+consentBar()+prefModal()+welcome();
+  $('#mdl').innerHTML=rvModal()+pdModal()+ulModal()+catModal()+consentBar()+prefModal()+welcome();
   $('#v').innerHTML=guestV()||(mem.tab==='promo'?promoV():mem.tab==='plan'?planV():mem.tab==='stores'?storesV():mem.tab==='tag'?tagV():mem.tab==='online'?onlineV():mem.tab==='com'?comV():mem.tab==='admin'?adminV():merchV());collapseBoxes();$('#mdl').insertAdjacentHTML('afterbegin',gdModal());
   if(mem.tab==='promo'&&!mem.f0&&document.querySelector('.card .tag.off')){mem.f0=1;setTimeout(()=>boom(null,null,1),450)}
   if(mem.tab==='plan'&&__net!=null){const k=Math.round(__net*100)+'|'+JSON.stringify(list)+'|'+real;if(k!==mem.fk){mem.fk=k;setTimeout(()=>boom(null,null,1),350)}}
@@ -1497,6 +1551,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('.mdl-bg[data-pdx]')){mem.pdk=null;return render()}
   if(e.target.closest('.mdl-bg[data-gdx]')){mem.gdk=null;return render()}
   if(e.target.closest('.mdl-bg[data-pfx]')){mem.pf=0;return render()}
+  if(e.target.closest('.mdl-bg[data-catx]')){mem.cmo=0;return render()}
   const t=e.target.closest('button');if(!t)return;const D=t.dataset;
   if(D.fvolta){const b=mem.fback||{q:'',cat:''};mem.q=b.q;mem.cat=b.cat;mem.fback=null;render();window.scrollTo({top:0,behavior:'smooth'});return}
   if(D.fogos!==undefined){const r=t.getBoundingClientRect();boom(r.left+r.width/2,r.top,1);if(D.fq){if(!mem.fback)mem.fback={q:mem.q,cat:mem.cat};mem.q=D.fq;mem.cat='';return setTimeout(()=>{render();const v=document.querySelector('[data-fvolta]');if(v)v.scrollIntoView({behavior:'smooth',block:'start'})},700)}return}
@@ -1514,7 +1569,10 @@ document.addEventListener('click',e=>{
   if(D.tab){mem.tabPick=1;mem.fback=null;mem.tab=D.tab;mem.open=null;mem.gdk=null;mem.pdk=null;return render()}
   if(D.grp!==undefined){mem.grp=D.grp?1:0;return render()}
   if(D.gtog!==undefined){mem.gopen=mem.gopen||{};mem.gopen[D.gtog]=mem.gopen[D.gtog]===false;return render()}
-  if(D.cat!==undefined){mem.cat=D.cat;return render()}
+  if(D.cat!==undefined){mem.cat=D.cat;mem.cmo=0;return render()}
+  if(D.catmore){mem.cmo=1;render();setTimeout(()=>{const i=document.getElementById('cq');if(i&&!mem.q)i.focus()},60);return}
+  if(D.catx){mem.cmo=0;return render()}
+  if(D.catq){const v=((document.getElementById('cq')||{}).value||'').trim();mem.q=v;mem.cat='';mem.cmo=0;if(v)try{srchAdd(v)}catch(_){}return render()}
   if(D.alr){mem.alr=mem.alr===0?1:0;return render()}
   if(D.srx!==undefined){PREF.srch=(PREF.srch||[]).filter(t=>t!==D.srx);savePref();return render()}
   if(D.dst){mem.dst=mem.dst===0?1:0;return render()}
@@ -1598,7 +1656,7 @@ document.addEventListener('click',e=>{
     if(it.k==='dl'){if(D.mno)return setSub(uid,id,{st:'Recusada'}).then(()=>toast('Envio recusado.')).catch(()=>toast('Não foi possível salvar agora.'));const st=findSh(it.loja);if(!st)return toast('Cadastre antes este comércio na aba Comércios.');const {id:_s,...rest}=st;return DB.collection('stores').doc(st.id).set({...rest,id:st.id,dl:{...it.dl,d:today()}}).then(()=>setSub(uid,id,{st:'Aprovada'})).then(()=>award(uid,it,false).catch(()=>null)).then(r=>{boom(null,null,1);toast('Entrega publicada.'+ptsMsg(r))}).catch(()=>toast('Não foi possível salvar agora.'))}
     const pv=Number(String((document.getElementById('ep_'+id)||{}).value).replace(',','.'));if(D.mok&&!(pv>0&&pv<1e6))return toast('Informe um preço válido.');
     const first=!pubL.some(o=>nk(o.loja)===nk(it.loja)&&nk(o.n)===nk(it.n));
-    const done=D.mok?DB.collection('pub').doc(id).set({id,loja:it.loja,n:it.n,p:pv,old:it.old||null,ate:it.ate,src:it.src||'tag',t:it.t,rl:1}).then(()=>setSub(uid,id,{st:'Aprovada',p:pv})).then(()=>award(uid,it,first).catch(()=>null)):setSub(uid,id,{st:'Recusada'});
+    const done=D.mok?DB.collection('pub').doc(id).set({id,loja:it.loja,n:it.n,p:pv,old:it.old||null,ate:it.ate,src:it.src||'tag',t:it.t,rl:1,...(it.ft?{ft:it.ft}:{}),...(it.tc?{tc:it.tc}:{})}).then(()=>setSub(uid,id,{st:'Aprovada',p:pv})).then(()=>award(uid,it,first).catch(()=>null)):setSub(uid,id,{st:'Recusada'});
     return done.then(r=>{if(D.mok)boom(null,null,1);toast(D.mok?'Promoção aprovada e publicada.'+ptsMsg(r):'Envio recusado.')}).catch(()=>toast('Não foi possível salvar agora.'))}
   if(D.mrl){if(!adm||!DB)return;const o=pubL.find(x=>x.id===D.mrl);if(!o)return;const {id,...rest}=o;return DB.collection('pub').doc(id).set({...rest,id,rl:o.rl===0?1:0}).then(()=>toast(o.rl===0?'Marcada como dado real.':'Marcada como exemplo: sai do histórico de preços.')).catch(()=>toast('Não foi possível alterar agora.'))}
   if(D.mset){if(!adm||!DB)return;const [id,v]=D.mset.split('|'),o=pubL.find(x=>x.id===id);if(!o)return;const {id:_i,...rest}=o;return DB.collection('pub').doc(id).set({...rest,id,rl:v==='1'?1:0}).then(()=>toast(v==='1'?'Marcado como real.':'Marcado como exemplo.')).catch(()=>toast('Não foi possível alterar agora.'))}
@@ -1628,7 +1686,11 @@ document.addEventListener('click',e=>{
     if(rev.length>15)rev.length=15;save();mem.rv=null;toast('Obrigado! Nossa equipe vai conferir o novo preço.');return render()}
   if(D.rvok||D.rvno){const r=rev.find(x=>x.id===(D.rvok||D.rvno));if(r){
     if(D.rvok){r.st='Confirmado';mine.forEach(o=>{if(o.loja===r.s&&o.n===r.n){o.p=r.np}});const u=findUst(r.s);if(u){const id=matchItem(r.n);if(id&&u.pr[id])u.pr[id].p=r.np;syncUst()}}else r.st='Não confirmado';save()}return render()}
-  if(D.del){mine.splice(+D.del,1);save();return render()}
+  if(D.del){mine.splice(+D.del,1);mem.medit=null;mem.gdk=null;save();return render()}
+  if(D.cmod!==undefined){mem.cmod=D.cmod;return render()}
+  if(D.pedit){if(!adm||!DB)return;const o=pubL.find(x=>x.id===D.pedit);if(!o)return;mem.mepub=o.id;mem.medit=null;mem.pdk=null;mem.gdk=null;mem.tab='merch';mem.err='';render();setTimeout(()=>{fillMf(o);const f=$('#mf');if(f)f.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
+  if(D.medit!==undefined){const k=+D.medit,o=mine[k];if(!o)return;mem.medit=k;mem.mepub=null;mem.pdk=null;mem.tab='merch';mem.gdk=null;mem.err='';render();setTimeout(()=>{fillMf(o);const f=$('#mf');if(f)f.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
+  if(D.meditx){mem.medit=null;mem.mepub=null;mem.err='';render();return}
 });
 document.addEventListener('error',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('pimg'))t.remove()},true);
 document.addEventListener('input',e=>{if(e.target.id==='of_u'){const st=$('#of_s'),v=e.target.value.trim();if(!v)return;clearTimeout(OFTM);if(/^https:\/\/[^\s]{8,}$/i.test(v)&&!$('#of_p').value.trim()){OFTRY[v]=1;OFTM=setTimeout(()=>{if(($('#of_u')||{}).value.trim()===v)fetchLink()},900)}const a=parseAff(v);
@@ -1733,11 +1795,17 @@ document.addEventListener('submit',e=>{
     if(!ate||new Date(ate+'T23:59:59')<NOW)return err('Informe uma validade a partir de hoje.');if(!$('#tc').checked)return err('Marque a confirmação para enviar.');
     mine.unshift({src:'tag',reg:today(),loja:mem.tgPlace,n:g('tn').trim(),p,old:o,ate,crowd:1});submitPub({src:'tag',loja:mem.tgPlace,n:g('tn').trim(),p,old:o,ate});attach(mem.tgPlace,[{n:g('tn').trim(),p,old:o,ate}]);save();mem.tag=null;mem.tgPlace='';mem.tab='promo';boom(null,null,1);toast('Obrigado! Sua promoção foi enviada (demonstração).');return render()}
   if(e.target.id!=='mf')return;e.preventDefault();
-  const g=id=>$('#'+id).value,n=x=>Number(String(x).replace(/\./g,'').replace(',','.')),p=n(g('mp')),o=n(g('mo')),ate=g('ma'),err=t=>{mem.err=t;$('#me').textContent=t};
+  const g=id=>$('#'+id).value,n=x=>Number(String(x).replace(/\./g,'').replace(',','.')),p=n(g('mp')),o=n(g('mo')),err=t=>{mem.err=t;$('#me').textContent=t},fx=readFeat();let ate=g('ma');
+  if(fx.err){const d=$('#mfx');if(d)d.open=true;return err(fx.err)}
+  if(fx.ft&&fx.ft.hoje)ate=todayS();
+  if(g('mt')==='curso'){const md=(($('#mmod')||{}).value||'');if(!MODC[md])return err('Informe como é o curso: online ao vivo, EAD, presencial ou híbrido.');fx.ft={...(fx.ft||{}),mod:md}}
+  const ex={tc:TN[g('mt')]?g('mt'):'mercado',...(fx.ft?{ft:fx.ft}:{})};
   if(g('ml').trim().length<3)return err('Informe o nome do comércio.');if(g('mn').trim().length<4)return err('Informe o produto.');
   if(!(p>0)||!(o>0))return err('Informe os dois preços.');if(p>=o)return err('O preço da promoção precisa ser menor que o normal.');
   if(!ate||new Date(ate+'T23:59:59')<NOW)return err('Informe uma data de validade a partir de hoje.');
-  mine.unshift({src:'enc',reg:new Date().toISOString().slice(0,10),loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate});if(!adm)submitPub({src:'enc',loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate});save();mem.err='';mem.tab='promo';toast('Promoção publicada (demonstração).');render()});
+  if(mem.mepub&&adm&&DB){const id=mem.mepub,po=pubL.find(x=>x.id===id);if(po){const {id:_i,...rest}=po,nv={...rest,id,loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,tc:ex.tc};if(ex.ft)nv.ft=ex.ft;else delete nv.ft;mem.mepub=null;mem.err='';DB.collection('pub').doc(id).set(nv).then(()=>{toast('Alterações salvas.');mem.tab='promo';render()}).catch(()=>err('Não foi possível salvar agora.'));return}}
+  {const nw={src:'enc',reg:new Date().toISOString().slice(0,10),loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,...ex},k=mem.medit;if(k!=null&&mine[k]){const old=mine[k];if(!fx.ft)delete nw.ft;mine[k]={...old,...nw};if(!fx.ft)delete mine[k].ft;mem.medit=null;if(!adm)submitPub({src:'enc',loja:nw.loja,n:nw.n,p,old:o,ate,...ex,ed:1});save();mem.err='';mem.tab='promo';toast('Alterações salvas (demonstração).'+(adm?'':' A promoção editada volta para conferência da equipe.'));return render()}}
+  mine.unshift({src:'enc',reg:new Date().toISOString().slice(0,10),loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,...ex});if(!adm)submitPub({src:'enc',loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,...ex});save();mem.err='';mem.tab='promo';toast('Promoção publicada (demonstração).');render()});
 render();
 (async()=>{if(!HASCL)return;
   const rs=()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;render()};
@@ -2231,5 +2299,87 @@ let tries=0;const iv=setInterval(()=>{if(started)return;if(typeof HASCL==='undef
     if(adm)DB.collection('adq').onSnapshot(sn=>{ADQ=sn.docs.map(d=>({uid:d.id,items:Array.isArray(d.data().items)?d.data().items:[]}));rs()},()=>{})}catch(_){}},500);
 })();
 </script>
+<style>:root{--stx-acc:var(--pri)}</style>
+<script>window.STX_CFG={app:'Achei Barato',item:'Lojas mais abertas (Ver ofertas)',itemCt:'Ofertas com mais cliques para a loja (WhatsApp ou site)',clicks:[{sel:'[data-store]',attr:'data-store'},{sel:'[data-adc]',attr:'data-adc',kind:'ct'}]};</script>
+<style>
+/* ---- Painel do administrador: estatísticas (comum aos apps) ---- */
+#stxsheet{position:fixed;inset:0;z-index:96;display:grid;place-items:end center}#stxsheet:empty{display:none}
+.stxbg{position:absolute;inset:0;background:rgba(10,18,30,.6)}
+.stxsh{position:relative;width:min(640px,100%);max-height:94dvh;overflow:auto;background:var(--bg,#f4f6f8);color:var(--ink,#111);border-radius:22px 22px 0 0;padding:12px 14px calc(22px + env(safe-area-inset-bottom,0px));box-sizing:border-box;font-size:15px;line-height:1.45}
+.stxtop{position:sticky;top:-12px;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--bg,#f4f6f8);padding:10px 0;margin:-12px 0 6px}
+.stxb{min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line,#ccc);background:var(--card,#fff);color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.stxc{background:var(--card,#fff);border:1px solid var(--line,#ccc);border-radius:16px;padding:14px;margin-top:10px;display:grid;gap:6px;min-width:0}
+.stxk{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stxk .stxc{margin-top:0}
+.stxm{color:var(--muted,#666);font-size:13.5px}
+.stxn{font-size:26px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.stxc details>summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center;justify-content:space-between;list-style:none}
+.stxc details>summary::-webkit-details-marker{display:none}
+.stxc details>summary::after{content:'+';font-weight:800;font-size:1.3em;padding:0 6px}
+.stxc details[open]>summary::after{content:'\2212'}
+.stxbar{display:grid;grid-template-columns:minmax(90px,40%) 1fr auto;gap:8px;align-items:center;font-size:14px;margin-top:6px}
+.stxbar i{display:block;height:12px;border-radius:6px;background:var(--stx-acc,#2D6A4F);min-width:2px}
+.stxbar b{font-variant-numeric:tabular-nums}
+.stxlink{display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:60px;padding:12px 14px;margin-top:10px;border-radius:16px;border:1.5px dashed var(--stx-acc,#2D6A4F);background:var(--card,#fff);color:var(--ink,#111);font:inherit;cursor:pointer;box-sizing:border-box}
+.stxlink .i{font-size:24px}.stxlink .t{flex:1;min-width:0}
+</style>
+<script>
+(function(){
+const C=Object.assign({app:'App',tela:null,telas:{},item:'Itens mais vistos',itemCt:'Itens com mais contatos',extra:null},window.STX_CFG||{});
+const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dk=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const ORI={direto:'Link direto do app',whatsapp:'WhatsApp',instagram:'Instagram',facebook:'Facebook',google:'Google (busca)',site:'Site',tiktok:'TikTok',outro:'Outro site'};
+function origem(){let q='';try{q=(new URLSearchParams(location.search).get('origem')||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20)}catch(_){}if(q)return q;let r='';try{r=document.referrer||''}catch(_){}
+ if(!r||/claude\.ai/.test(r))return 'direto';if(/whatsapp|wa\.me/.test(r))return 'whatsapp';if(/instagram/.test(r))return 'instagram';if(/facebook|fb\./.test(r))return 'facebook';if(/google\./.test(r))return 'google';if(/tiktok/.test(r))return 'tiktok';return 'outro'}
+const modo=()=>{try{return(matchMedia('(display-mode: standalone)').matches||navigator.standalone)?'app':'nav'}catch(_){return 'nav'}};
+const apar=()=>/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||'')?'cel':'pc';
+const X={db:null,uid:null,adm:false,T:null,q:[],tm:null,busy:false,all:[],loaded:false,open:false,op:{k1:true,k2:true},last:''};
+function tk(fn){X.q.push(fn);if(X.T)flush()}
+function flush(){if(!X.T||!X.db)return;X.q.splice(0).forEach(f=>{try{f(X.T)}catch(_){}});clearTimeout(X.tm);X.tm=setTimeout(save,1500)}
+async function save(){if(X.busy){X.tm=setTimeout(save,1500);return}X.busy=true;const T=X.T;try{const lim=(o,n)=>Object.fromEntries(Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n));T.pv=lim(T.pv,80);T.ct=lim(T.ct,80);T.sec=lim(T.sec,40);const ks=Object.keys(T.pn);if(ks.length>100)ks.slice(0,ks.length-100).forEach(k=>delete T.pn[k]);T.dd=Object.fromEntries(Object.entries(T.dd).sort().slice(-90));await X.db.collection('vis').doc(X.uid).set(T)}catch(_){}X.busy=false}
+const nm=(T,id,n)=>{if(n)T.pn[id]=String(n).slice(0,50)};
+window.STX={view:(id,n)=>{if(!id)return;id=String(id).slice(0,60);tk(T=>{T.pv[id]=(T.pv[id]||0)+1;nm(T,id,n)})},ct:(id,n)=>{if(!id)return;id=String(id).slice(0,60);tk(T=>{T.ct[id]=(T.ct[id]||0)+1;nm(T,id,n)})},ev:(k)=>tk(T=>{T.ev[k]=(T.ev[k]||0)+1}),open:()=>openS()};
+function tela(){try{if(C.tela)return String(C.tela()||'');const a=document.querySelector('nav [aria-current="page"],[role=tablist] [aria-selected="true"]');if(!a)return '';return (a.getAttribute('aria-label')||(a.childNodes[0]&&a.childNodes[0].textContent)||a.textContent||'').trim().replace(/\s+/g,' ').slice(0,30)}catch(_){return ''}}
+function tick(){const t=tela();if(t&&t!==X.last){X.last=t;tk(T=>{T.sec[t]=(T.sec[t]||0)+1})}
+ if(X.adm)document.querySelectorAll('[data-stlk]').forEach(el=>{if(!el.firstChild)el.innerHTML=`<button type="button" class="stxlink" data-stx="open"><span class="i" aria-hidden="true">📊</span><span class="t"><b>Painel do administrador</b><br><span class="stxm">Estatísticas do ${E(C.app)}: pessoas usando, de onde vieram e o que mais veem</span></span><span aria-hidden="true">›</span></button>`})}
+async function init(){try{if(!window.claude||!claude.use)return;const db=await claude.use('db');let u=null;try{u=await claude.use('user')}catch(_){}if(!db)return;X.db=db;try{X.uid=u?await u.id():null}catch(_){}try{X.adm=u?!!(await u.canEdit()):false}catch(_){}if(!X.uid){try{X.uid=localStorage.getItem('stx_id')}catch(_){}if(!X.uid){X.uid='a'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{localStorage.setItem('stx_id',X.uid)}catch(_){}}}
+ const d=await db.collection('vis').doc(X.uid).get(),c=d.exists?d.data():{},now=Date.now();
+ X.T={f:c.f||now,l:c.l||0,n:c.n||0,dd:c.dd||{},o:c.o||{},m:c.m||{},dv:c.dv||{},pv:c.pv||{},pn:c.pn||{},ct:c.ct||{},sec:c.sec||{},ev:c.ev||{}};
+ if(now-X.T.l>30*60000){X.T.n++;const o=origem(),m=modo(),a=apar();X.T.o[o]=(X.T.o[o]||0)+1;X.T.m[m]=(X.T.m[m]||0)+1;X.T.dv[a]=(X.T.dv[a]||0)+1}
+ const k=dk(now);X.T.dd[k]=(X.T.dd[k]||0)+1;X.T.l=now;flush();
+ if(X.adm)db.collection('vis').onSnapshot(sn=>{X.all=sn.docs.map(x=>x.data()||{});X.loaded=true;if(X.open)draw()},()=>{X.loaded=true;if(X.open)draw()})}catch(_){}}
+function soma(L,k){const r={};L.forEach(v=>Object.entries(v[k]||{}).forEach(([a,n])=>r[a]=(r[a]||0)+(+n||0)));return r}
+function bars(o,name,max){const L=Object.entries(o).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,max||10);if(!L.length)return '<p class="stxm">Ainda sem dados.</p>';const mx=L[0][1]||1;
+ return L.map(([k,n])=>`<div class="stxbar"><span>${E(name?name(k):k)}</span><i style="width:${Math.max(2,n/mx*100)}%" aria-hidden="true"></i><b>${n}</b></div>`).join('')}
+function sec(k,t,body,def){const o=k in X.op?X.op[k]:!!def;return `<div class="stxc"><details data-stxk="${k}" ${o?'open':''}><summary>${t}</summary><div>${body}</div></details></div>`}
+function body(){if(!X.db)return '<div class="stxc"><b>O painel só funciona com o app aberto pelo Claude, com login.</b></div>';if(!X.adm)return '<div class="stxc"><b>Só o administrador vê esta tela.</b></div>';if(!X.loaded)return '<div class="stxc">Carregando as estatísticas...</div>';
+ const L=X.all,now=Date.now(),dia=864e5,hoje=dk(now),ult=n=>L.filter(v=>now-(v.l||0)<n*dia).length,nov=n=>L.filter(v=>now-(v.f||0)<n*dia).length,pl=(n,a,b)=>n+' '+(n===1?a:b);
+ const ses=L.reduce((a,v)=>a+(v.n||0),0),mo=soma(L,'m'),ap=mo.app||0,nv=mo.nav||0,tt=ap+nv||1,pn=Object.assign({},...L.map(v=>v.pn||{})),nome=id=>pn[id]||id;
+ const ds=[...Array(14)].map((_,i)=>dk(now-(13-i)*dia)),pd={};ds.forEach(d=>pd[d]=L.filter(v=>v.dd&&v.dd[d]).length);const mx=Math.max(1,...ds.map(d=>pd[d]));
+ const kp=(n,t,s)=>`<div class="stxc"><span class="stxm">${t}</span><span class="stxn">${n}</span>${s?`<span class="stxm">${s}</span>`:''}</div>`;
+ const pv=soma(L,'pv'),ct=soma(L,'ct'),ev=soma(L,'ev');
+ return `<div class="stxc"><b style="font-size:19px">Painel do administrador · ${E(C.app)}</b><p class="stxm">Só você vê esta tela. Os números juntam todas as pessoas que abriram o ${E(C.app)}. Ninguém é identificado, só os totais.</p></div>
+<div class="stxk" style="margin-top:10px">${kp(L.length,'Pessoas que já usaram','desde o início')}${kp(L.filter(v=>v.dd&&v.dd[hoje]).length,'Usaram hoje')}${kp(ult(7),'Últimos 7 dias',pl(nov(7),'nova','novas'))}${kp(ult(30),'Últimos 30 dias',pl(nov(30),'nova','novas'))}${kp(ses,'Visitas (aberturas)','pausa de 30 min conta nova visita')}${kp(Math.round(ap/tt*100)+'%','Abriram pelo app instalado',Math.round(nv/tt*100)+'% pelo navegador (site)')}</div>
+${sec('k1','Pessoas por dia (últimos 14 dias)',[...ds].reverse().map(d=>`<div class="stxbar"><span>${d===hoje?'Hoje':d.slice(8)+'/'+d.slice(5,7)}</span><i style="width:${Math.max(2,pd[d]/mx*100)}%" aria-hidden="true"></i><b>${pd[d]}</b></div>`).join(''),true)}
+${Object.keys(pv).length||C.itemAlways?sec('k2',E(C.item),bars(pv,nome,10),true):''}
+${Object.keys(ct).length?sec('k3',E(C.itemCt),bars(ct,nome,10)):''}
+${Object.keys(ev).length?sec('k8','Ações feitas no app',bars(ev,k=>(C.evs&&C.evs[k])||k,12)):''}
+${sec('k4','Partes do app mais usadas',bars(soma(L,'sec'),k=>C.telas[k]||k,12))}
+${sec('k5','De onde as pessoas vieram',bars(soma(L,'o'),k=>ORI[k]||k)+'<p class="stxm">Para saber de onde veio, divulgue o link com a origem no final. Exemplo: <b>?origem=instagram</b> ou <b>?origem=whatsapp</b>. Quem chega sem isso entra como "Link direto do app".</p>')}
+${sec('k6','Como abriram e em qual aparelho',bars({'App instalado na tela do celular':ap,'Navegador (site)':nv})+bars(Object.fromEntries(Object.entries(soma(L,'dv')).map(([k,n])=>[k==='cel'?'Celular':'Computador',n]))))}
+${sec('k7','Sobre downloads','<p class="stxm">Enquanto o app roda aqui no Claude, não existe loja de aplicativos, então "baixar" ainda não existe. "App instalado" conta quem colocou o app na tela do celular. Quando o app estiver na Play Store e na App Store, o número de downloads vem do painel de cada loja e pode ser trazido para cá.</p>')}`}
+function draw(){const el=document.getElementById('stxsheet');if(!el)return;if(!X.open){el.innerHTML='';document.body.style.overflow='';return}document.body.style.overflow='hidden';const sc=el.querySelector('.stxsh'),y=sc?sc.scrollTop:0;
+ el.innerHTML=`<div class="stxbg" data-stx="close"></div><div class="stxsh" role="dialog" aria-modal="true" aria-label="Painel do administrador"><div class="stxtop"><button type="button" class="stxb" data-stx="close">← Voltar</button></div>${body()}</div>`;const s2=el.querySelector('.stxsh');if(s2)s2.scrollTop=y}
+function openS(){let el=document.getElementById('stxsheet');if(!el){el=document.createElement('div');el.id='stxsheet';document.body.appendChild(el)}X.open=true;draw();setTimeout(()=>{const b=el.querySelector('.stxb');if(b)b.focus()},30)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-stx]');if(!b)return;e.preventDefault();e.stopPropagation();if(b.dataset.stx==='open')openS();else{X.open=false;draw()}},true);
+document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.stxk)X.op[t.dataset.stxk]=t.open},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&X.open){X.open=false;draw()}});
+const nmOf=el=>{const c=el.closest('.card,.prod,li,article,.tile,section')||el;const h=c.querySelector('b,strong,h3,h2,h4');return ((h&&h.textContent)||el.getAttribute('aria-label')||el.textContent||'').trim().replace(/\s+/g,' ').slice(0,50)};
+document.addEventListener('click',e=>{if(!C.clicks||!e.target.closest)return;C.clicks.forEach(r=>{const el=e.target.closest(r.sel);if(!el)return;const id=el.getAttribute(r.attr)||'';if(!id)return;const n=(r.name?r.name(el):nmOf(el))||id;window.STX[r.kind||'view'](id,n)})},true);
+window.STX._test=(L)=>{X.db={};X.adm=true;X.all=L;X.loaded=true;tick();openS()};
+setInterval(tick,1500);init();
+})();
+</script>
+
 <script>window.IA_INTRO={"app": "achei-barato", "nome": "Achei Barato", "cor": "#8A4B00", "fundo": "#FFFFFF", "tinta": "#1B1B1B", "slides": [{"ic": "🏷️", "t": "Bem-vindo ao Achei Barato", "x": "Aqui você vê as promoções de mercados, lojas e comércios e decide onde vale a pena comprar.", "fala": "Oi, pessoal! Quer economizar? Então você chegou no lugar certo! O Achei Barato mostra as promoções de mercados, lojas e comércios, pra você decidir onde vale a pena comprar!"}, {"ic": "🛒", "t": "Promoções perto e online", "x": "Veja as promoções das lojas físicas, os comércios e as ofertas online. Toque num item para ver os detalhes.", "fala": "Toque num item pra ver os detalhes. Tem promoção de loja física, de comércio da sua região e também de loja online!"}, {"ic": "🗺️", "t": "Monte a lista e o roteiro", "x": "Com a sua conta, você monta a lista de compras e o app mostra o roteiro que mais economiza.", "fala": "Com a sua conta, você monta a lista de compras e o app mostra o roteiro que mais economiza. É dinheiro no bolso!"}, {"ic": "🏪", "t": "Para comerciantes", "x": "Tem uma loja? Em \"Sou comerciante\" você divulga as suas promoções para quem está por perto.", "fala": "Tem uma loja? Em Sou comerciante, você divulga as suas promoções pra quem está por perto!"}, {"ic": "👀", "t": "Visitante ou com conta", "x": "Sem entrar, você vê as promoções e manda sugestão ou crítica. Entrando, salva a lista, monta o roteiro e participa.", "fala": "Sem entrar, você já vê as promoções e pode mandar sugestão. Entrando, salva a lista e monta o roteiro. Vamos economizar juntos?"}]}</script><script src="../intro.js?v=2"></script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
