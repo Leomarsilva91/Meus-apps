@@ -199,6 +199,7 @@ header.top>*{position:relative;z-index:1}
 
 <div class="wrap">
 <header class="top"><div class="brand"><i></i>Achei Barato</div><span class="pill">Protótipo · comércios e preços fictícios</span><button type="button" class="fbhb" data-fbx="open" aria-label="Enviar problema ou sugestão">💬 Sugestão</button><p class="tagline">Ache o menor preço, monte o roteiro e economize de verdade.</p></header>
+<div id="gst"></div>
 <div id="pfb"></div>
 <nav class="tabs" id="tabs" aria-label="Seções"></nav>
 <div id="locb"></div>
@@ -1412,11 +1413,11 @@ function render(){
   const T=[['promo','Promoções lojas físicas','Físicas'],['plan','Roteiro de economia','Roteiro'],['stores','Comércios','Lojas'],['online','Promoções online','Online'],['com','Comunidade','Social'],['tag','Achei uma promoção','Enviar preço'],['merch','Sou comerciante','Sou loja'],...(adm?[['admin','Administrador','Admin']]:[])].filter(t=>t[0]==='admin'||(tabOn(t[0])&&(t[0]!=='com'||comOn||adm)));
   if(!T.some(t=>t[0]===mem.tab)&&T.length)mem.tab=T[0][0];
   {const nt=T.filter(t=>t[0]!=='admin').length;$('#tabs').style.gridTemplateColumns=nt<3?'repeat('+Math.max(1,nt)+',minmax(0,1fr))':''}
-  $('#pfb').innerHTML=prefBar(T.map(t=>t[0]));try{$('#locb').innerHTML=locBar()}catch(_){}
+  $('#gst').innerHTML=guestBan();$('#pfb').innerHTML=prefBar(T.map(t=>t[0]));try{$('#locb').innerHTML=locBar()}catch(_){}
   $('#tabs').innerHTML=T.map(t=>`<button data-tab="${t[0]}" ${mem.tab===t[0]?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC[t[0]]}</svg><span class="lg">${t[1]}</span><span class="sh">${t[2]}</span></button>`).join('')+(window.IA_AUTH?`<button type="button" data-${IA_AUTH.logado()?'sair':'entrar'}="1" aria-label="${IA_AUTH.logado()?'Sair da conta':'Entrar na conta'}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span class="lg">${IA_AUTH.logado()?'Sair da conta':'Entrar'}</span><span class="sh">${IA_AUTH.logado()?'Sair':'Entrar'}</span></button>`:'');
   __net=null;DET={};try{recPH()}catch(e){}try{$('#dst').innerHTML=mem.tabPick?'':destV()}catch(e){$('#dst').innerHTML=''}try{$('#alr').innerHTML=mem.tabPick?'':alrV()}catch(e){$('#alr').innerHTML=''}$('#lg').innerHTML=legalBox();
   $('#mdl').innerHTML=rvModal()+pdModal()+ulModal()+consentBar()+prefModal()+welcome();
-  $('#v').innerHTML=guestV()||guestBan()+(mem.tab==='promo'?promoV():mem.tab==='plan'?planV():mem.tab==='stores'?storesV():mem.tab==='tag'?tagV():mem.tab==='online'?onlineV():mem.tab==='com'?comV():mem.tab==='admin'?adminV():merchV());collapseBoxes();$('#mdl').insertAdjacentHTML('afterbegin',gdModal());
+  $('#v').innerHTML=guestV()||(mem.tab==='promo'?promoV():mem.tab==='plan'?planV():mem.tab==='stores'?storesV():mem.tab==='tag'?tagV():mem.tab==='online'?onlineV():mem.tab==='com'?comV():mem.tab==='admin'?adminV():merchV());collapseBoxes();$('#mdl').insertAdjacentHTML('afterbegin',gdModal());
   if(mem.tab==='promo'&&!mem.f0&&document.querySelector('.card .tag.off')){mem.f0=1;setTimeout(()=>boom(null,null,1),450)}
   if(mem.tab==='plan'&&__net!=null){const k=Math.round(__net*100)+'|'+JSON.stringify(list)+'|'+real;if(k!==mem.fk){mem.fk=k;setTimeout(()=>boom(null,null,1),350)}}
   if(mem.keepQ){const q=$('#q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}mem.keepQ=0}}
