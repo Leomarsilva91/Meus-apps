@@ -54,12 +54,85 @@ async function taxas(req, o, ctx) {
   return resp(out, 200, o);
 }
 
+// Lê a página de um produto pelo servidor (as lojas não deixam o navegador do cliente ler direto).
+// Devolve título, preço, imagem e descrição que a própria página informa, e o texto limpo para a IA.
+const UA = 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36';
+const ent = (s) => String(s || '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
+function meta(h, nomes) {
+  for (const n of nomes) {
+    const a = new RegExp('<meta[^>]+(?:property|name|itemprop)=["\']' + n + '["\'][^>]*content=["\']([^"\']*)["\']', 'i').exec(h)
+      || new RegExp('<meta[^>]+content=["\']([^"\']*)["\'][^>]*(?:property|name|itemprop)=["\']' + n + '["\']', 'i').exec(h);
+    if (a && a[1].trim()) return ent(a[1].trim());
+  }
+  return '';
+}
+function jsonLd(h) {
+  const out = {};
+  const re = /<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = re.exec(h))) {
+    let j; try { j = JSON.parse(m[1].trim()); } catch (_) { continue; }
+    const pilha = [j];
+    while (pilha.length) {
+      const x = pilha.pop();
+      if (!x || typeof x !== 'object') continue;
+      if (Array.isArray(x)) { pilha.push(...x); continue; }
+      if (x['@graph']) pilha.push(x['@graph']);
+      const t = [].concat(x['@type'] || []).join(' ');
+      if (/Product/i.test(t)) {
+        out.n = out.n || x.name; out.desc = out.desc || x.description;
+        const im = [].concat(x.image || [])[0]; out.img = out.img || (typeof im === 'string' ? im : im && im.url);
+        const of = [].concat(x.offers || [])[0];
+        if (of) { out.p = out.p || of.price || of.lowPrice; out.old = out.old || of.highPrice; }
+      }
+    }
+  }
+  return out;
+}
+function textoLimpo(h) {
+  return ent(h.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<(br|\/p|\/div|\/li|\/h\d|\/tr)[^>]*>/gi, '\n').replace(/<[^>]+>/g, ' '))
+    .replace(/[ \t\r]+/g, ' ').replace(/\n\s*/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+async function pagina(req, o, env) {
+  if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
+  const ip = req.headers.get('CF-Connecting-IP') || 'x';
+  if (!(await contar(env, 'pg:' + ip, 120))) return resp({ erro: 'limite' }, 429, o);
+  let u;
+  try { u = new URL(new URL(req.url).searchParams.get('u') || ''); } catch (_) { return resp({ erro: 'link' }, 400, o); }
+  if (u.protocol !== 'https:' || /^(localhost|\d+\.\d+\.\d+\.\d+|\[)/i.test(u.hostname) || !u.hostname.includes('.')) return resp({ erro: 'link' }, 400, o);
+  const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 15000);
+  let r;
+  try {
+    r = await fetch(u.toString(), { redirect: 'follow', signal: ac.signal, headers: { 'User-Agent': UA, 'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'pt-BR,pt;q=0.9' } });
+  } catch (_) { clearTimeout(tm); return resp({ erro: 'rede' }, 502, o); }
+  clearTimeout(tm);
+  const h = (await r.text()).slice(0, 2_000_000);
+  const L = jsonLd(h);
+  const t = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(h);
+  const num = (v) => { const s = String(v || '').replace(/[^\d.,]/g, ''); if (!s) return null; const n = /,\d{1,2}$/.test(s) ? Number(s.replace(/\./g, '').replace(',', '.')) : Number(s.replace(/,/g, '')); return n > 0 ? n : null; };
+  const out = {
+    ok: r.ok, status: r.status, url: r.url,
+    n: String(L.n || meta(h, ['og:title', 'twitter:title']) || (t ? ent(t[1]) : '')).trim().slice(0, 200),
+    p: num(L.p || meta(h, ['product:price:amount', 'og:price:amount', 'price'])),
+    old: num(L.old),
+    img: String(L.img || meta(h, ['og:image', 'og:image:secure_url', 'twitter:image']) || ''),
+    desc: String(L.desc || meta(h, ['og:description', 'description', 'twitter:description']) || '').trim().slice(0, 3000),
+    texto: textoLimpo(h).slice(0, 14000),
+  };
+  if (!/^https:\/\//.test(out.img)) out.img = '';
+  return resp(out, 200, o);
+}
+
 export default {
   async fetch(req, env, ctx) {
     const o = req.headers.get('Origin') || '';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(o) });
     if (req.method === 'GET' && new URL(req.url).pathname === '/taxas') {
       try { return await taxas(req, o, ctx); } catch (_) { return resp({ erro: 'bcb' }, 502, o); }
+    }
+    if (req.method === 'GET' && new URL(req.url).pathname === '/pagina') {
+      try { return await pagina(req, o, env); } catch (_) { return resp({ erro: 'pagina' }, 502, o); }
     }
     if (req.method !== 'POST') return resp({ erro: 'metodo' }, 405, o);
     if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);

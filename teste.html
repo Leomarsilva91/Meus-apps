@@ -60,7 +60,12 @@ async function run(){
     const dados=c.toDataURL('image/png').split(',')[1];const {r,j}=await postIA({texto:'Qual preço aparece na imagem? Responda só o preço.',imagens:[{tipo:'image/png',dados}],max:100});
     const ok=r.ok&&j&&typeof j.texto==='string'&&/12[,.]90/.test(j.texto);f(ok,ok?'Leu a imagem: '+j.texto.slice(0,40):(r.ok?'Respondeu, mas não leu certo: '+String(j&&j.texto||'').slice(0,40):'Não leu a imagem'),ok?'':(r.ok?'':dicaIA(r.status,j)))}
   catch(e){f(false,'Não respondeu','Sem conexão ('+e.message+').')}
-  f=box('5. Leitor de páginas (buscar oferta pelo link)');
+  f=box('5. Leitura de links pelo seu servidor (novo)');
+  try{const r=await tempo(fetch(window.IA_URL+'/pagina?u='+encodeURIComponent('https://www.magazineluiza.com.br/')),30000);let j=null;try{j=await r.json()}catch(_){}
+    if(r.status===405)f(false,'O servidor ainda está na versão antiga','Atualize o código do servidor no Cloudflare (passo a passo na conversa com o Claude).');
+    else{const ok=r.ok&&j&&(j.n||j.texto);f(!!ok,ok?'Leu a página da loja'+(j.n?': '+String(j.n).slice(0,50):''):'Não leu (erro '+r.status+(j&&j.erro?' · '+j.erro:'')+')',ok?'':'A loja pode ter bloqueado a leitura. Tente com outro link.')}}
+  catch(e){f(false,'Não respondeu','Sem conexão com o servidor ('+e.message+').')}
+  f=box('5b. Leitor de páginas gratuito (reserva)');
   try{const r=await tempo(fetch('https://r.jina.ai/https://www.magazineluiza.com.br/',{headers:{Accept:'text/plain'}}),30000);const t=r.ok?await r.text():'';f(r.ok&&t.length>200,r.ok&&t.length>200?'Conseguiu ler uma página de loja':'Não conseguiu ler (erro '+r.status+')',r.ok&&t.length>200?'':'O serviço gratuito de leitura de páginas recusou ou limitou o pedido.')}
   catch(e){f(false,'Não conseguiu ler','O serviço de leitura de páginas não respondeu ('+e.message+').')}
   f=box('6. Dados oficiais do Mercado Livre');
