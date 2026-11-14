@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teste dos apps</title>
+<script src="config.js?v=4"></script>
+<style>
+  body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;background:#f4f6f5;color:#1b2420}
+  main{max-width:640px;margin:0 auto;padding:16px;display:grid;gap:12px}
+  h1{font-size:22px;margin:4px 0}
+  p{margin:0}
+  .t{background:#fff;border:1px solid #dfe5e2;border-radius:14px;padding:12px 14px;display:grid;gap:4px}
+  .t b{font-size:16px}
+  .st{font-weight:700}
+  .ok{color:#12803f}.bad{color:#c62828}.wait{color:#8a5400}
+  .m{color:#5a6661;font-size:14px;overflow-wrap:anywhere}
+  button{font:700 16px system-ui;border:0;border-radius:12px;background:#1f7a5c;color:#fff;padding:12px 16px;min-height:48px;cursor:pointer}
+  button.gh{background:#fff;color:#1b2420;border:1.5px solid #dfe5e2}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<main>
+  <h1>🔧 Teste dos apps</h1>
+  <p class="m">Esta página confere, neste aparelho, se a IA, a leitura de links e a localização estão funcionando. Toque em <b>Começar o teste</b>, espere terminar e mande um print do resultado.</p>
+  <div class="row"><button id="go">Começar o teste</button><button class="gh" id="cp">Copiar o resultado</button></div>
+  <div id="out" style="display:grid;gap:10px"></div>
+</main>
+<script>
+const out=document.getElementById('out'),R=[];
+function box(nome){const d=document.createElement('div');d.className='t';d.innerHTML='<b>'+nome+'</b><span class="st wait">Testando…</span><span class="m"></span>';out.appendChild(d);
+  return (ok,txt,dica)=>{const s=d.querySelector('.st');s.className='st '+(ok?'ok':'bad');s.textContent=(ok?'✅ ':'❌ ')+txt;d.querySelector('.m').textContent=dica||'';R.push((ok?'OK ':'FALHOU ')+nome+': '+txt+(dica?' ('+dica+')':''))}}
+async function tempo(p,ms){let t;return Promise.race([p,new Promise((_,no)=>t=setTimeout(()=>no(new Error('demorou demais')),ms))]).finally(()=>clearTimeout(t))}
+function dicaIA(status,j){const e=j&&j.erro,s=j&&j.status;
+  if(status===403||e==='origem')return 'O servidor de IA recusou este endereço. Ele só aceita o site leomarsilva91.github.io.';
+  if(e==='sem_chave')return 'A chave da IA não está cadastrada no Cloudflare (variável ANTHROPIC_API_KEY).';
+  if(e==='ia'&&s===401)return 'A chave da IA cadastrada no Cloudflare está errada ou foi apagada.';
+  if(e==='ia'&&(s===400||s===402))return 'A conta da Anthropic pode estar sem crédito. Confira em console.anthropic.com, em Billing.';
+  if(e==='ia'&&s===429)return 'A conta da Anthropic atingiu o limite de uso. Espere um pouco ou aumente o limite.';
+  if(e==='ia'&&s>=500)return 'A IA da Anthropic está instável agora. Tente de novo em alguns minutos.';
+  if(status===429)return 'Limite de usos por dia do servidor atingido.';
+  if(e==='imagem')return 'A imagem foi recusada pelo servidor (formato ou tamanho).';
+  return 'Erro '+status+(e?' · '+e:'')+(s?' · '+s:'')}
+async function postIA(body){const r=await tempo(fetch(window.IA_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),40000);let j=null;try{j=await r.json()}catch(_){}return{r,j}}
+async function run(){
+  out.innerHTML='';R.length=0;document.getElementById('go').disabled=true;
+  R.push('Aparelho: '+navigator.userAgent);R.push('Endereço: '+location.href);
+  let f=box('1. Configuração do servidor de IA');
+  if(!window.IA_URL){f(false,'Endereço do servidor não encontrado','O arquivo config.js não carregou.');document.getElementById('go').disabled=false;return}
+  f(true,'Encontrado',window.IA_URL);
+  f=box('2. Servidor de IA está no ar');
+  try{const r=await tempo(fetch(window.IA_URL+'/taxas'),20000);f(r.ok,r.ok?'Respondeu':'Respondeu com erro '+r.status,r.ok?'':'O servidor no Cloudflare pode estar desligado ou com erro.')}
+  catch(e){f(false,'Não respondeu','Sem conexão com o servidor no Cloudflare ('+e.message+'). Pode ser a internet, um bloqueador de anúncios ou o servidor desligado.')}
+  f=box('3. IA responde a um texto');
+  try{const {r,j}=await postIA({texto:'Responda só com a palavra: funcionando',max:100});const ok=r.ok&&j&&typeof j.texto==='string'&&j.texto.length>0;f(ok,ok?'A IA respondeu: '+j.texto.slice(0,60):'A IA não respondeu',ok?'':dicaIA(r.status,j))}
+  catch(e){f(false,'Não respondeu','Sem conexão ('+e.message+').')}
+  f=box('4. IA lê uma imagem');
+  try{const c=document.createElement('canvas');c.width=220;c.height=80;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,220,80);g.fillStyle='#000';g.font='bold 36px sans-serif';g.fillText('R$ 12,90',14,52);
+    const dados=c.toDataURL('image/png').split(',')[1];const {r,j}=await postIA({texto:'Qual preço aparece na imagem? Responda só o preço.',imagens:[{tipo:'image/png',dados}],max:100});
+    const ok=r.ok&&j&&typeof j.texto==='string'&&/12[,.]90/.test(j.texto);f(ok,ok?'Leu a imagem: '+j.texto.slice(0,40):(r.ok?'Respondeu, mas não leu certo: '+String(j&&j.texto||'').slice(0,40):'Não leu a imagem'),ok?'':(r.ok?'':dicaIA(r.status,j)))}
+  catch(e){f(false,'Não respondeu','Sem conexão ('+e.message+').')}
+  f=box('5. Leitor de páginas (buscar oferta pelo link)');
+  try{const r=await tempo(fetch('https://r.jina.ai/https://www.magazineluiza.com.br/',{headers:{Accept:'text/plain'}}),30000);const t=r.ok?await r.text():'';f(r.ok&&t.length>200,r.ok&&t.length>200?'Conseguiu ler uma página de loja':'Não conseguiu ler (erro '+r.status+')',r.ok&&t.length>200?'':'O serviço gratuito de leitura de páginas recusou ou limitou o pedido.')}
+  catch(e){f(false,'Não conseguiu ler','O serviço de leitura de páginas não respondeu ('+e.message+').')}
+  f=box('6. Dados oficiais do Mercado Livre');
+  try{const r=await tempo(fetch('https://api.mercadolibre.com/sites/MLB'),20000);f(r.ok,r.ok?'Respondeu':'Recusou (erro '+r.status+')',r.ok?'':'O Mercado Livre passou a exigir cadastro para consultar produtos.')}
+  catch(e){f(false,'Não respondeu','Sem conexão com o Mercado Livre ('+e.message+').')}
+  f=box('7. Localização do aparelho');
+  if(!('geolocation' in navigator))f(false,'Este navegador não tem localização','');
+  else await new Promise(ok=>navigator.geolocation.getCurrentPosition(p=>{f(true,'Localização encontrada','Precisão de cerca de '+Math.round(p.coords.accuracy)+' m');ok()},e=>{f(false,e.code===1?'Permissão negada':e.code===3?'Demorou demais':'Não encontrou a localização',e.code===1?'Libere a localização para o site nas configurações do navegador (cadeado ao lado do endereço).':e.code===3?'Ligue o GPS ou a localização do aparelho e tente perto de uma janela. No computador, a localização vem só pela internet e às vezes falha.':'Ligue a localização do aparelho.');ok()},{enableHighAccuracy:true,timeout:15000,maximumAge:60000}));
+  document.getElementById('go').disabled=false;
+}
+document.getElementById('go').onclick=run;
+document.getElementById('cp').onclick=async()=>{const t=R.join('\n')||'Rode o teste primeiro.';try{await navigator.clipboard.writeText(t);alert('Resultado copiado.')}catch(_){prompt('Copie o resultado:',t)}};
+</script>
+</body>
+</html>

@@ -22,7 +22,7 @@
       res = await fetch(URL_IA, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto: texto, imagens: imagens, max: json ? 1500 : 500 }) });
     } catch (_) { throw erro('network_error', 'Sem conexão com o servidor de IA.'); }
     if (res.status === 429) throw erro('rate_limited', 'Limite de usos da IA atingido por hoje.');
-    if (!res.ok) throw erro('server_error', 'A IA não respondeu agora.');
+    if (!res.ok) { var j = {}; try { j = await res.json(); } catch (_) {} throw erro('ia_' + (j.erro || res.status) + (j.status ? '_' + j.status : ''), 'A IA não respondeu agora.'); }
     return (await res.json()).texto || '';
   }
   function extrair(t) {
