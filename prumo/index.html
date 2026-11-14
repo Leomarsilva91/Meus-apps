@@ -792,7 +792,7 @@ function itemSync(g){const m=itemMult(g);planItems(g).forEach(x=>{if(x.auto||!x.
 const UEXT={ref:[['pdia','Por pessoa, por dia'],['gdia','Por dia (grupo todo)']]};
 const unitOpts=(k,cur,totLbl)=>[['u',ULBL[k][0]]].concat(UEXT[k]||[],[['total',totLbl||ULBL[k][1]]]).map(([v,l])=>`<option value="${v}"${v===cur?' selected':''}>${l}</option>`).join('');
 const ULBL={dia:['Por noite, por quarto','Valor total da hospedagem'],casa:['Por noite (imóvel inteiro)','Valor total da hospedagem'],ref:['Por pessoa, cada refeição','Valor total da alimentação'],tl:['Por dia (grupo todo)','Valor total'],pa:['Por pessoa, por dia','Valor total dos passeios'],alug:['Por dia','Valor total do aluguel'],bag:['Por pessoa','Valor total da bagagem'],ppp:['Por pessoa, ida e volta','Valor total das passagens']};
-function autoField(x,g){if(g.tipo!=='viagem'||!x.auto)return '';const r=rotaDef(g);return{hdest:r.hosp==='casa'?'casa':'dia',alug:'alug',adest:'ref',ref:+r.refE>0?'':'ref',tloc:'tl',pasd:'pa',bag:'bag',pass:'ppp'}[x.auto]||''}
+function autoField(x,g){if(g.tipo!=='viagem'||!x.auto)return '';const r=rotaDef(g);return{hdest:r.hosp==='casa'?'casa':'dia',alug:'alug',adest:mealHas(r,'D')?'':'ref',ref:+r.refE>0||mealHas(r,'E')?'':'ref',tloc:'tl',pasd:'pa',bag:'bag',pass:'ppp'}[x.auto]||''}
 function cuSel(x,g){const f=autoField(x,g);
   if(x.auto&&!f)return '';
   if(x.auto){return `<label class="small" style="display:grid;gap:4px;font-weight:600">O valor que você digita é<select data-cu="${x.id}" aria-label="Tipo do valor de ${esc(x.n)}">${unitOpts(f,x.man?'total':((g.rota&&g.rota.un&&g.rota.un[f])||'u'),'Valor total (digitado)')}</select></label>`}
@@ -802,12 +802,12 @@ const DUP=[[/transport/i,'tloc'],[/hosped|hotel|flat|pousada/i,'hdest'],[/alugue
 function dupNote(x,g){if(g.tipo!=='viagem'||x.auto||!(+x.v>0))return '';const a=DUP.find(([re,k])=>re.test(x.n)&&planItems(g).some(y=>y.auto===k&&+y.v>0));
   return a?`<span class="small" style="color:var(--debt,#B3261E);font-weight:600">Atenção: já existe um item calculado parecido (${esc(AUTO[a[1]][0])}). Se for o mesmo gasto, remova um dos dois para não contar duas vezes.</span>`:''}
 const nf=v=>(+v).toLocaleString('pt-BR',{maximumFractionDigits:1});
-const refTxt=(r,d,eq)=>{const m=(r.un&&r.un.ref)||'u';return m==='pdia'?d+' dias × '+eq+' × '+brl(+r.ref)+' por dia':m==='gdia'?d+' dias × '+brl(+r.ref):d+' dias × 2 refeições × '+eq+' × '+brl(+r.ref)};
+const refTxt=(r,d,eq,n)=>{const m=(r.un&&r.un.ref)||'u',q=n==null?2:n;return m==='pdia'?d+' dias × '+eq+' × '+brl(+r.ref)+' por dia':m==='gdia'?d+' dias × '+brl(+r.ref):d+' dias × '+q+(q===1?' refeição':' refeições')+' × '+eq+' × '+brl(+r.ref)};
 function autoFormula(x,g){if(g.tipo!=='viagem'||!x.auto||x.man||!(+x.v>0))return '';const r=rotaDef(g),C=rotaCalc(g),G=rotaGrp(g),eq=nf(G.pesEq)+(G.pesEq===1?' pessoa':' pessoas'),q=C.quartos+(C.quartos===1?' quarto':' quartos'),
   F={hdest:r.hosp==='casa'?brl(+r.casa)+' × '+C.nn+' noites':brl(+r.dia)+' × '+C.nn+' noites × '+q,hot:(+r.diaE>0?brl(+r.diaE):brl(+r.dia))+' × '+C.noites+(C.noites===1?' noite':' noites')+(r.iv&&!(+r.nE>=0&&r.nE!==''&&r.nE!=null)?' ('+C.nI+' na ida + '+C.nV+' na volta)':'')+' × '+(+r.diaE>0&&r.diaEu==='pes'?G.pesPag+' pessoas':q),alug:brl(+r.alug)+' × '+Math.max(1,C.nn+C.noites)+' dias',
-   adest:refTxt(r,C.dd,eq),ref:+r.refE>0?C.diasE+' dias de estrada × 2 refeições × '+eq+' × '+brl(+r.refE):refTxt(r,C.diasE,eq),tloc:brl(+r.tl)+' × '+C.dd+' dias',pasd:brl(+r.pa)+' × '+C.dd+' dias × '+eq,
-   comb:nf(C.litros)+' litros × '+brl(+r.preco),pass:brl(+r.ppp)+' × '+eq,bag:brl(+r.bag)+' × '+G.pesPag+(G.pesPag===1?' pessoa':' pessoas')}[x.auto];
-  const fld={hdest:r.hosp==='casa'?'casa':'dia',alug:'alug',adest:'ref',tloc:'tl',pasd:'pa',bag:'bag',pass:'ppp'}[x.auto];
+   adest:mealHas(r,'D')?mealTxt(r,'D',C.dd,C.fbD,eq):refTxt(r,C.dd,eq,C.mD),ref:mealHas(r,'E')?mealTxt(r,'E',C.diasE,C.fbE,eq):+r.refE>0?C.diasE+' dias de estrada × '+C.mE+(C.mE===1?' refeição':' refeições')+' × '+eq+' × '+brl(+r.refE):refTxt(r,C.diasE,eq,C.mE),tloc:brl(+r.tl)+' × '+C.dd+' dias',pasd:brl(+r.pa)+' × '+C.dd+' dias × '+eq,
+   comb:nf(C.litros)+' litros × '+brl(+r.preco),pass:brl(+r.ppp)+' × '+eq,bag:brl(+r.bag)+' × '+G.pesPag+(G.pesPag===1?' pessoa':' pessoas'),pvol:brl(+r.pvol)+' × '+eq}[x.auto];
+  const fld={hdest:r.hosp==='casa'?'casa':'dia',alug:'alug',adest:mealHas(r,'D')?'':'ref',tloc:'tl',pasd:'pa',bag:'bag',pass:'ppp'}[x.auto];
   if(fld&&r.un&&r.un[fld]==='total')return `<span class="small" style="color:var(--meta);font-weight:600">Valor total informado = ${brl(+x.v)}</span>`;
   if((x.auto==='hot'&&!(+r.diaE>0)&&r.un&&r.un.dia==='total')||(x.auto==='ref'&&!(+r.refE>0)&&r.un&&r.un.ref==='total'))return '';
   return F?`<span class="small" style="color:var(--meta);font-weight:600">${F} = ${brl(+x.v)}</span>`:''}
@@ -1042,46 +1042,60 @@ function memCard(g,tot){
    <div>${rows}</div>${add}`}
 
 /* ---------- viagem: carro ou avião ---------- */
-function rotaDef(g){if(!g.rota)g.rota={modo:'',pessoas:(S.orc&&S.orc.pessoas)||1,orig:'',dest:'',km:'',iv:true,cons:10,preco:'',dia:'',ref:'',ppp:'',noites:'',tl:'',pa:'',ped:'',bag:'',trf:'',sim:{},adultos:'',idades:'',fam:false,gr:5,me:11,fm:50,hosp:'hotel',casa:'',quartos:'',alugado:false,alug:'',rach:'',escopo:'total'};const r=g.rota,df={un:{},totO:'',pagO:'',sim:{},adultos:'',idades:'',fam:false,gr:5,me:11,fm:50,hosp:'hotel',casa:'',quartos:'',alugado:false,alug:'',rach:'',escopo:'total'};for(const k in df)if(r[k]==null)r[k]=df[k];if(r.adultos===''||!(+r.adultos>0))r.adultos=Math.max(1,(+r.pessoas||1)-rotaAges(r).length);if(g.membros&&g.membros.length){const ch=g.membros.filter(m=>m.t==='c');const am=g.membros.filter(m=>m.t!=='c'),pa=am.filter(m=>m.pag!==false).length;r.adultos=Math.max(1,pa);r.adL=Math.max(0,am.length-Math.max(1,pa));r.kp=ch.map(m=>m.pag===true?true:m.pag===false?false:null);r.idades=ch.map(m=>m.idade).join(', ');r.fam=ch.length>0}else{r.adL=0;r.kp=[]}return r}
+function rotaDef(g){if(!g.rota)g.rota={modo:'',pessoas:(S.orc&&S.orc.pessoas)||1,orig:'',dest:'',km:'',iv:true,cons:10,preco:'',dia:'',ref:'',ppp:'',noites:'',tl:'',pa:'',ped:'',bag:'',trf:'',sim:{},adultos:'',idades:'',fam:false,gr:5,me:11,fm:50,hosp:'hotel',casa:'',quartos:'',alugado:false,alug:'',rach:'',escopo:'total'};const r=g.rota,df={un:{},totO:'',pagO:'',sim:{},adultos:'',idades:'',fam:false,gr:5,me:11,fm:50,hosp:'hotel',casa:'',quartos:'',alugado:false,alug:'',rach:'',escopo:'total'};for(const k in df)if(r[k]==null)r[k]=df[k];if(r.volta==null||r.volta==='')r.volta=r.iv===false?'fica':'carro';r.iv=r.volta==='carro'||r.volta==='carro2';if(r.adultos===''||!(+r.adultos>0))r.adultos=Math.max(1,(+r.pessoas||1)-rotaAges(r).length);if(g.membros&&g.membros.length){const ch=g.membros.filter(m=>m.t==='c');const am=g.membros.filter(m=>m.t!=='c'),pa=am.filter(m=>m.pag!==false).length;r.adultos=Math.max(1,pa);r.adL=Math.max(0,am.length-Math.max(1,pa));r.kp=ch.map(m=>m.pag===true?true:m.pag===false?false:null);r.idades=ch.map(m=>m.idade).join(', ');r.fam=ch.length>0}else{r.adL=0;r.kp=[]}return r}
+function mealsList(){return[['cafe','Café da manhã'],['alm','Almoço'],['lan','Café da tarde'],['jan','Jantar']]}
+function rotaMeals(r,w){const s=r['ml'+w];const a=typeof s==='string'?s.split(',').filter(Boolean):['alm','jan'];return mealsList().map(m=>m[0]).filter(k=>a.includes(k))}
+function mealPr(r,w){const o=r['mp'+w];return o&&typeof o==='object'?o:{}}
+function mealGet(r,w,k){const o=mealPr(r,w),a=w==='E'?mealPr(r,'D'):{};return +((o[k]||{}).v)>0?o[k]:+((a[k]||{}).v)>0?a[k]:null}
+function mealHas(r,w){return rotaMeals(r,w).some(k=>mealGet(r,w,k))}
+function mealDay(r,w,eq,fb){let t=0;rotaMeals(r,w).forEach(k=>{const p=mealGet(r,w,k);t+=p?(p.u==='g'?+p.v:+p.v*eq):(fb||0)*eq});return t}
+function mealTxt(r,w,d,fb,eqs){const N=Object.fromEntries(mealsList()),P=rotaMeals(r,w).map(k=>{const p=mealGet(r,w,k);return p?N[k]+' '+brl(+p.v)+(p.u==='g'?' do grupo':' × '+eqs):N[k]+' '+brl(fb||0)+' × '+eqs});return d+(d===1?' dia':' dias')+' × ('+P.join(' + ')+')'}
+function mealPick(r,w,fb){const sel=rotaMeals(r,w),o=mealPr(r,w),dd=mealPr(r,'D'),N=Object.fromEntries(mealsList()),EX={cafe:20,alm:40,lan:15,jan:40};
+  const rows=sel.map(k=>{const p=o[k]||{},alt=w==='E'&&+((dd[k]||{}).v)>0?dd[k]:null,ph=alt?'Igual ao destino: '+brl(+alt.v):fb>0?'Média: '+brl(fb):'Ex.: '+EX[k];return `<div class="grid2"><label>${N[k]} (R$)<input data-mp="${w}:${k}" inputmode="decimal" value="${+p.v>0?esc(String(p.v).replace('.',',')):''}" placeholder="${ph}"></label><label>O valor é<select data-mpu="${w}:${k}"><option value="p"${p.u!=='g'?' selected':''}>Por pessoa</option><option value="g"${p.u==='g'?' selected':''}>Do grupo todo</option></select></label></div>`}).join('');
+  return `<div style="display:grid;gap:8px">${mealPick0(r,w)}${rows}${sel.length?`<span class="muted small">Digite o preço de cada refeição e diga se é por pessoa ou do grupo todo.${w==='E'?' Em branco, usa o mesmo preço do destino':fb>0?' Em branco, usa a média de '+brl(fb)+' por pessoa':''}.</span>`:''}</div>`}
+document.addEventListener('change',e=>{const i=e.target;if(!i||!i.dataset||!(i.dataset.mp||i.dataset.mpu))return;e.stopImmediatePropagation();const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;const r=rotaDef(g),[w,k]=(i.dataset.mp||i.dataset.mpu).split(':');r['mp'+w]=Object.assign({},mealPr(r,w));const p=Object.assign({v:'',u:'p'},r['mp'+w][k]);if(i.dataset.mp){const v=num(i.value);p.v=isNaN(v)||v<0?'':v}else p.u=i.value==='g'?'g':'p';r['mp'+w][k]=p;planSync(g);save();render(true)},true);
+function mealPick0(r,w){const sel=rotaMeals(r,w);return `<div style="display:grid;gap:6px"><span style="font-weight:600;font-size:14px">${w==='E'?'Refeições em cada dia de estrada':'Refeições em cada dia no destino'}</span><div class="row" style="gap:6px 14px">${mealsList().map(([k,l])=>`<label style="grid-auto-flow:column;justify-content:start;align-items:center;gap:6px;font-weight:500"><input type="checkbox" data-ml="${w}:${k}"${sel.includes(k)?' checked':''} style="width:auto;min-height:0"> ${l}</label>`).join('')}</div><span class="muted small">${sel.length?sel.length+(sel.length===1?' refeição':' refeições')+' por dia, por pessoa. Marque só almoço, só jantar ou o dia todo.':'Nenhuma refeição marcada: a alimentação '+(w==='E'?'na estrada':'no destino')+' não entra na conta.'}</span></div>`}
+document.addEventListener('change',e=>{const i=e.target;if(!i||!i.dataset||!i.dataset.ml)return;e.stopImmediatePropagation();const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;const r=rotaDef(g),[w,k]=i.dataset.ml.split(':'),s=new Set(rotaMeals(r,w));if(i.checked)s.add(k);else s.delete(k);r['ml'+w]=mealsList().map(m=>m[0]).filter(x=>s.has(x)).join(',');planSync(g);save();render(true)},true);
 function rotaAges(r){return String(r.idades||'').split(/[,;\s]+/).map(x=>parseInt(x,10)).filter(x=>!isNaN(x)&&x>=0&&x<=17).slice(0,10)}
 function rotaGrp(g){const r=rotaDef(g),ages=r.fam?rotaAges(r):[],ad=Math.max(1,+r.adultos||1),gr=+r.gr>=0?+r.gr:5,me=+r.me>=0?+r.me:11,fm=(+r.fm>=0?+r.fm:50)/100,fac=a=>a<=gr?0:a<=me?fm:1,facs=ages.map((a,i)=>{const kp=(r.kp||[])[i],b=fac(a);return kp===false?0:kp===true&&b===0?1:b}),pesEq=ad+facs.reduce((a,x)=>a+x,0),pesPag=ad+facs.filter(x=>x>0).length,rach=Math.min(ad,Math.max(1,+r.rach||ad));let pes=ad+(+r.adL||0)+ages.length,pg=pesPag,pe=pesEq,ov=false;const tO=Math.round(+r.totO),pO=Math.round(+r.pagO);
   if(tO>0||pO>0){ov=true;let t=tO>0?tO:pes,q=pO>0?pO:Math.min(t,pg+(t-pes));if(q<0)q=0;if(q>t){if(tO>0&&pO>0)q=t;else t=q}pe=pg>0?pesEq*q/pg:q;pes=t;pg=q}
   return{ad,ages,facs,pes,pesEq:pe,pesPag:pg,rach,gr,me,fm,ov,pes0:ad+(+r.adL||0)+ages.length,pag0:pesPag,adL:+r.adL||0}}
 function rotaCalc(g){
-  const r=rotaDef(g),G=rotaGrp(g),km=+r.km||0,tr=r.iv?2:1,pes=G.pes,KMD=640,par=km>0?Math.max(0,Math.ceil(km/KMD)-1):0,diasA=km>0?(par+1)*tr:0,dIs=+r.dIda>0?Math.round(+r.dIda):0,dVs=+r.dVolta>0?Math.round(+r.dVolta):0,dI=dIs||dVs||(+r.dE>0?Math.ceil(+r.dE/tr):(km>0?par+1:0)),dV=tr===2?(dVs||dIs||dI):0,manD=!!(dIs||dVs),diasE=manD?dI+dV:(+r.dE>0?Math.round(+r.dE):diasA),nI=Math.max(0,dI-1),nV=tr===2?Math.max(0,dV-1):0,noites=+r.nE>=0&&r.nE!==''&&r.nE!=null?Math.round(+r.nE):manD?nI+nV:(+r.dE>0?Math.max(0,diasE-tr):par*tr),quartos=+r.quartos>0?+r.quartos:Math.ceil(pes/3),
-    litros=km>0&&+r.cons>0?km*tr/+r.cons:0,nn=+r.noites>0?+r.noites:0,dd=nn>0?nn+1:0;
+  const r=rotaDef(g),G=rotaGrp(g),km=+r.km||0,tr=r.iv?2:1,pes=G.pes,KMD=640,par=km>0?Math.max(0,Math.ceil(km/KMD)-1):0,kmV=tr===2?(r.volta==='carro2'&&+r.kmV>0?+r.kmV:km):0,parV=kmV>0?Math.max(0,Math.ceil(kmV/KMD)-1):0,diasA=km>0?(par+1)+(tr===2?parV+1:0):0,dIs=+r.dIda>0?Math.round(+r.dIda):0,dVs=+r.dVolta>0?Math.round(+r.dVolta):0,dI=dIs||dVs||(+r.dE>0?Math.ceil(+r.dE/tr):(km>0?par+1:0)),dV=tr===2?(dVs||(kmV!==km&&kmV>0?parV+1:(dIs||dI))):0,manD=!!(dIs||dVs),diasE=manD?dI+dV:(+r.dE>0?Math.round(+r.dE):diasA),nI=Math.max(0,dI-1),nV=tr===2?Math.max(0,dV-1):0,noites=+r.nE>=0&&r.nE!==''&&r.nE!=null?Math.round(+r.nE):manD?nI+nV:(+r.dE>0?Math.max(0,diasE-tr):par+(tr===2?parV:0)),quartos=+r.quartos>0?+r.quartos:Math.ceil(pes/3),
+    litros=km>0&&+r.cons>0?(km+kmV)/+r.cons:0,nn=+r.noites>0?+r.noites:0,dd=nn>0?nn+1:0;
   const tt=k=>!!(r.un&&r.un[k]==='total'),eq=G.pesEq,v=k=>+r[k]>0?+r[k]:0,
     diaN=!v('dia')?0:tt('dia')?(nn>0&&quartos>0?v('dia')/(nn*quartos):0):v('dia'),
-    rm=(r.un&&r.un.ref)||'u',refPP=!v('ref')?0:tt('ref')?(dd>0&&eq>0?v('ref')/(dd*2*eq):0):rm==='pdia'?v('ref')/2:rm==='gdia'?(eq>0?v('ref')/(2*eq):0):v('ref'),hE=v('diaE')?(r.diaEu==='pes'?noites*G.pesPag*v('diaE'):noites*quartos*v('diaE')):null,rE=v('refE')&&diasE>0?diasE*2*eq*v('refE'):null;
-  return{km,tr,pes,par,noites,diasE,diasA,quartos,litros,horas:km/80,
+    rm=(r.un&&r.un.ref)||'u',mD=rotaMeals(r,'D').length,mE=rotaMeals(r,'E').length,qD=Math.max(1,mD),refPP=!v('ref')?0:tt('ref')?(dd>0&&eq>0?v('ref')/(dd*qD*eq):0):rm==='pdia'?v('ref')/qD:rm==='gdia'?(eq>0?v('ref')/(qD*eq):0):v('ref'),hE=v('diaE')?(r.diaEu==='pes'?noites*G.pesPag*v('diaE'):noites*quartos*v('diaE')):null,rE=v('refE')&&diasE>0?diasE*mE*eq*v('refE'):null;
+  return{km,kmV,parV,tr,pes,par,noites,diasE,diasA,quartos,litros,horas:km/80,
     comb:litros>0&&+r.preco>0?litros*+r.preco:'',
     hot:hE!=null?hE:(diasE>0&&diaN>0?noites*quartos*diaN:(diasE>0&&noites===0?0:'')),
-    ref:rE!=null?rE:(diasE>0&&refPP>0?diasE*2*eq*refPP:''),
+    ref:diasE>0&&mealDay(r,'E',eq,v('refE')||refPP)>0?diasE*mealDay(r,'E',eq,v('refE')||refPP):'',
     pass:v('ppp')?(tt('ppp')?v('ppp'):v('ppp')*eq):'',
     hdest:r.hosp==='casa'?(v('casa')?(tt('casa')?v('casa'):nn>0?nn*v('casa'):''):''):(v('dia')?(tt('dia')?v('dia'):nn>0?nn*quartos*v('dia'):''):''),
-    adest:v('ref')&&tt('ref')?v('ref'):(dd>0&&refPP>0?dd*2*eq*refPP:''),
+    adest:mealHas(r,'D')?(dd>0?dd*mealDay(r,'D',eq,refPP):''):v('ref')&&tt('ref')?(mD?v('ref'):0):(dd>0&&refPP>0?dd*mD*eq*refPP:''),
     tloc:v('tl')?(tt('tl')?v('tl'):dd>0?dd*v('tl'):''):'',
     pasd:v('pa')?(tt('pa')?v('pa'):dd>0?dd*eq*v('pa'):''):'',
-    ped:+r.ped>0?+r.ped:'',bag:v('bag')?(tt('bag')?v('bag'):v('bag')*G.pesPag):'',trf:+r.trf>0?+r.trf:'',
-    alug:r.alugado&&v('alug')?(tt('alug')?v('alug'):v('alug')*Math.max(1,nn+noites)):'',nn,dd,dI,dV,nI,nV}
+    pvol:['aviao','onibus','outro'].includes(r.volta)&&v('pvol')?v('pvol')*eq:'',ped:+r.ped>0?+r.ped:'',bag:v('bag')?(tt('bag')?v('bag'):v('bag')*G.pesPag):'',trf:+r.trf>0?+r.trf:'',
+    alug:r.alugado&&v('alug')?(tt('alug')?v('alug'):v('alug')*Math.max(1,nn+noites)):'',nn,dd,dI,dV,nI,nV,mD,mE,fbD:refPP,fbE:v('refE')||refPP}
 }
-const AUTO={alug:['Aluguel do carro','Diária do aluguel vezes os dias da viagem. Confira seguro e caução.'],hdest:['Hospedagem no destino','Noites no destino vezes a diária do quarto.'],adest:['Alimentação no destino','Almoço e jantar por dia, por pessoa.'],tloc:['Transporte no destino','Aplicativo, ônibus ou aluguel, por dia.'],pasd:['Passeios e ingressos','Média por pessoa por dia.'],ped:['Pedágios','Total de ida e volta no trajeto.'],bag:['Bagagem despachada','Valor por pessoa, ida e volta, vezes as pessoas.'],trf:['Transporte até o aeroporto','Ida e volta, nos dois aeroportos.'],comb:['Combustível','Calculado pela distância, consumo e preço do litro.'],hot:['Hotel no caminho','Noites na estrada, quando a distância pede parada.'],ref:['Almoço e jantar na estrada','Duas refeições por dia de estrada, por pessoa.'],pass:['Passagens aéreas','Preço por pessoa vezes o número de pessoas.']};
+const AUTO={pvol:['Passagem da volta','Passagem da volta por pessoa vezes as pessoas.'],alug:['Aluguel do carro','Diária do aluguel vezes os dias da viagem. Confira seguro e caução.'],hdest:['Hospedagem no destino','Noites no destino vezes a diária do quarto.'],adest:['Alimentação no destino','Refeições marcadas, por dia, por pessoa.'],tloc:['Transporte no destino','Aplicativo, ônibus ou aluguel, por dia.'],pasd:['Passeios e ingressos','Média por pessoa por dia.'],ped:['Pedágios','Total de ida e volta no trajeto.'],bag:['Bagagem despachada','Valor por pessoa, ida e volta, vezes as pessoas.'],trf:['Transporte até o aeroporto','Ida e volta, nos dois aeroportos.'],comb:['Combustível','Calculado pela distância, consumo e preço do litro.'],hot:['Hotel no caminho','Noites na estrada, quando a distância pede parada.'],ref:['Alimentação na estrada','Refeições marcadas em cada dia de estrada, por pessoa.'],pass:['Passagens aéreas','Preço por pessoa vezes o número de pessoas.']};
 const SIMD={comb:['cons','preco','km'],hot:['dia','km'],ref:['ref','km'],pass:['ppp'],hdest:['dia','casa'],adest:['ref'],tloc:['tl'],pasd:['pa'],ped:['ped'],bag:['bag'],trf:['trf']},SIMDEP=(x,g)=>!x.man&&(SIMD[x.auto]||[]).some(k=>g.rota&&g.rota.sim&&g.rota.sim[k]);
 function planSync(g){
   if(g.tipo!=='viagem')return;const r=rotaDef(g),it=planItems(g),sa=()=>{const T=planTotals(g);if(T.total>0)g.alvo=Math.round(r.escopo==='minha'?rotaShare(g).contrib:T.total)};if(!r.modo){sa();return}
-  const dst=['hdest','adest','tloc','pasd'],want=(r.modo==='carro'?['comb','ped'].concat(r.alugado?['alug']:[],['hot','ref']):['pass','bag','trf'].concat(r.alugado?['alug']:[])).concat(dst),C=rotaCalc(g);
+  const dst=['hdest','adest','tloc','pasd'],want=(r.modo==='carro'?['comb','ped'].concat(r.alugado?['alug']:[],['hot','ref'],['aviao','onibus','outro'].includes(r.volta)?['pvol']:[]):['pass','bag','trf'].concat(r.alugado?['alug']:[])).concat(dst),C=rotaCalc(g);
   g.custos=it.filter(x=>!x.auto||want.includes(x.auto));
   g.custos=g.custos.filter(x=>!(['Hospedagem','Alimentação','Transporte no destino','Passeios e ingressos'].includes(x.n)&&!x.auto&&!(+x.v>0)));
   if(r.modo==='carro')g.custos=g.custos.filter(x=>!(x.n==='Passagens'&&!x.auto&&!(+x.v>0)));
   else{const t=g.custos.find(x=>x.n==='Passagens'&&!x.auto);if(t&&!(+t.v>0)){t.auto='pass';t.n=AUTO.pass[0];t.tip=AUTO.pass[1]}}
   want.slice().reverse().forEach(k=>{if(!g.custos.some(x=>x.auto===k))g.custos.unshift({id:uid(),n:AUTO[k][0],tip:AUTO[k][1],v:'',auto:k})});
+  g.custos.forEach(x=>{if(x.auto==='ref'&&x.n==='Almoço e jantar na estrada'){x.n=AUTO.ref[0];x.tip=AUTO.ref[1]}if(x.auto==='adest'){x.tip=AUTO.adest[1]}});
   r.pessoas=rotaGrp(g).pes;
   g.custos.forEach(x=>{if(x.auto&&!x.man){const v=C[x.auto];x.v=v===''||v===undefined?'':Math.round(v)}});sa();
 }
 
 function rotaShare(g){
   const T=planTotals(g),it=planItems(g).filter(x=>+x.v>0),G=rotaGrp(g),r=rotaDef(g),mult=1+T.ip/100,
-  S1=['comb','ped','alug','hdest','hot','tloc','trf'],S2=['ref','adest','pasd','pass'];
+  S1=['comb','ped','alug','hdest','hot','tloc','trf'],S2=['ref','adest','pasd','pass','pvol'];
   let sh=0,ind=0,bag=0,oth=0;it.forEach(x=>{const v=+x.v;if(S1.includes(x.auto))sh+=v;else if(S2.includes(x.auto))ind+=v;else if(x.auto==='bag')bag+=v;else oth+=v});
   const iu=G.pesEq>0?ind/G.pesEq:0,pp=(bag+oth)/G.pesPag,
   contrib=(sh/G.rach+iu+pp)*mult,other=(iu+pp)*mult,kids=G.ages.map((a,i)=>({age:a,f:G.facs[i],pay:(G.facs[i]*iu+(G.facs[i]>0?pp:0))*mult}));
@@ -1115,18 +1129,23 @@ function peopleIn(g,tot){const {r,hasM,F,CK}=rotaKit(g);
    ${r.fam?`${hasM?'':F('idades','Idade de cada criança (separe por vírgula)','Ex.: 3, 8','')}<div class="grid2">${F('gr','Não pagam até (anos)','5','numeric')}${F('me','Pagam meia até (anos)','11','numeric')}</div><p class="muted small" style="margin:0">Regra comum. Cada hotel, parque e companhia aérea tem a sua: confirme e ajuste.</p>`:''}
    ${F('rach','Adultos que dividem os custos','Todos','numeric')}`}
 function roadIn(g){const {r,C,F,CK}=rotaKit(g),G=rotaGrp(g);
-  return `<div class="grid2">${F('km','Distância de ida (km)','Ex.: 2.200','decimal')}<div style="display:grid;align-items:end"><button class="btn ghost sm" data-act="plankm">Estimar distância</button></div></div>
-   ${CK('iv','Ida e volta')}
+  return `<div class="grid2">${F('km','Quilometragem de carro, só a ida (km)','Ex.: 900','decimal')}<div style="display:grid;align-items:end"><button class="btn ghost sm" data-act="plankm">Estimar distância</button></div></div>
+   <label>E a volta, como vai ser?<select data-pr="volta">${Object.entries({carro:'De carro, pelo mesmo caminho (o app calcula a volta)',carro2:'De carro, por outro caminho',aviao:'De avião',onibus:'De ônibus',outro:'Outro meio (van, carona, trem)',fica:'Não vou voltar (vou ficar)'}).map(([k,l])=>`<option value="${k}"${r.volta===k?' selected':''}>${l}</option>`).join('')}</select></label>
+   ${['aviao','onibus','outro'].includes(r.volta)?F('pvol','Passagem da volta (R$ por pessoa)','Ex.: 600','decimal'):''}
+   ${r.volta==='carro2'?F('kmV','Quilometragem da volta (km)',+r.km>0?'Igual à ida: '+Math.round(+r.km)+' km':'Ex.: 520','decimal')+F('viaV','Voltando por (opcional)','Ex.: por Uberlândia',''):''}
+   ${r.volta==='carro2'&&C.kmV>0&&C.km>0?`<div class="note info">Volta por outro caminho${r.viaV?' ('+esc(r.viaV)+')':''}: <b>${Math.round(C.kmV).toLocaleString('pt-BR')} km</b>, cerca de <b>${(C.kmV/80).toFixed(1).replace('.',',')} h</b> ao volante, ${C.parV>0?C.parV+(C.parV>1?' paradas':' parada')+' para dormir':'sem hotel no caminho'}. Total de carro: <b>${Math.round(C.km+C.kmV).toLocaleString('pt-BR')} km</b>.</div>`:''}
+   <p class="muted small" style="margin:0">${r.volta==='carro2'?'Digite a quilometragem da volta. Ela entra no combustível, nas paradas e nos dias para voltar. Em branco, usa a mesma da ida.':r.volta==='carro'?'Digite só a ida: a volta de carro é calculada com a mesma quilometragem.':r.volta==='fica'?'Só a ida entra na conta: sem combustível, hotel nem comida na volta.':'A volta de carro sai da conta e entra o valor da passagem da volta.'}</p>
    <div class="grid2">${F('cons','Consumo do carro (km por litro)','10','decimal')}${F('preco','Preço do litro (R$)','Ex.: 6,20','decimal')}</div>
-   ${F('ped','Pedágios (R$ total, ida e volta)','Ex.: 180','decimal')}
+   ${F('ped',r.iv?'Pedágios (R$ total, ida e volta)':'Pedágios (R$ total, só a ida)','Ex.: 180','decimal')}
    ${CK('alugado','Vou de carro alugado')}${r.alugado?F('alug','Aluguel do carro (R$)','Ex.: 180','decimal'):''}
-   ${C.km>0?`<div class="note info"><b>${Math.round(C.km).toLocaleString('pt-BR')} km</b> por trecho, cerca de <b>${C.horas.toFixed(1).replace('.',',')} h</b> ao volante (a 80 km/h de média). ${C.par>0?`Com no máximo 8 horas de direção por dia, dá <b>${C.par} parada${C.par>1?'s':''} para dormir</b> em cada trecho${r.iv?', ou '+(C.par*C.tr)+' noites na estrada, contando ida e volta':''}.`:'Dá para fazer em um dia de direção, sem hotel no caminho.'} Combustível: cerca de <b>${Math.round(C.litros).toLocaleString('pt-BR')} litros</b>.</div>`:'<p class="muted small">Informe a distância, ou use a simulação, para o Prumo calcular combustível, hotel no caminho e refeições.</p>'}
-   <div class="card flat" style="gap:8px"><b>Dias na estrada</b><span class="muted small">Quantos dias você dirige até chegar. Cada dia de estrada tem almoço e jantar; cada dia a mais na estrada é uma noite de hotel no caminho.</span>
+   ${C.km>0?`<div class="note info"><b>${Math.round(C.km).toLocaleString('pt-BR')} km</b> por trecho, cerca de <b>${C.horas.toFixed(1).replace('.',',')} h</b> ao volante (a 80 km/h de média). ${C.par>0?`Com no máximo 8 horas de direção por dia, dá <b>${C.par} parada${C.par>1?'s':''} para dormir</b> em cada trecho${r.iv?', ou '+(C.par+(C.tr===2?C.parV:0))+' noites na estrada, contando ida e volta':''}.`:'Dá para fazer em um dia de direção, sem hotel no caminho.'} Combustível: cerca de <b>${Math.round(C.litros).toLocaleString('pt-BR')} litros</b>.</div>`:'<p class="muted small">Informe a distância, ou use a simulação, para o Prumo calcular combustível, hotel no caminho e refeições.</p>'}
+   <div class="card flat" style="gap:8px"><b>Dias na estrada</b><span class="muted small">Quantos dias você dirige até chegar. Cada dia de estrada tem as refeições que você marcar logo abaixo; cada dia a mais na estrada é uma noite de hotel no caminho.</span>
    <div class="grid2"><label>Dias para ir<input data-pr="dIda" inputmode="numeric" value="${+r.dIda>0?r.dIda:''}" placeholder="${C.dI>0?C.dI+' (calculado)':'Ex.: 2'}"></label>${r.iv?`<label>Dias para voltar<input data-pr="dVolta" inputmode="numeric" value="${+r.dVolta>0?r.dVolta:''}" placeholder="${C.dV>0?C.dV+' (calculado)':'Ex.: 2'}"></label>`:'<span></span>'}</div>
    <div class="grid2"><label>Noites de hotel na estrada<input data-pr="nE" inputmode="numeric" value="${r.nE!==''&&r.nE!=null&&+r.nE>=0?r.nE:''}" placeholder="${C.noites} (calculado)"></label><div style="display:grid;align-items:end">${(+r.dIda>0||+r.dVolta>0||(r.nE!==''&&r.nE!=null))?'<button class="btn ghost sm" data-act="dEauto">Voltar ao calculado</button>':''}</div></div>
    <p class="muted small" style="margin:0">${C.diasE>0?`<b>${C.dI} ${C.dI===1?'dia':'dias'} para ir${r.iv?' e '+C.dV+(C.dV===1?' dia':' dias')+' para voltar':''}</b>: ${C.diasE} ${C.diasE===1?'dia':'dias'} de estrada no total e <b>${C.noites} ${C.noites===1?'noite':'noites'} de hotel</b> no caminho${r.iv&&!(r.nE!==''&&r.nE!=null)?' ('+C.nI+' na ida e '+C.nV+' na volta)':''}. Exemplo: 2 dias para ir = 1 noite no hotel da estrada, porque no 2º dia você chega ao destino.`:'Informe a distância ou os dias para ir e voltar.'}</p></div>
    <div class="grid2"><div style="display:grid;gap:4px">${F('diaE','Hotel na estrada (R$)',+r.dia>0?'Igual ao destino: '+brl0(+r.dia):'Ex.: 200','decimal')}<select data-pr="diaEu" aria-label="Como o valor do hotel na estrada é informado" style="font-size:14px"><option value="quarto"${r.diaEu!=='pes'?' selected':''}>Por noite, por quarto</option><option value="pes"${r.diaEu==='pes'?' selected':''}>Por noite, por pessoa</option></select></div>
-   <div style="display:grid;gap:4px">${F('refE','Comida na estrada (R$)',+r.ref>0?'Igual ao destino: '+brl0(+r.ref):'Ex.: 40','decimal')}<span class="muted small">Por pessoa, cada refeição (almoço e jantar)</span></div></div>
+   <span></span></div>
+   ${mealPick(r,'E',C.fbE)}
    <p class="muted small" style="margin:0">Na estrada: <b>${G.pes} ${G.pes===1?'pessoa':'pessoas'}</b>, ${G.pesPag} ${G.pesPag===1?'pagante':'pagantes'}. Deixe em branco para usar os mesmos valores do destino.</p>`}
 function airIn(g){const {r,F,CK}=rotaKit(g);
   return `<div class="grid2">${F('ppp','Passagem aérea (R$)','Ex.: 900','decimal')}${F('bag','Bagagem despachada (R$)','Ex.: 120','decimal')}</div>${F('trf','Transporte até o aeroporto (R$ total, ida e volta)','Ex.: 150','decimal')}
@@ -1135,7 +1154,7 @@ function destIn(g){const {r,F}=rotaKit(g);
   return `${F('noites','Noites no destino (o app usa noites + 1 dias)','Ex.: 7','numeric')}
    <label>Hospedagem<select data-pr="hosp"><option value="hotel"${r.hosp!=='casa'?' selected':''}>Hotel ou pousada (diária por quarto)</option><option value="casa"${r.hosp==='casa'?' selected':''}>Casa ou flat (valor por noite)</option></select></label>
    ${r.hosp==='casa'?F('casa','Casa ou flat (R$)','Ex.: 600','decimal'):`<div class="grid2">${F('dia','Hotel ou pousada (R$)','Ex.: 250','decimal')}${F('quartos','Quartos (opcional)','Ex.: 2','numeric')}</div>`}
-   ${F('ref','Alimentação (R$)','Ex.: 45','decimal')}<div class="grid2">${F('tl','Transporte no destino (R$)','Ex.: 60','decimal')}${F('pa','Passeios e ingressos (R$)','Ex.: 80','decimal')}</div>`}
+   ${mealPick(r,'D',rotaCalc(g).fbD)}<div class="grid2">${F('tl','Transporte no destino (R$)','Ex.: 60','decimal')}${F('pa','Passeios e ingressos (R$)','Ex.: 80','decimal')}</div>`}
 const simSig=r=>[r.dest,r.orig,r.noites,r.pessoas,r.modo,r.hosp].join('|');
 
 const SIML={km:['Distância de ida','km, de ida'],dia:['Hospedagem (hotel ou pousada)','por noite, por quarto'],ref:['Alimentação','por pessoa, cada refeição'],tl:['Transporte no destino','por dia, grupo todo'],pa:['Passeios e ingressos','por pessoa, por dia'],ped:['Pedágios','total, ida e volta'],preco:['Preço do litro de combustível','por litro'],ppp:['Passagem aérea','por pessoa, ida e volta'],bag:['Bagagem despachada','por pessoa, ida e volta'],trf:['Transporte de e para o aeroporto','total, ida e volta']};
@@ -1603,7 +1622,7 @@ document.addEventListener('change',e=>{
   if(i.id==='g-t'){tripToggle();return}
   if(i.id&&i.id.startsWith('iv-')&&UI.inv){UI.inv[i.id.slice(3)]=i.value;render(true);return}
   if(i.id==='dr-t'){UI.dream&&(UI.dream.t=i.value);dreamToggle();return}
-  if(i.dataset&&i.dataset.pr){const g=S.goals.find(x=>x.id===UI.plan);if(g){const r=rotaDef(g),k=i.dataset.pr;if(r.sim)delete r.sim[k];if(k==='iv'||k==='fam'||k==='alugado')r[k]=i.checked;else if(k==='orig'||k==='dest'||k==='idades'||k==='hosp'||k==='escopo'||k==='diaEu')r[k]=i.value.trim().slice(0,50);else{const v=num(i.value);r[k]=isNaN(v)||v<0?'':v}planSync(g);save();render(true)}return}
+  if(i.dataset&&i.dataset.pr){const g=S.goals.find(x=>x.id===UI.plan);if(g){const r=rotaDef(g),k=i.dataset.pr;if(r.sim)delete r.sim[k];if(k==='iv'||k==='fam'||k==='alugado')r[k]=i.checked;else if(k==='orig'||k==='dest'||k==='idades'||k==='hosp'||k==='escopo'||k==='diaEu'||k==='volta'||k==='viaV')r[k]=i.value.trim().slice(0,50);else{const v=num(i.value);r[k]=isNaN(v)||v<0?'':v}planSync(g);save();render(true)}return}
   if(i.dataset&&i.dataset.gn){const g=S.goals.find(x=>x.id===UI.plan);if(g){const v=i.value.trim().slice(0,60);if(v){g.nome=v;save();render(true);toast('Nome da meta atualizado.')}else i.value=g.nome}return}
   if(i.dataset&&i.dataset.simon){const it=UI.simRes&&UI.simRes.items.find(y=>y.k===i.dataset.simon);if(it)it.on=i.checked;return}
   if(i.dataset&&i.dataset.simv){const it=UI.simRes&&UI.simRes.items.find(y=>y.k===i.dataset.simv),v=num(i.value);if(it&&!isNaN(v)&&v>=0){it.v=v;it.on=v>0&&it.on}render(true);return}
@@ -2423,6 +2442,49 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-vis]');if(
 },true);
 render();
 cloudInit();
+</script>
+<script>
+/* ---- Continuar de onde parou: guarda a tela, a meta aberta, os quadros abertos, a rolagem e o rascunho da meta ---- */
+(function(){
+const RK='prumo_resume',DK='prumo_gdraft',DF=['g-n','g-t','g-or','g-de','g-mo','g-pt','g-pp','g-pn','g-no','g-dv','g-a','g-g','g-p'];
+const LG=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}},LS=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(_){}};
+const edId=()=>UI.ed&&UI.ed.w==='goal'?UI.ed.id:null;
+let READY=false,TM=null;
+function rsSave(){if(!READY)return;LS(RK,{tab:UI.tab,plan:UI.plan||null,msv:UI.msv||null,neg:UI.neg,div:UI.div,cs:UI.cs,ed:edId()?{w:'goal',id:edId()}:null,gbo:UI.gbo||null,y:Math.round(scrollY),t:Date.now()})}
+const later=()=>{clearTimeout(TM);TM=setTimeout(rsSave,400)};
+function dSave(){const f=document.getElementById('f-goal');if(!f)return;const o={n:S.goals.length,ed:edId(),v:{}};let any=false;DF.forEach(id=>{const el=document.getElementById(id);if(el){o.v[id]=el.value;if(['g-n','g-or','g-de','g-a','g-no'].includes(id)&&el.value.trim())any=true}});LS(DK,any?o:null)}
+function dApply(){const f=document.getElementById('f-goal'),d=LG(DK);if(!f||!d)return;
+  if(!d.ed&&S.goals.length>d.n){LS(DK,null);return}
+  if(d.ed&&!S.goals.some(g=>g.id===d.ed)){LS(DK,null);return}
+  if((d.ed||null)!==edId())return;
+  DF.forEach(id=>{const el=document.getElementById(id);if(el&&d.v&&d.v[id]!=null&&d.v[id]!=='')el.value=d.v[id]});try{tripToggle()}catch(_){}
+  if(!f.querySelector('[data-rsd]')){const n=document.createElement('div');n.className='note info';n.dataset.rsd='1';n.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap';n.innerHTML='<span>✏️ '+(d.ed?'Você tinha começado a editar esta meta.':'Você tinha começado esta meta.')+' Continue de onde parou.</span><button type="button" class="btn ghost sm" data-rsx="1">Começar de novo</button>';const h=f.querySelector('h3');if(h)h.after(n);else f.prepend(n)}}
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#f-goal'))dSave()},true);
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#f-goal'))setTimeout(dSave,0)},true);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rsx],[data-act=edcancel],[data-preset]');if(!b)return;if(b.dataset.preset){setTimeout(dSave,0);return}LS(DK,null);if(b.dataset.rsx){e.stopImmediatePropagation();e.preventDefault();render(true)}},true);
+document.addEventListener('submit',e=>{if(e.target.id!=='f-goal')return;const was=edId();if(was)setTimeout(()=>{if(!edId())LS(DK,null)},300)},true);
+addEventListener('scroll',later,{passive:true});
+document.addEventListener('toggle',later,true);
+function flush(){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!(a.closest&&a.closest('#f-goal')))a.blur();dSave();rsSave()}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
+addEventListener('pagehide',flush);
+function boot(){
+  const r0=window.render;window.render=function(){const x=r0.apply(this,arguments);try{dApply()}catch(_){}later();return x};
+  const st=LG(RK);let nome='';
+  if(st&&Date.now()-(st.t||0)<60*864e5&&!(typeof VIS!=='undefined'&&VIS.kid)){
+    if(st.neg)UI.neg=st.neg;if(st.div)UI.div=st.div;if(st.cs)UI.cs=st.cs;if(st.gbo&&typeof st.gbo==='object')UI.gbo=st.gbo;
+    const gp=st.plan&&S.goals.find(g=>g.id===st.plan),ge=st.ed&&S.goals.find(g=>g.id===st.ed.id);
+    if(ge){UI.tab='metas';UI.plan=null;UI.ed={w:'goal',id:ge.id};nome=ge.nome}
+    else if(gp){UI.tab='metas';UI.plan=gp.id;nome=gp.nome}
+    else if(st.msv){UI.tab='metas';UI.msv=st.msv}
+    else if(st.tab&&VIEWS[st.tab])UI.tab=st.tab;
+    render(true);const y=+st.y||0;requestAnimationFrame(()=>requestAnimationFrame(()=>scrollTo(0,y)));
+    if(nome)toast('Continuando a meta "'+nome+'" de onde você parou.');
+  }else{try{dApply()}catch(_){}}
+  READY=true;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,0);
+})();
 </script>
 <script>
 /* Veja também: links entre os apps */
