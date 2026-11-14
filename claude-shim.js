@@ -63,6 +63,16 @@
     };
   }
   function sair() { ls('s', 'ia_conta', '0'); location.reload(); }
+  function chip() {
+    if (window.IA_LOGIN_PROPRIO || document.getElementById('ia-chip')) return;
+    var b = document.createElement('button'); b.id = 'ia-chip'; b.type = 'button';
+    b.style.cssText = 'position:fixed;z-index:39;right:max(10px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 60px);min-height:36px;padding:0 12px;border-radius:999px;border:1.5px solid rgba(127,127,127,.55);background:rgba(255,255,255,.94);color:#111;font:700 13px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer';
+    var lg = logado(); b.textContent = lg ? '👤 ' + (ls('g', 'ia_nome') || 'Conta') + ' · Sair' : '👤 Entrar';
+    b.setAttribute('aria-label', lg ? 'Sair da conta e voltar a visitante' : 'Entrar na conta');
+    b.onclick = function () { logado() ? sair() : entrar(); };
+    document.body.appendChild(b);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chip); else chip();
   window.IA_AUTH = { logado: logado, entrar: entrar, sair: sair, nome: function () { return ls('g', 'ia_nome') || ''; }, email: function () { return ls('g', 'ia_email') || ''; } };
   var user = {
     isOwner: async function () { return isAdm(); },
