@@ -73,6 +73,14 @@
     document.body.appendChild(b);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chip); else chip();
+  function stl() {
+    if (document.getElementById('ia-authcss')) return;
+    var st = document.createElement('style'); st.id = 'ia-authcss';
+    st.textContent = '[data-iaauth]{color:#C2410C!important;background:rgba(234,88,12,.12)!important;border-color:rgba(234,88,12,.55)!important}[data-iaauth] svg{color:#EA580C!important;fill:none!important;stroke:currentColor!important}[data-iaauth] span{color:#C2410C!important;font-weight:800}';
+    document.head.appendChild(st);
+  }
+  stl();
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-iaauth]'); if (!b) return; e.preventDefault(); e.stopPropagation(); logado() ? sair() : entrar(); }, true);
   window.IA_AUTH = { logado: logado, entrar: entrar, sair: sair, nome: function () { return ls('g', 'ia_nome') || ''; }, email: function () { return ls('g', 'ia_email') || ''; } };
   var user = {
     isOwner: async function () { return isAdm(); },

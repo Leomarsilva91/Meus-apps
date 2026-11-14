@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=3"></script><script src="../claude-shim.js?v=5"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=3"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=7"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Prumo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,7 +119,7 @@ header.top .brand svg{color:var(--meta);animation:wob .9s cubic-bezier(.3,1.5,.5
 .seg.meta button[aria-pressed=true]{background:var(--meta);color:var(--on-meta)}
 .bar i{transition:width .9s cubic-bezier(.2,.8,.2,1)}
 .bar{height:14px}
-.tabbar nav{grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.tabbar nav{grid-template-columns:repeat(8,minmax(0,1fr));gap:2px}.tabbar button[data-iaauth] svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .tabbar button{font-size:11px;padding:6px 0;min-width:0;transition:transform .15s}.tabbar button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tabbar button svg{width:22px;height:22px}.tabbar button[data-tab=casa][aria-current=page]{background:color-mix(in srgb,var(--sky) 16%,transparent)}.tabbar button[data-tab=casa][aria-current=page] svg{color:var(--sky)}.tabbar nav button{font-size:10.5px;letter-spacing:-.1px}.tabbar nav button[aria-current=page]{font-weight:700}.tabbar nav{padding:6px 4px;gap:0}.seg.fit.casa button{font-size:12.5px;padding-left:4px;padding-right:4px}@media(max-width:340px){.tabbar nav button{font-size:9.5px}}
 .tabbar button:active{transform:scale(.92)}
 .tabbar button[aria-current=page]{background:var(--sun-soft);color:var(--ink)}
@@ -1519,7 +1519,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||el.tagName!=='IN
   maskEl(el)});
 function render(keepScroll){
   cycSync();const y=scrollY;
-  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}"${k==='casa'?' aria-label="Economia doméstica" title="Economia doméstica"':''} ${UI.tab===k?'aria-current="page"':''}>${ico(k)}<span>${l}</span></button>`).join('');
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}"${k==='casa'?' aria-label="Economia doméstica" title="Economia doméstica"':''} ${UI.tab===k?'aria-current="page"':''}>${ico(k)}<span>${l}</span></button>`).join('')+(window.IA_AUTH?`<button type="button" data-iaauth="1" aria-label="${IA_AUTH.logado()?'Sair da conta':'Entrar na conta'}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>${IA_AUTH.logado()?'Sair':'Entrar'}</span></button>`:'');
   $('#who').textContent=S.demo?'Exemplo':SYNC.label();
   $('#v').className=keepScroll?'wrap noanim':'wrap';
   $('#v').innerHTML=VIEWS[UI.tab]();
@@ -2374,7 +2374,7 @@ render=function(k){
 };
 function visApply(){
   document.body.classList.toggle('kid',soCofre());
-  const nav=$('#tabs');if(nav){let n=0;nav.querySelectorAll('button[data-tab]').forEach(b=>{if(visHidden(b.dataset.tab))b.remove();else n++});nav.style.gridTemplateColumns='repeat('+Math.max(1,n)+',minmax(0,1fr))'}
+  const nav=$('#tabs');if(nav){let n=0;nav.querySelectorAll('button[data-tab]').forEach(b=>{if(visHidden(b.dataset.tab))b.remove();else n++});n+=nav.querySelector('[data-iaauth]')?1:0;nav.style.gridTemplateColumns='repeat('+Math.max(1,n)+',minmax(0,1fr))'}
   const v=$('#v');if(!v)return;
   v.querySelectorAll('[data-go]').forEach(b=>{if(visHidden(b.dataset.go)){const it=b.closest('.item');(it||b).remove()}});
   if(soCofre())v.querySelectorAll('[data-go=comunidade]').forEach(b=>(b.closest('.card')||b).remove());
