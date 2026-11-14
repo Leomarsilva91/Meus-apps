@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=3"></script><script src="../claude-shim.js?v=4"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=3"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=5"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Achei Barato</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
@@ -1413,7 +1413,7 @@ function render(){
   if(!T.some(t=>t[0]===mem.tab)&&T.length)mem.tab=T[0][0];
   {const nt=T.filter(t=>t[0]!=='admin').length;$('#tabs').style.gridTemplateColumns=nt<3?'repeat('+Math.max(1,nt)+',minmax(0,1fr))':''}
   $('#pfb').innerHTML=prefBar(T.map(t=>t[0]));try{$('#locb').innerHTML=locBar()}catch(_){}
-  $('#tabs').innerHTML=T.map(t=>`<button data-tab="${t[0]}" ${mem.tab===t[0]?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC[t[0]]}</svg><span class="lg">${t[1]}</span><span class="sh">${t[2]}</span></button>`).join('');
+  $('#tabs').innerHTML=T.map(t=>`<button data-tab="${t[0]}" ${mem.tab===t[0]?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC[t[0]]}</svg><span class="lg">${t[1]}</span><span class="sh">${t[2]}</span></button>`).join('')+(window.IA_AUTH?`<button type="button" data-${IA_AUTH.logado()?'sair':'entrar'}="1" aria-label="${IA_AUTH.logado()?'Sair da conta':'Entrar na conta'}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span class="lg">${IA_AUTH.logado()?'Sair da conta':'Entrar'}</span><span class="sh">${IA_AUTH.logado()?'Sair':'Entrar'}</span></button>`:'');
   __net=null;DET={};try{recPH()}catch(e){}try{$('#dst').innerHTML=mem.tabPick?'':destV()}catch(e){$('#dst').innerHTML=''}try{$('#alr').innerHTML=mem.tabPick?'':alrV()}catch(e){$('#alr').innerHTML=''}$('#lg').innerHTML=legalBox();
   $('#mdl').innerHTML=rvModal()+pdModal()+ulModal()+consentBar()+prefModal()+welcome();
   $('#v').innerHTML=guestV()||guestBan()+(mem.tab==='promo'?promoV():mem.tab==='plan'?planV():mem.tab==='stores'?storesV():mem.tab==='tag'?tagV():mem.tab==='online'?onlineV():mem.tab==='com'?comV():mem.tab==='admin'?adminV():merchV());collapseBoxes();$('#mdl').insertAdjacentHTML('afterbegin',gdModal());
@@ -1544,6 +1544,7 @@ document.addEventListener('click',e=>{
   if(D.ldelno){mem.ldc=0;return render()}
   if(D.ldel){if(!mem.ldc){mem.ldc=1;return render()}mem.ldc=0;list={};notes={};mem.lt='';mem.lmsg='';save();toast('Lista excluída.');return render()}
   if(D.ledit){mem.lt=Object.keys(list).map(id=>{const i=I.find(x=>x.id===id);return i?(list[id]>1?list[id]+' ':'')+i.n:''}).filter(Boolean).join('\n');mem.lmsg='Altere o texto e toque em Analisar e montar rota.';render();const b=document.getElementById('lbx');if(b)b.scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(D.sair&&window.IA_AUTH){IA_AUTH.sair();return}
   if(D.entrar){if(window.IA_AUTH)IA_AUTH.entrar();else toast('Para entrar, abra o app pelo Claude com a sua conta.');return}
   if((D.inc||D.dec||D.basket)&&AR&&!UID){toast('Entre para montar e salvar a sua lista.');return}
   if(D.inc){list[D.inc]=(list[D.inc]||0)+1;save();return render()}
