@@ -1095,7 +1095,7 @@ async function fetchLink(){
       try{const rd=await fetch('https://api.mercadolibre.com/items/'+L.ml+'/description');if(rd.ok){const jd=await rd.json();if(jd&&typeof jd.plain_text==='string')fillOffer({desc:jd.plain_text})}}catch(_){}
       const im=((j.pictures||[])[0]||{}).secure_url||String(j.thumbnail||'').replace(/^http:/,'https:');OFIMGU=/^https:\/\/[^\s"'<>]+$/.test(im)?im:'';OFIMG='';ofImgShow();
       return st('Pronto (dados do Mercado Livre). Confira os campos e salve. Confira o preço no site da loja.')}}}catch(_){}}
-  let WP=null,WIMG='';
+  let WP=null,WIMG='';const GEN=s=>/ofertas incr[ií]veis|melhores pre[cç]os|compre online|^\s*(shopee( brasil)?|amazon(\.com\.br)?|mercado livre|magalu|magazine luiza)\s*([|\-–].*)?$/i.test(String(s||''));
   if(!viaB&&window.IA_URL){try{st('Lendo a página da loja…');const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),25000);const res=await fetch(window.IA_URL+'/pagina?u='+encodeURIComponent(u),{signal:ac.signal});clearTimeout(tm);
     if(res.ok){const j=await res.json();if(j&&(j.n||j.texto)){WP=j;WIMG=/^https:\/\/[^\s"'<>]+$/.test(j.img||'')?j.img:'';const head=['TÍTULO DA PÁGINA: '+(j.n||''),j.p?'PREÇO NOS DADOS DA PÁGINA: '+j.p:'',j.old?'PREÇO ANTERIOR NOS DADOS DA PÁGINA: '+j.old:'',WIMG?'IMAGEM PRINCIPAL: '+WIMG:'',j.desc?'DESCRIÇÃO NOS DADOS DA PÁGINA: '+j.desc:''].filter(Boolean).join('\n');page=(head+'\n\n'+(j.texto||'')).trim()}}}catch(_){}}
   if(!viaB&&!page){
@@ -1114,14 +1114,14 @@ async function fetchLink(){
   try{
     const lim=await sample.limits().catch(()=>null),imgs=shot&&lim&&lim.images?[await new Promise(ok=>{const im=new Image(),uu=URL.createObjectURL(shot);im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>ok(b),'image/jpeg',.8)};im.onerror=()=>ok(shot);im.src=uu})]:[];
     const r=await sample.json('O texto'+(imgs.length?' e a imagem':'')+' abaixo vêm da página de um produto em loja online brasileira. Responda apenas JSON: {"ok":true ou false se é página de um produto com preço,"loja":"ml","sh","am","mg" ou null,"n":"nome do produto","p":preço atual em número,"old":preço anterior riscado em número ou null,"fr":frete em número, 0 se grátis, ou null se não aparece,"d":dias de entrega ou null,"cup":"cupom ou null","ate":"AAAA-MM-DD validade da oferta ou null","desc":"descrição do produto em português do Brasil, só com o que aparece (características, medidas, cor, voltagem, o que vem na caixa, garantia), em tópicos curtos separados por quebra de linha, até 1.500 letras, ou null se não houver","img":"URL https da imagem principal do produto se aparecer no texto, senão null"}. Não invente nada. Texto da página:\n'+page.slice(0,12000),{images:imgs,modelTier:'default',cache:false});
-    if((!r||!r.ok||!(+r.p>0))&&WP&&WP.n&&WP.ok!==false){fillOffer({n:WP.n,p:+WP.p||null,old:+WP.old||null,desc:WP.desc||''});OFIMGU=WIMG;OFIMG='';ofImgShow();return st(WP.p?'Preenchi com os dados da página. Confira os campos e salve.':'Li o nome do produto, mas a página não mostra o preço para leitura automática. Digite o preço ou use o print.')}
-    if(!r||!r.ok||!(+r.p>0))return st('Abri a página, mas não achei um produto com preço (pode pedir login ou ter bloqueio). Use o print.');
+    if((!r||!r.ok||!(+r.p>0))&&WP&&WP.n&&WP.ok!==false&&!GEN(WP.n)){fillOffer({n:WP.n,p:+WP.p||null,old:+WP.old||null,desc:WP.desc||''});OFIMGU=WIMG;OFIMG='';ofImgShow();return st(WP.p?'Preenchi com os dados da página. Confira os campos e salve.':'Li o nome do produto, mas a página não mostra o preço para leitura automática. Digite o preço ou use o print.')}
+    if(!r||!r.ok||!(+r.p>0)||GEN(r.n))return st((/shopee|shp\.ee|shope\.ee/i.test(u)?'A Shopee não deixa ler os dados do produto pelo link (ela mostra só o nome geral do site). ':'Abri a página, mas não achei um produto com preço (pode pedir login ou ter bloqueio). ')+'Use o print da oferta: tire um print no app da loja e toque em “Print da galeria”.');
     fillOffer(r);
     OFIMGU=typeof r.img==='string'&&/^https:\/\/[^\s"'<>]+$/.test(r.img)?r.img:WIMG;
     OFIMG=!OFIMGU&&shot?await thumbOf(shot,420):'';
     ofImgShow();
     st('Pronto. Confira os campos e salve. A IA pode errar: confira o preço no site da loja.')
-  }catch(e){if(WP&&WP.n&&WP.ok!==false){fillOffer({n:WP.n,p:+WP.p||null,old:+WP.old||null,desc:WP.desc||''});OFIMGU=WIMG;OFIMG='';ofImgShow();return st('A IA não respondeu'+(e&&e.code?' ('+e.code+')':'')+', mas preenchi com os dados da página. Confira e complete.')}st(e&&e.code==='not_granted'?'Permissão negada para usar a IA.':'Não consegui entender a página.'+(e&&e.code?' ('+e.code+')':''))}}
+  }catch(e){if(WP&&WP.n&&WP.ok!==false&&!GEN(WP.n)){fillOffer({n:WP.n,p:+WP.p||null,old:+WP.old||null,desc:WP.desc||''});OFIMGU=WIMG;OFIMG='';ofImgShow();return st('A IA não respondeu'+(e&&e.code?' ('+e.code+')':'')+', mas preenchi com os dados da página. Confira e complete.')}st(e&&e.code==='not_granted'?'Permissão negada para usar a IA.':'Não consegui entender a página.'+(e&&e.code?' ('+e.code+')':''))}}
 async function readOffer(f){
   const st=t=>{const e=$('#of_s');if(e)e.textContent=t};
   let sample=null;try{sample=await claude.use('sample')}catch(_){}
