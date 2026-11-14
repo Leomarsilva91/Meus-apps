@@ -249,11 +249,42 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mem.cmo){mem.cmo=0;
 const MODC={online:['💻','Online ao vivo','Curso online ao vivo'],ead:['▶️','EAD (aulas gravadas)','Curso EAD (aulas gravadas)'],presencial:['🏫','Presencial','Curso presencial'],hibrido:['🔀','Híbrido (online e presencial)','Curso híbrido (online e presencial)']};
 function mmodSync(){const t=document.getElementById('mt'),l=document.getElementById('mmodl');if(t&&l)l.style.display=t.value==='curso'?'grid':'none'}
 document.addEventListener('change',e=>{if(e.target&&e.target.id==='mt')mmodSync()});
-const mfEditing=()=>!!((mem.medit!=null&&mine[mem.medit])||(mem.mepub&&pubL.some(o=>o.id===mem.mepub)));
-function mfBanner(){if(!mfEditing())return '';const o=mem.mepub?pubL.find(x=>x.id===mem.mepub):mine[mem.medit];
-  return `<div class="row sp" style="flex-wrap:nowrap;gap:8px;background:var(--warnbg);color:var(--ink);border-radius:12px;padding:8px 10px"><span style="min-width:0;overflow-wrap:anywhere"><b>Editando:</b> ${esc(o.n)}${mem.mepub?' <span class="m">(promoção publicada para todos)</span>':''}</span><button class="chip" type="button" data-meditx="1" style="flex:none">Cancelar edição</button></div>`}
-function editBtn(x){if(x.mk!=null&&mine[x.mk])return `<button class="chip" type="button" data-medit="${x.mk}" style="justify-self:start;font-weight:800">✏️ Editar promoção</button>`;
+const mfEditing=()=>!!((mem.msub&&(mySubs().some(i=>i.id===mem.msub)||pubRaw.some(p=>p.id===mem.msub)))||(mem.medit!=null&&mine[mem.medit])||(mem.mepub&&pubL.some(o=>o.id===mem.mepub)));
+function mfBanner(){if(!mfEditing())return '';const o=mem.msub?(pubL.find(x=>x.id===mem.msub)||mySubs().find(i=>i.id===mem.msub)||{n:''}):mem.mepub?pubL.find(x=>x.id===mem.mepub):mine[mem.medit];
+  return `<div class="row sp" style="flex-wrap:nowrap;gap:8px;background:var(--warnbg);color:var(--ink);border-radius:12px;padding:8px 10px"><span style="min-width:0;overflow-wrap:anywhere"><b>Editando:</b> ${esc(o.n)}${mem.mepub?' <span class="m">(promoção publicada para todos)</span>':mem.msub&&pubRaw.some(p=>p.id===mem.msub)?' <span class="m">(já publicada: a alteração vale na hora)</span>':''}</span><button class="chip" type="button" data-meditx="1" style="flex:none">Cancelar edição</button></div>`}
+function editBtn(x){if(x.pid&&UID&&!adm&&pubRaw.some(p=>p.id===x.pid&&p.uid===UID))return `<button class="chip" type="button" data-mpe="${esc(x.pid)}" style="justify-self:start;font-weight:800">✏️ Editar promoção</button>`;if(x.mk!=null&&mine[x.mk])return `<button class="chip" type="button" data-medit="${x.mk}" style="justify-self:start;font-weight:800">✏️ Editar promoção</button>`;
   if(adm&&DB&&x.pid)return `<button class="chip" type="button" data-pedit="${esc(x.pid)}" style="justify-self:start;font-weight:800">✏️ Editar promoção</button>`;return ''}
+let pubRaw=[],OWN={};
+/* Painel do comerciante: o lojista publica, altera e tira as próprias promoções */
+function applyOwn(){const o=[];pubRaw.forEach(p=>{const w=p.uid&&OWN[p.uid];if(w){if(Array.isArray(w.rm)&&w.rm.includes(p.id))return;const e=w.ed&&w.ed[p.id];if(e&&typeof e==='object'&&String(e.ts||'')>String(p.ets||'')){const q={...p};if(typeof e.n==='string'&&e.n.trim())q.n=e.n.slice(0,100);if(+e.p>0)q.p=+e.p;q.old=+e.old>+q.p?+e.old:null;if(/^\d{4}-\d\d-\d\d$/.test(e.ate||''))q.ate=e.ate;if(e.ft&&typeof e.ft==='object')q.ft=e.ft;else delete q.ft;if(TN[e.tc])q.tc=e.tc;q.lj=e.ts;o.push(q);return}}o.push(p)});return o}
+const OWNME=()=>(UID&&OWN[UID])||{rm:[],ed:{}};
+async function ownSet(fn){if(!DB||!UID)throw 0;const cur=OWNME(),nx=fn({rm:[...(cur.rm||[])],ed:{...(cur.ed||{})}});nx.rm=nx.rm.slice(-300);await DB.collection('own').doc(UID).set(nx)}
+function mpItems(){const L=[];
+  if(DB&&UID){mySubs().filter(i=>!i.k&&i.src==='enc').forEach(i=>{const p=pubL.find(x=>x.id===i.id),raw=pubRaw.find(x=>x.id===i.id),rm=(OWNME().rm||[]).includes(i.id);
+    L.push({src:'sub',id:i.id,o:p||i,st:rm?'rm':i.st==='Aprovada'?(raw?'pub':'off'):i.st==='Recusada'?'no':'an'})})}
+  else mine.forEach((o,k)=>{if(o.src==='enc')L.push({src:'mine',k,o,st:'loc'})});
+  if(adm&&DB){const ids=new Set(L.map(x=>x.id));pubL.forEach(o=>{if(!ids.has(o.id))L.push({src:'pub',id:o.id,o,st:'pub'})})}
+  return L}
+const MPS={an:['Em análise','warn'],pub:['Publicada','ok'],no:['Recusada',''],rm:['Tirada por você',''],off:['Retirada do app',''],loc:['Neste aparelho','']};
+const mpVenc=o=>!!o.ate&&new Date(o.ate+'T23:59:59')<NOW;
+const mpFlt=(x,f)=>f==='all'||(f==='on'?((x.st==='pub'||x.st==='loc')&&!mpVenc(x.o)):f==='an'?x.st==='an':f==='venc'?(mpVenc(x.o)&&!['rm','off','no'].includes(x.st)):['rm','off','no'].includes(x.st));
+function mpRow(x){const o=x.o,s=MPS[x.st]||['',''],b=(a,t)=>`<button class="chip" type="button" ${a}>${t}</button>`,cf=mem.mprc===x.id;let acts='';
+  if(x.src==='mine')acts=b(`data-medit="${x.k}"`,'✏️ Alterar')+b(`data-del="${x.k}"`,'🗑️ Tirar');
+  else if(x.src==='pub')acts=b(`data-pedit="${esc(x.id)}"`,'✏️ Alterar')+b(`data-mdel="${esc(x.id)}"`,'🗑️ Retirar');
+  else if(x.st==='rm')acts=b(`data-mpback="${esc(x.id)}"`,'↩️ Publicar de novo');
+  else if(x.st==='off')acts='<span class="m">Retirada pela equipe ou vencida. Se quiser, publique de novo pelo formulário abaixo.</span>';
+  else acts=b(`data-mpe="${esc(x.id)}"`,x.st==='no'?'✏️ Corrigir e reenviar':'✏️ Alterar')+b(x.st==='pub'?`data-mprm="${esc(x.id)}"`:`data-mpx="${esc(x.id)}"`,cf?'Toque de novo para confirmar':x.st==='pub'?'🗑️ Tirar do app':'🗑️ Cancelar envio');
+  return `<div class="box" data-nc="1" style="gap:6px;padding:10px 12px"><div class="row sp" style="flex-wrap:nowrap;align-items:flex-start;gap:10px"><span style="min-width:0;overflow-wrap:anywhere"><b>${esc(o.n)}</b>${featIc({ft:o.ft})}<br><span class="m">${esc(o.loja||'')}${o.tc&&TN[o.tc]?' · '+esc(TN[o.tc]):''} · até ${o.ate?fd(o.ate):'—'}</span></span><b style="color:var(--pri);white-space:nowrap">${o.p>0?brl(o.p):''}</b></div><div class="row" style="gap:6px">${s[0]?`<span class="tag ${s[1]}">${s[0]}</span>`:''}${mpVenc(o)&&!['rm','off'].includes(x.st)?'<span class="tag warn">Vencida</span>':''}${o.lj?'<span class="tag">Alterada</span>':''}${acts}</div></div>`}
+function merchPanel(){const all=mpItems(),q=nk(mem.mq||''),f=mem.mqf||'all',FL=[['all','Todas'],['on','Ativas'],['an','Em análise'],['venc','Vencidas'],['out','Tiradas ou recusadas']];
+  const R=all.filter(x=>mpFlt(x,f)&&(!q||nk((x.o.n||'')+' '+(x.o.loja||'')).includes(q))).sort((a,b)=>String(b.o.ate||'').localeCompare(String(a.o.ate||'')));
+  return `<section class="box" data-nc="1" style="gap:10px;border-left-color:var(--c-merch)"><b style="font-family:var(--f-d);font-size:20px">Painel do comerciante</b><span class="m">${DB&&UID?'Aqui você mesmo publica, altera e tira as suas promoções. Promoção nova passa pela conferência da equipe antes de aparecer. Alterar e tirar do app valem na hora.':'Aqui você mesmo publica, altera e tira as suas promoções. Neste aparelho, elas ficam salvas só aqui.'}</span>
+  <div class="row" style="flex-wrap:nowrap"><label class="sr" for="mq">Pesquisar as minhas promoções</label><input id="mq" type="search" value="${esc(mem.mq||'')}" placeholder="🔎 Pesquisar: nome do produto ou do comércio" autocomplete="off" style="flex:1 1 0;width:100%;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--card)"></div>
+  <div class="row" style="gap:6px" role="group" aria-label="Filtrar">${FL.map(c=>`<button class="chip" type="button" data-mqf="${c[0]}" aria-pressed="${f===c[0]}">${c[1]} (${all.filter(x=>mpFlt(x,c[0])).length})</button>`).join('')}</div>
+  ${R.length?pageRows('mpn',R.map(mpRow),8):`<span class="m">${all.length?'Nada encontrado com essa pesquisa.':'Você ainda não publicou promoções. Toque em “Nova promoção”.'}</span>`}
+  <button class="btn acc" type="button" data-mnew="1">+ Nova promoção</button></section>`}
+function ownAdm(){if(!DB)return '';const ed=pubL.filter(o=>o.lj),rmN=pubRaw.filter(p=>p.uid&&OWN[p.uid]&&(OWN[p.uid].rm||[]).includes(p.id)).length;
+  return `<div class="box" data-nc="1"><b>Alterações feitas pelos lojistas (${ed.length})</b><span class="m">Os lojistas alteram e tiram as próprias promoções sem esperar a equipe. Confira aqui e retire o que estiver errado. Promoções tiradas pelos próprios lojistas: ${rmN}.</span>${ed.length?pageRows('ownA',ed.slice().sort((a,b)=>String(b.lj).localeCompare(String(a.lj))).map(o=>`<div class="line" style="align-items:flex-start"><span><b>${esc(o.n)}</b> <span class="m">· ${esc(o.loja)} · ${brl(o.p)} · alterada em ${fd(String(o.lj).slice(0,10))}</span></span><button class="chip" data-mdel="${esc(o.id)}" type="button">Retirar</button></div>`)):'<span class="m">Nenhuma alteração por enquanto.</span>'}</div>`}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='mq'){mem.mq=e.target.value;const s=e.target.selectionStart;render();const i=document.getElementById('mq');if(i){i.focus();try{i.setSelectionRange(s,s)}catch(_){}}}});
 function featL(ft){if(!ft||typeof ft!=='object')return [];const L=[];if(ft.mod&&MODC[ft.mod])L.push([MODC[ft.mod][0],MODC[ft.mod][2]]);
   if(ft.rel){const h=[ft.rel.de?'das '+ft.rel.de:'',ft.rel.ate?'até '+ft.rel.ate:''].filter(Boolean).join(' ');L.push(['⚡','Relâmpago'+(h?' · '+h:''),1])}
   if(ft.uni>0)L.push(['1️⃣',ft.uni===1?'Unitária: 1 por cliente':'Limite de '+ft.uni+' por cliente']);
@@ -971,7 +1002,7 @@ async function spModel(){
   try{const dl=await claude.use('downloads');if(dl){await dl.save({filename:'modelo-promocoes.csv',data:blob});return}}catch(_){}
   try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='modelo-promocoes.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(_){toast('Não consegui baixar o modelo aqui.')}}
 function merchV(){
-  return `<div style="display:grid;gap:12px;max-width:560px"><div class="box"><b>Sou comerciante</b><span class="m">Cadastre uma promoção para aparecer no app. Neste protótipo, ela fica só neste aparelho e aparece na aba Promoções.</span></div>
+  return `<div style="display:grid;gap:12px;max-width:560px">${merchPanel()}
   ${flyBox()}
   ${planBox()}
   <form class="f box" id="dsf" novalidate><b>Descontos para quem compra na loja</b><span class="m">Informe só o que você realmente cumpre no caixa. O app mostra ao cliente o valor já com esse desconto.</span>
@@ -985,8 +1016,8 @@ function merchV(){
   <div class="row"><label for="dl_f" style="flex:1">Taxa (R$, 0 = grátis)<input id="dl_f" inputmode="decimal" placeholder="Ex.: 8,90"></label><label for="dl_m" style="flex:1">Pedido mínimo (R$)<input id="dl_m" inputmode="decimal"></label></div>
   <div class="row"><label for="dl_g" style="flex:1">Frete grátis acima de (R$)<input id="dl_g" inputmode="decimal"></label><label for="dl_e" style="flex:1">Prazo<input id="dl_e" placeholder="Ex.: 40 a 90 min" maxlength="30"></label></div>
   <div class="err" id="dl_er" role="alert"></div><button class="btn acc" type="submit">Enviar para conferência</button></form>
-  <form class="f box" id="mf" novalidate>${mfBanner()}<label for="ml">Nome do comércio<input id="ml" autocomplete="organization"></label><label for="mt">Tipo de comércio<select id="mt">${Object.keys(TN).map(k=>`<option value="${k}">${esc(TN[k])}</option>`).join('')}</select></label><label for="mmod" id="mmodl" style="display:none">Como é o curso<select id="mmod"><option value="">Escolha…</option>${Object.keys(MODC).map(k=>`<option value="${k}">${MODC[k][0]} ${MODC[k][1]}</option>`).join('')}</select></label><label for="mn">Produto e quantidade<input id="mn" placeholder="Ex.: Arroz tipo 1, 5 kg"></label><div class="row"><label for="mp" style="flex:1">Preço da promoção (R$)<input id="mp" inputmode="decimal"></label><label for="mo" style="flex:1">Preço normal (R$)<input id="mo" inputmode="decimal"></label></div><label for="ma">Válido até<input id="ma" type="date"></label><span class="m">Marcando “Só hoje” nas características, a validade fica a data de hoje.</span>${featForm()}<div class="err" id="me" role="alert">${esc(mem.err)}</div><button class="btn acc" type="submit">${mfEditing()?'Salvar alterações':'Publicar promoção'}</button></form>
-  ${mine.length?`<div class="box"><b>Suas promoções (${mine.length})</b>${pager('mine',mine.map((o,k)=>({o,k})),30,({o,k})=>chipB('mi'+k,o.n,esc(o.loja||'Sua loja')+' · até '+fd(o.ate),brl(o.p),{t:o.n,b:()=>`<div class="line"><span class="m">Preço</span><b>${brl(o.p)}</b></div>${o.old?`<div class="line"><span class="m">Preço normal</span><span>${brl(o.old)}</span></div>`:''}<div class="line"><span class="m">Válido até</span><span>${fd(o.ate)}</span></div><button class="btn ghost" data-del="${k}" type="button">Remover esta promoção</button><button class="btn acc" data-medit="${k}" type="button">Editar esta promoção</button>`}),CHW)}</div>`:''}</div>`}
+  <form class="f box" id="mf" novalidate>${mfBanner()||'<b style="font-family:var(--f-d);font-size:18px">Nova promoção</b>'}<label for="ml">Nome do comércio<input id="ml" autocomplete="organization"></label><label for="mt">Tipo de comércio<select id="mt">${Object.keys(TN).map(k=>`<option value="${k}">${esc(TN[k])}</option>`).join('')}</select></label><label for="mmod" id="mmodl" style="display:none">Como é o curso<select id="mmod"><option value="">Escolha…</option>${Object.keys(MODC).map(k=>`<option value="${k}">${MODC[k][0]} ${MODC[k][1]}</option>`).join('')}</select></label><label for="mn">Produto e quantidade<input id="mn" placeholder="Ex.: Arroz tipo 1, 5 kg"></label><div class="row"><label for="mp" style="flex:1">Preço da promoção (R$)<input id="mp" inputmode="decimal"></label><label for="mo" style="flex:1">Preço normal (R$)<input id="mo" inputmode="decimal"></label></div><label for="ma">Válido até<input id="ma" type="date"></label><span class="m">Marcando “Só hoje” nas características, a validade fica a data de hoje.</span>${featForm()}<div class="err" id="me" role="alert">${esc(mem.err)}</div><button class="btn acc" type="submit">${mfEditing()?'Salvar alterações':'Publicar promoção'}</button></form>
+  </div>`}
 function tagV(){
   const t=mem.tag,pl=mem.tgPlace||'';
   return `<div style="display:grid;gap:12px;max-width:560px">${hereBox()}${repBox()}<div class="box"><b>Achou um preço bom? Compartilhe</b><span class="m">Fotografe a etiqueta ou a placa de preço. A IA lê o produto e o valor, você confere e envia para outras pessoas verem.</span></div>
@@ -1340,7 +1371,7 @@ function adminV(){
   const sec=(t,h)=>`<details class="adm" data-adm="${t}"${(mem.adm||{})[t]?' open':''}><summary style="font-weight:700;font-size:16px;cursor:pointer;min-height:44px;display:flex;align-items:center">${h}</summary><div style="display:grid;gap:12px;padding:6px 0 12px">`;
   const pend=subAll.reduce((a,d)=>a+d.items.filter(i=>i.st==='Em análise').length,0);
   return `<div style="display:grid;gap:12px;max-width:620px"><div class="box" style="border-left-color:var(--acc)"><b>Administrador</b><span class="m">Tudo que você faz aqui vale para todos os usuários. ${DB?'':'O armazenamento compartilhado não está ativo agora: o que você cadastra fica só neste aparelho.'}</span></div>
-  ${sec('mod','Moderar envios ('+pend+' em análise)')}${modBox()}</div></details>
+  ${sec('mod','Moderar envios ('+pend+' em análise)')}${modBox()}${ownAdm()}</div></details>
   ${sec('pts','Programa de pontos')}${ptsAdm()}</div></details>
   ${sec('loj','Comércios cadastrados ('+shStores.length+')')}${storesAdmin()}</div></details>
   ${sec('pro','Inserir promoções e encartes')}${promoAdmin()}${flyBox()}</div></details>
@@ -1656,7 +1687,7 @@ document.addEventListener('click',e=>{
     if(it.k==='dl'){if(D.mno)return setSub(uid,id,{st:'Recusada'}).then(()=>toast('Envio recusado.')).catch(()=>toast('Não foi possível salvar agora.'));const st=findSh(it.loja);if(!st)return toast('Cadastre antes este comércio na aba Comércios.');const {id:_s,...rest}=st;return DB.collection('stores').doc(st.id).set({...rest,id:st.id,dl:{...it.dl,d:today()}}).then(()=>setSub(uid,id,{st:'Aprovada'})).then(()=>award(uid,it,false).catch(()=>null)).then(r=>{boom(null,null,1);toast('Entrega publicada.'+ptsMsg(r))}).catch(()=>toast('Não foi possível salvar agora.'))}
     const pv=Number(String((document.getElementById('ep_'+id)||{}).value).replace(',','.'));if(D.mok&&!(pv>0&&pv<1e6))return toast('Informe um preço válido.');
     const first=!pubL.some(o=>nk(o.loja)===nk(it.loja)&&nk(o.n)===nk(it.n));
-    const done=D.mok?DB.collection('pub').doc(id).set({id,loja:it.loja,n:it.n,p:pv,old:it.old||null,ate:it.ate,src:it.src||'tag',t:it.t,rl:1,...(it.ft?{ft:it.ft}:{}),...(it.tc?{tc:it.tc}:{})}).then(()=>setSub(uid,id,{st:'Aprovada',p:pv})).then(()=>award(uid,it,first).catch(()=>null)):setSub(uid,id,{st:'Recusada'});
+    const done=D.mok?DB.collection('pub').doc(id).set({id,loja:it.loja,n:it.n,p:pv,old:it.old||null,ate:it.ate,src:it.src||'tag',t:it.t,rl:1,uid,...(it.ft?{ft:it.ft}:{}),...(it.tc?{tc:it.tc}:{})}).then(()=>setSub(uid,id,{st:'Aprovada',p:pv})).then(()=>award(uid,it,first).catch(()=>null)):setSub(uid,id,{st:'Recusada'});
     return done.then(r=>{if(D.mok)boom(null,null,1);toast(D.mok?'Promoção aprovada e publicada.'+ptsMsg(r):'Envio recusado.')}).catch(()=>toast('Não foi possível salvar agora.'))}
   if(D.mrl){if(!adm||!DB)return;const o=pubL.find(x=>x.id===D.mrl);if(!o)return;const {id,...rest}=o;return DB.collection('pub').doc(id).set({...rest,id,rl:o.rl===0?1:0}).then(()=>toast(o.rl===0?'Marcada como dado real.':'Marcada como exemplo: sai do histórico de preços.')).catch(()=>toast('Não foi possível alterar agora.'))}
   if(D.mset){if(!adm||!DB)return;const [id,v]=D.mset.split('|'),o=pubL.find(x=>x.id===id);if(!o)return;const {id:_i,...rest}=o;return DB.collection('pub').doc(id).set({...rest,id,rl:v==='1'?1:0}).then(()=>toast(v==='1'?'Marcado como real.':'Marcado como exemplo.')).catch(()=>toast('Não foi possível alterar agora.'))}
@@ -1688,9 +1719,16 @@ document.addEventListener('click',e=>{
     if(D.rvok){r.st='Confirmado';mine.forEach(o=>{if(o.loja===r.s&&o.n===r.n){o.p=r.np}});const u=findUst(r.s);if(u){const id=matchItem(r.n);if(id&&u.pr[id])u.pr[id].p=r.np;syncUst()}}else r.st='Não confirmado';save()}return render()}
   if(D.del){mine.splice(+D.del,1);mem.medit=null;mem.gdk=null;save();return render()}
   if(D.cmod!==undefined){mem.cmod=D.cmod;return render()}
+  if(D.mqf!==undefined){mem.mqf=D.mqf;return render()}
+  if(D.mnew){mem.medit=null;mem.mepub=null;mem.msub=null;mem.err='';render();const f=$('#mf');if(f){f.reset();mmodSync();f.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{const n=$('#ml');if(n)n.focus()},400)}return}
+  if(D.mpe){const id=D.mpe,o=pubL.find(x=>x.id===id)||mySubs().find(i=>i.id===id);if(!o)return;mem.msub=id;mem.medit=null;mem.mepub=null;mem.pdk=null;mem.gdk=null;mem.tab='merch';mem.err='';render();setTimeout(()=>{fillMf(o);const f=$('#mf');if(f)f.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
+  if(D.mprm||D.mpx){const id=D.mprm||D.mpx;if(mem.mprc!==id){mem.mprc=id;return render()}mem.mprc=null;
+    if(D.mprm)return ownSet(w=>{if(!w.rm.includes(id))w.rm.push(id);return w}).then(()=>{toast('Promoção tirada do app.');render()}).catch(()=>toast('Não foi possível tirar agora.'));
+    return DB.collection('sub').doc(UID).set({items:mySubs().filter(i=>i.id!==id)}).then(()=>{toast('Envio cancelado.');render()}).catch(()=>toast('Não foi possível cancelar agora.'))}
+  if(D.mpback){const id=D.mpback;return ownSet(w=>{w.rm=w.rm.filter(x=>x!==id);return w}).then(()=>{toast('Promoção publicada de novo.');render()}).catch(()=>toast('Não foi possível agora.'))}
   if(D.pedit){if(!adm||!DB)return;const o=pubL.find(x=>x.id===D.pedit);if(!o)return;mem.mepub=o.id;mem.medit=null;mem.pdk=null;mem.gdk=null;mem.tab='merch';mem.err='';render();setTimeout(()=>{fillMf(o);const f=$('#mf');if(f)f.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
   if(D.medit!==undefined){const k=+D.medit,o=mine[k];if(!o)return;mem.medit=k;mem.mepub=null;mem.pdk=null;mem.tab='merch';mem.gdk=null;mem.err='';render();setTimeout(()=>{fillMf(o);const f=$('#mf');if(f)f.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
-  if(D.meditx){mem.medit=null;mem.mepub=null;mem.err='';render();return}
+  if(D.meditx){mem.medit=null;mem.mepub=null;mem.msub=null;mem.err='';render();return}
 });
 document.addEventListener('error',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('pimg'))t.remove()},true);
 document.addEventListener('input',e=>{if(e.target.id==='of_u'){const st=$('#of_s'),v=e.target.value.trim();if(!v)return;clearTimeout(OFTM);if(/^https:\/\/[^\s]{8,}$/i.test(v)&&!$('#of_p').value.trim()){OFTRY[v]=1;OFTM=setTimeout(()=>{if(($('#of_u')||{}).value.trim()===v)fetchLink()},900)}const a=parseAff(v);
@@ -1803,7 +1841,11 @@ document.addEventListener('submit',e=>{
   if(g('ml').trim().length<3)return err('Informe o nome do comércio.');if(g('mn').trim().length<4)return err('Informe o produto.');
   if(!(p>0)||!(o>0))return err('Informe os dois preços.');if(p>=o)return err('O preço da promoção precisa ser menor que o normal.');
   if(!ate||new Date(ate+'T23:59:59')<NOW)return err('Informe uma data de validade a partir de hoje.');
-  if(mem.mepub&&adm&&DB){const id=mem.mepub,po=pubL.find(x=>x.id===id);if(po){const {id:_i,...rest}=po,nv={...rest,id,loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,tc:ex.tc};if(ex.ft)nv.ft=ex.ft;else delete nv.ft;mem.mepub=null;mem.err='';DB.collection('pub').doc(id).set(nv).then(()=>{toast('Alterações salvas.');mem.tab='promo';render()}).catch(()=>err('Não foi possível salvar agora.'));return}}
+  if(mem.msub&&DB&&UID){const id=mem.msub,it=mySubs().find(i=>i.id===id),raw=pubRaw.find(x=>x.id===id);mem.msub=null;mem.err='';if(!it&&!raw)return err('Não encontrei essa promoção.');
+    const nv={loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,tc:ex.tc,ft:ex.ft||null};
+    if(raw&&raw.uid===UID){const ts=new Date().toISOString();return ownSet(w=>{w.ed[id]={n:nv.n,p,old:o,ate,tc:nv.tc,ft:nv.ft,ts};w.rm=w.rm.filter(x=>x!==id);return w}).then(()=>it?DB.collection('sub').doc(UID).set({items:mySubs().map(i=>i.id===id?{...i,...nv,loja:i.loja}:i)}):0).then(()=>{boom(null,null,1);toast('Alteração publicada. Já aparece para todos.');render()}).catch(()=>toast('Não foi possível salvar agora.'))}
+    return DB.collection('sub').doc(UID).set({items:mySubs().map(i=>i.id===id?{...i,...nv,st:'Em análise',t:today()}:i)}).then(()=>{toast('Alteração enviada para a conferência da equipe.');render()}).catch(()=>toast('Não foi possível salvar agora.'))}
+  if(mem.mepub&&adm&&DB){const id=mem.mepub,po=pubL.find(x=>x.id===id);if(po){const {id:_i,...rest}=po,nv={...rest,id,loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,tc:ex.tc,ets:new Date().toISOString()};delete nv.lj;if(ex.ft)nv.ft=ex.ft;else delete nv.ft;mem.mepub=null;mem.err='';DB.collection('pub').doc(id).set(nv).then(()=>{toast('Alterações salvas.');mem.tab='promo';render()}).catch(()=>err('Não foi possível salvar agora.'));return}}
   {const nw={src:'enc',reg:new Date().toISOString().slice(0,10),loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,...ex},k=mem.medit;if(k!=null&&mine[k]){const old=mine[k];if(!fx.ft)delete nw.ft;mine[k]={...old,...nw};if(!fx.ft)delete mine[k].ft;mem.medit=null;if(!adm)submitPub({src:'enc',loja:nw.loja,n:nw.n,p,old:o,ate,...ex,ed:1});save();mem.err='';mem.tab='promo';toast('Alterações salvas (demonstração).'+(adm?'':' A promoção editada volta para conferência da equipe.'));return render()}}
   mine.unshift({src:'enc',reg:new Date().toISOString().slice(0,10),loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,...ex});if(!adm)submitPub({src:'enc',loja:g('ml').trim(),n:g('mn').trim(),p,old:o,ate,...ex});save();mem.err='';mem.tab='promo';toast('Promoção publicada (demonstração).');render()});
 render();
@@ -1818,7 +1860,8 @@ render();
       DB.collection('stores').onSnapshot(sn=>{shStores=sn.docs.map(d=>({...d.data(),id:d.id,pr:{}}));try{syncUst()}catch(_){}rs()},()=>{});
       DB.collection('news').onSnapshot(sn=>{newsL=sn.docs.map(d=>({...d.data(),id:d.id}));rs()},()=>{});
       DB.doc('config/app').onSnapshot(d=>{if(d.exists&&typeof d.data().v==='string'){appUrl=d.data().v;rs()}},()=>{});
-      DB.collection('pub').onSnapshot(sn=>{pubL=sn.docs.map(d=>({...d.data(),id:d.id}));sweepExpired();try{syncUst()}catch(_){}rs();try{recShared()}catch(_){}},()=>{});
+      DB.collection('own').onSnapshot(sn=>{OWN={};sn.docs.forEach(d=>{OWN[d.id]=d.data()});pubL=applyOwn();try{syncUst()}catch(_){}rs()},()=>{});
+      DB.collection('pub').onSnapshot(sn=>{pubRaw=sn.docs.map(d=>({...d.data(),id:d.id}));pubL=applyOwn();sweepExpired();try{syncUst()}catch(_){}rs();try{recShared()}catch(_){}},()=>{});
       DB.collection('ph').onSnapshot(sn=>{PHS={};sn.docs.forEach(d=>{PHS[d.id]=d.data()});rs();try{recShared()}catch(_){}},()=>{});
       DB.collection('tips').onSnapshot(sn=>{tipsL=sn.docs.map(d=>({...d.data(),id:d.id}));rs()},()=>{});
       DB.doc('config/com').onSnapshot(d=>{const v=d.exists?d.data():{};comOn=!!v.on;comAD=Array.isArray(v.ad)?v.ad.filter(x=>typeof x==='string').slice(0,20):[];if(adm&&UID&&!comAD.includes(UID)){comAD=[...comAD,UID];DB.doc('config/com').set({on:comOn,ad:comAD}).catch(()=>{})}render()},()=>{});
@@ -2283,7 +2326,7 @@ function after(){try{document.querySelectorAll('#v [data-adid]').forEach(el=>{co
   if(DB&&!advAll&&(adm||mineL().length)){advAll=1;DB.collection('adv').onSnapshot(sn=>{ADVALL=sn.docs.map(d=>({uid:d.id,m:(d.data()||{}).m||{}}));rs()},()=>{})}}catch(_){}}
 const rs=()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;render()};
 /* ---------- encaixe no app ---------- */
-const _m=merchV;merchV=function(){const h=_m();return h.replace('</div>','</div>'+adsMerch())};
+const _m=merchV;merchV=function(){const h=_m();return h.replace('</section>','</section>'+adsMerch())};
 const _a=adminV;adminV=function(){const h=_a();if(!adm)return h;const sec=`<details class="adm" data-adm="ads"${(mem.adm||{}).ads?' open':''}><summary style="font-weight:700;font-size:16px;cursor:pointer;min-height:44px;display:flex;align-items:center">Divulgação paga (${allQ().reduce((a,g)=>a+g.items.filter(i=>i.st==='Em análise').length,0)} em análise)</summary><div style="display:grid;gap:12px;padding:6px 0 12px">${adsAdmin()}</div></details>`;return h.replace('<details class="adm" data-adm="mod"',sec+'<details class="adm" data-adm="mod"')};
 const _p=promoV;promoV=function(){const h=_p();return h.replace('<div class="bar">',stripPromo()+'<div class="bar">')};
 const _c=comV;comV=function(){const h=_c();return h.replace(/<div class="box" data-nc="1" style="border-style:dashed"><b[^>]*>Publicidade<\/b>[\s\S]*?<\/div>/,stripCom())};
