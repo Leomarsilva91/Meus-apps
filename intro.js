@@ -7,6 +7,11 @@
   var reduce = false;
   try { reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
   paused = reduce;
+  var snd = false, sayTok = 0, hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window, vz = null;
+  function pickVoice() { if (!hasTTS) return; var L = speechSynthesis.getVoices() || [], k; for (k = 0; k < L.length; k++) if (/pt[-_]BR/i.test(L[k].lang) && /google|luciana|francisca|natural|online/i.test(L[k].name)) return (vz = L[k]); for (k = 0; k < L.length; k++) if (/pt[-_]BR/i.test(L[k].lang)) return (vz = L[k]); for (k = 0; k < L.length; k++) if (/^pt/i.test(L[k].lang)) return (vz = L[k]); return (vz = null); }
+  if (hasTTS) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {} }
+  function say(txt, onend) { if (!hasTTS) return; var tok = ++sayTok; try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; if (vz || pickVoice()) u.voice = vz; u.rate = 1.04; u.pitch = 1.15; u.onend = function () { if (tok === sayTok && onend) onend(); }; speechSynthesis.speak(u); } catch (e) {} }
+  function hush() { sayTok++; try { if (hasTTS) speechSynthesis.cancel(); } catch (e) {} }
   function seen() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
   function mark() { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -51,8 +56,8 @@
     root.className = paused ? 'pz' : '';
     root.innerHTML =
       '<div class="iac" role="dialog" aria-modal="true" aria-label="Como funciona o ' + esc(C.nome) + '">' +
-      '<div class="iah"><b>' + esc(C.nome) + ' · ' + (i + 1) + ' de ' + S.length + '</b><button type="button" class="iask" data-ia="skip" aria-label="Pular a apresentação">Pular</button></div>' +
-      (reduce ? '' : '<div class="iab" aria-hidden="true"><i></i></div>') +
+      '<div class="iah"><b>' + esc(C.nome) + ' · ' + (i + 1) + ' de ' + S.length + '</b><span style="display:flex;gap:6px">' + (hasTTS ? '<button type="button" class="iask" data-ia="snd" aria-pressed="' + snd + '">' + (snd ? '🔊 Som ligado' : '🔈 Ouvir') + '</button>' : '') + '<button type="button" class="iask" data-ia="skip" aria-label="Pular a apresentação">Pular</button></span></div>' +
+      (reduce || snd ? '' : '<div class="iab" aria-hidden="true"><i></i></div>') +
       '<div class="iast" aria-live="polite"><span class="iaic" aria-hidden="true">' + s.ic + '</span><h2>' + esc(s.t) + '</h2><p>' + esc(s.x) + '</p></div>' +
       '<div class="iad" role="group" aria-label="Escolher parte">' + S.map(function (_, k) { return '<button type="button" data-ia-go="' + k + '" aria-label="Parte ' + (k + 1) + '"' + (k === i ? ' aria-current="true"' : '') + '></button>'; }).join('') + '</div>' +
       '<div class="iar"><button type="button" data-ia="prev"' + (i === 0 ? ' disabled' : '') + '>Anterior</button>' +
@@ -62,8 +67,9 @@
     var bar = root.querySelector('.iab i');
     if (bar) bar.addEventListener('animationend', function () { if (!paused) { if (i < S.length - 1) { i++; draw(); } } });
     var f = root.querySelector('.pr'); if (f) { try { f.focus({ preventScroll: true }); } catch (e) {} }
+    if (snd && !paused) say(s.fala || s.x, function () { if (root && snd && !paused && i < S.length - 1) { i++; draw(); } }); else hush();
   }
-  function close() { mark(); if (root) { root.remove(); root = null; } document.body.style.overflow = ''; document.removeEventListener('keydown', key); }
+  function close() { mark(); hush(); if (root) { root.remove(); root = null; } document.body.style.overflow = ''; document.removeEventListener('keydown', key); }
   function key(e) { if (e.key === 'Escape') close(); else if (e.key === 'ArrowRight' && i < S.length - 1) { i++; draw(); } else if (e.key === 'ArrowLeft' && i > 0) { i--; draw(); } }
   function open() {
     if (root) return; addCss(); i = 0; paused = reduce;
@@ -72,9 +78,10 @@
       var b = e.target.closest && e.target.closest('button'); if (!b) return;
       var a = b.getAttribute('data-ia'), g = b.getAttribute('data-ia-go');
       if (g != null) { i = +g; draw(); return; }
-      if (a === 'skip') close(); else if (a === 'next') { if (i < S.length - 1) { i++; draw(); } } else if (a === 'prev') { if (i > 0) { i--; draw(); } } else if (a === 'pause') { paused = !paused; draw(); }
+      if (a === 'skip') close(); else if (a === 'next') { if (i < S.length - 1) { i++; draw(); } } else if (a === 'prev') { if (i > 0) { i--; draw(); } } else if (a === 'pause') { paused = !paused; draw(); } else if (a === 'snd') { snd = !snd; draw(); }
     });
     document.addEventListener('keydown', key);
+    if (C.video) { root.innerHTML = '<div class="iac" role="dialog" aria-modal="true" aria-label="Vídeo: como funciona o ' + esc(C.nome) + '"><div class="iah"><b>' + esc(C.nome) + '</b><button type="button" class="iask" data-ia="skip">Pular</button></div><video src="' + esc(C.video) + '" controls autoplay playsinline style="width:100%;border-radius:16px;background:#000"></video><details><summary>Ler tudo em texto</summary><div class="iat">' + S.map(function (z) { return '<p><b>' + esc(z.t) + '.</b> ' + esc(z.x) + '</p>'; }).join('') + '</div></details></div>'; return; }
     draw();
   }
   window.IA_INTRO_OPEN = open;
