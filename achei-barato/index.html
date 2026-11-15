@@ -1047,7 +1047,7 @@ function mSt(uid){const v=mVerOf(uid);if(!v)return 'pend';if(v.n&&nk(v.n)!==nk(m
 function mVerName(n){if(!n)return false;const k=nk(n);if(DB)return Object.keys(OWN).some(u=>{const o=OWN[u];return o&&o.pf&&nk(o.pf.nome||'')===k&&mSt(u)==='ok'});const p=LS.g(MPF_LS,null);return !!p&&nk(p.nome||'')===k&&mSt('local')==='ok'}
 async function mPrivLoad(){if(!DB||!UID||mem.mpvL)return;mem.mpvL=1;try{const d=await DB.collection('mlj').doc(UID).get();if(d.exists){mem.mpv={uid:UID,d:d.data()};render()}}catch(_){}}
 function mPfForm(p){p=p||{};const T=Object.keys(TN);
-  return `<form class="f box" id="mpff" novalidate style="gap:10px;border-left-color:var(--c-merch)"><b style="font-family:var(--f-d);font-size:20px">${p.nome?'Dados do seu comércio':'Cadastre o seu comércio'}</b>
+  return `<form class="f box" id="mpff" data-nc="1" novalidate style="gap:10px;border-left-color:var(--c-merch)"><b style="font-family:var(--f-d);font-size:20px">${p.nome?'Dados do seu comércio':'Cadastre o seu comércio'}</b>
   <span class="m">${p.nome?'Altere o que precisar. Se mudar o nome ou o CNPJ/CPF, a equipe confere de novo.':'Esta área é para quem tem comércio. Com o cadastro, as suas promoções aparecem com o nome da sua loja e, depois que a equipe conferir, com o selo de Comércio verificado.'}</span>
   <label for="mp_n">Nome do comércio<input id="mp_n" maxlength="60" value="${esc(p.nome||'')}" autocomplete="organization" placeholder="Ex.: Mercado Bom Preço"></label>
   <label for="mp_t">Tipo de comércio<select id="mp_t">${T.map(k=>`<option value="${k}"${(p.tipo||'mercado')===k?' selected':''}>${esc(TN[k])}</option>`).join('')}</select></label>
@@ -1060,7 +1060,7 @@ function mPfForm(p){p=p||{};const T=Object.keys(TN);
   <label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input type="checkbox" id="mp_ok" ${p.nome?'checked':''} style="width:22px;height:22px;flex:none;margin-top:2px"> Declaro que represento este comércio e que as informações são verdadeiras.</label>
   <span class="m">Os clientes veem o nome, o tipo, o endereço, a cidade, o horário, a entrega e o telefone da loja. O CNPJ/CPF e o nome do responsável ficam só com a equipe do app, para conferir o cadastro.</span>
   <div class="err" id="mp_x" role="alert"></div>
-  <div class="row"><button class="btn acc" type="submit">${p.nome?'Salvar alterações':'Cadastrar meu comércio'}</button>${p.nome?'<button class="btn ghost" type="button" data-mpfx="1">Cancelar</button>':''}</div></form>`}
+  <div class="row"><button class="btn acc" type="submit">${p.nome?'Salvar alterações':'Cadastrar meu comércio'}</button><button class="btn ghost" type="button" data-mpfx="1">${p.nome?'Cancelar':'Fechar'}</button></div></form>`}
 function mPfCard(p){const st=mSt(mMe()),v=mVerOf(mMe())||{};
   const tag=st==='ok'?'<span class="tag ok">✔ Comércio verificado</span>':st==='no'?'<span class="tag">Cadastro não aprovado</span>':'<span class="tag warn">Em conferência pela equipe</span>';
   return `<section class="box" data-nc="1" style="gap:8px;border-left-color:var(--c-merch)"><div class="row sp" style="gap:8px;align-items:flex-start"><span style="min-width:0"><span class="m">🏪 Seu comércio</span><br><b style="font-family:var(--f-d);font-size:20px;overflow-wrap:anywhere">${esc(p.nome)}</b></span>${tag}</div>
@@ -1092,7 +1092,7 @@ document.addEventListener('input',e=>{const i=e.target;if(!i)return;if(i.id==='m
 document.addEventListener('submit',e=>{if(e.target&&e.target.id==='mpff'){e.preventDefault();e.stopImmediatePropagation();mPfSave(e.target)}},true);
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-mpfe],[data-mpfx],[data-mvok],[data-mvno],[data-mvun]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
   if(b.dataset.mpfe){mem.mpfEd=1;render();const f=$('#mpff');if(f)f.scrollIntoView({block:'start'});return}
-  if(b.dataset.mpfx){mem.mpfEd=0;render();return}
+  if(b.dataset.mpfx){mem.mpfEd=0;if(!mPf())mem.tab='promo';render();try{scrollTo(0,0)}catch(_){}return}
   if(!adm)return;const uid=b.dataset.mvok||b.dataset.mvno||b.dataset.mvun;let mo='';
   if(b.dataset.mvno){mo=(document.getElementById('mvm_'+uid)||{}).value||'';mo=mo.trim().slice(0,120);if(mo.length<3){toast('Escreva o motivo para o comerciante.');return}}
   const m={...(DB?MVER:LS.g(MVER_LS,{}))};if(b.dataset.mvun)delete m[uid];else m[uid]={st:b.dataset.mvok?'ok':'no',mo,n:mNomeOf(uid),ts:new Date().toISOString()};
