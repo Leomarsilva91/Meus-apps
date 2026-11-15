@@ -253,6 +253,32 @@
     ["Arquivo grande demais (máximo 3 MB).", "File too large (maximum 3 MB).", "Archivo demasiado grande (máximo 3 MB)."],
     ["Não achei o traçado neste arquivo. Confira se é um GPX de trilha.", "I couldn't find a track in this file. Check that it's a trail GPX.", "No encontré el trazado en este archivo. Verifica que sea un GPX de sendero."],
     ["Não consegui ler este arquivo.", "I couldn't read this file.", "No pude leer este archivo."],
+    ["Lotado agora", "Crowded right now", "Lleno ahora"],
+    ["Fila grande na entrada", "Long line at the entrance", "Fila grande en la entrada"],
+    ["Estacionamento cheio", "Parking full", "Estacionamiento lleno"],
+    ["Trilha ou lugar fechado hoje", "Trail or place closed today", "Sendero o lugar cerrado hoy"],
+    ["Água turva, ruim para nadar", "Murky water, bad for swimming", "Agua turbia, mala para nadar"],
+    ["Chovendo forte agora", "Heavy rain right now", "Lloviendo fuerte ahora"],
+    ["Muitos mosquitos ou insetos", "Lots of mosquitoes or insects", "Muchos mosquitos o insectos"],
+    ["Trânsito ou estrada ruim para chegar", "Traffic or bad road to get there", "Tráfico o camino malo para llegar"],
+    ["Avisos de agora", "Live updates", "Avisos de ahora"],
+    ["Avisos de agora (#)", "Live updates (#)", "Avisos de ahora (#)"],
+    ["Avisos de agora por perto (#)", "Live updates nearby (#)", "Avisos de ahora cerca (#)"],
+    ["some sozinho em # h se ninguém confirmar", "disappears on its own in # h if nobody confirms", "desaparece solo en # h si nadie confirma"],
+    ["Confirmado por # pessoas", "Confirmed by # people", "Confirmado por # personas"],
+    ["confirmado por #", "confirmed by #", "confirmado por #"],
+    ["Você está aí? Ainda está assim?", "Are you there? Is it still like this?", "¿Estás ahí? ¿Sigue así?"],
+    ["Ainda está", "Still is", "Sigue así"],
+    ["Avisar o que está acontecendo agora", "Report what's happening now", "Avisar lo que está pasando ahora"],
+    ["Nenhum aviso agora. Quem está no lugar avisa o que está acontecendo, e o aviso some sozinho depois de algumas horas.", "No updates right now. People at the place report what's happening, and the update disappears on its own after a few hours.", "Ningún aviso ahora. Quien está en el lugar avisa lo que pasa, y el aviso desaparece solo después de algunas horas."],
+    ["Só avise se você está no lugar agora. Outros visitantes confirmam ou dizem que já passou.", "Only report if you're at the place now. Other visitors confirm it or say it's over.", "Avisa solo si estás en el lugar ahora. Otros visitantes confirman o dicen que ya pasó."],
+    ["Aviso agora", "Live update", "Aviso ahora"],
+    ["Entre na sua conta para avisar.", "Sign in to report.", "Entra en tu cuenta para avisar."],
+    ["Entre na sua conta para responder.", "Sign in to answer.", "Entra en tu cuenta para responder."],
+    ["Você já avisou isso aqui há pouco.", "You already reported this here a moment ago.", "Ya avisaste esto aquí hace poco."],
+    ["Aviso publicado. Obrigado!", "Update posted. Thank you!", "Aviso publicado. ¡Gracias!"],
+    ["Obrigado! O aviso foi apagado.", "Thank you! The update was removed.", "¡Gracias! El aviso fue borrado."],
+    ["Obrigado! O aviso continua valendo por mais algumas horas.", "Thank you! The update stays on for a few more hours.", "¡Gracias! El aviso sigue valiendo unas horas más."],
     ['🥾 Você tem uma trilha em andamento', '🥾 You have a trail in progress', '🥾 Tienes un sendero en curso'], ['🥾 Trilha em andamento', '🥾 Trail in progress', '🥾 Sendero en curso'], ['Voltar para a trilha', 'Back to the trail', 'Volver al sendero'], ['Suas trilhas aqui', 'Your trails here', 'Tus senderos aquí'], ['🥾 Minhas trilhas', '🥾 My trails', '🥾 Mis senderos'], ['Trilha', 'Trail', 'Sendero'],
     ['Marcando seu trajeto pelo GPS', 'Recording your route by GPS', 'Marcando tu recorrido por GPS'], ['Pausada', 'Paused', 'En pausa'], ['pausada', 'paused', 'en pausa'], ['Antes de começar, leia', 'Before you start, read this', 'Antes de empezar, lee esto'],
     ['• Deixe o Respiro', '• Keep Respiro', '• Deja Respiro'], ['aberto e com a tela ligada', 'open with the screen on', 'abierto y con la pantalla encendida'], ['. Se a tela apagar ou você trocar de app, o celular pode parar de marcar e o trecho sai em linha reta.', '. If the screen turns off or you switch apps, the phone may stop recording and that stretch shows as a straight line.', '. Si la pantalla se apaga o cambias de app, el celular puede dejar de marcar y ese tramo sale en línea recta.'],
@@ -315,6 +341,8 @@
     m = s.match(/^(.+) \(exemplo\), (.+) quilômetros$/); if (m) return m[1] + (COL === 1 ? ' (example), ' + m[2] + ' kilometers' : ' (ejemplo), ' + m[2] + ' kilómetros');
     m = s.match(/^Entrada (\d+h)(?:, saída (\d+h))?$/); if (m) return COL === 1 ? 'Check-in ' + m[1] + (m[2] ? ', check-out ' + m[2] : '') : 'Entrada ' + m[1] + (m[2] ? ', salida ' + m[2] : '');
     m = s.match(/^✅ Traçado lido: (\d+) pontos, (.+)\.$/); if (m) return COL === 1 ? '✅ Track read: ' + m[1] + ' points, ' + m[2] + '.' : '✅ Trazado leído: ' + m[1] + ' puntos, ' + m[2] + '.';
+    m = s.match(/^Avisado por ([^·]+)$/); if (m) return (COL === 1 ? 'Reported by ' : 'Avisado por ') + (m[1] === 'Você' ? (COL === 1 ? 'you' : 'ti') : m[1]);
+    m = s.match(/^(📍 )?Você está perto de (.+)$/); if (m) return (m[1] || '') + (COL === 1 ? 'You are near ' : 'Estás cerca de ') + m[2];
     m = s.match(/^Mostrando lugares perto de (.+)\.$/); if (m) return (COL === 1 ? 'Showing places near ' : 'Mostrando lugares cerca de ') + m[1] + '.';
     m = s.match(/^Perto de (.+)$/); if (m && !D[s]) return (COL === 1 ? 'Near ' : 'Cerca de ') + m[1];
     m = s.match(/^Avaliar (.+)$/); if (m && !D[s]) return (COL === 1 ? 'Review ' : 'Reseñar ') + m[1];
