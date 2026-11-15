@@ -1440,7 +1440,7 @@ document.addEventListener('submit',async e=>{const f=e.target;if(!f||(f.id!=='mk
   if(f.id==='mkf'){const n=($('#mk_n').value||'').replace(/\s+/g,' ').trim();if(n.length<2)return er('mk_e','Escreva o nome da loja.');
     if(Object.keys(MK).some(k=>nz(MK[k].n)===nz(n)))return er('mk_e','Essa loja já está na lista.');if(MKX.length>=30)return er('mk_e','Limite de 30 lojas extras.');
     MKX=[...MKX,{k:'x'+Date.now().toString(36),n:n.slice(0,30)}];try{await mkSave()}catch(_){return er('mk_e','Não consegui salvar agora. Confira se você está cadastrado como administrador.')}render();toast('Loja adicionada.');return}
-  const n=($('#gr_n').value||'').replace(/\s+/g,' ').trim(),d=($('#gr_d').value||'').replace(/\s+/g,' ').trim(),U=[...document.querySelectorAll('[data-gru]')].map(i=>i.value.trim()).filter(Boolean);
+  const n=($('#gr_n').value||'').replace(/\s+/g,' ').trim(),d=($('#gr_d').value||'').replace(/\s+/g,' ').trim(),U=[...document.querySelectorAll('[data-gru]')].map(i=>{let v=i.value.trim().replace(/\s+/g,'');if(v&&!/^https?:\/\//i.test(v))v='https://'+v.replace(/^\/+/,'');v=v.replace(/^http:\/\//i,'https://');i.value=v;return v}).filter(Boolean);
   if(n.length<2)return er('gr_e','Escreva o nome do grupo ou canal.');if(!U.length)return er('gr_e','Coloque pelo menos um link.');
   for(const u of U){let ok=false;try{ok=new URL(u).protocol==='https:'}catch(_){}if(!ok)return er('gr_e','Confira os links: cada um precisa ser completo, começando com https://')}
   if(new Set(U).size<U.length)return er('gr_e','Tem um link repetido.');
