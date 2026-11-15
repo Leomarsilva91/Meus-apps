@@ -266,7 +266,7 @@ function applyOwn(){const o=[],oh=new Set(OMOD.hid||[]),ok=new Set(OMOD.ok||[]),
   Object.keys(OWN).forEach(u=>{const L=OWN[u]&&Array.isArray(OWN[u].items)?OWN[u].items:[];L.forEach(it=>{if(!it||typeof it.id!=='string'||typeof it.n!=='string'||!(+it.p>0)||!/^\d{4}-\d\d-\d\d$/.test(it.ate||''))return;if(oh.has(it.id)||(!ok.has(it.id)&&denN(it.id)>=3)||new Date(it.ate+'T23:59:59')<now)return;
     const q={id:it.id,loja:String(it.loja||'').slice(0,60),n:it.n.slice(0,100),p:+it.p,old:+it.old>+it.p?+it.old:null,ate:it.ate,tc:TN[it.tc]?it.tc:'mercado',t:it.t,src:it.crowd?'tag':'loj',uid:u,rl:1};if(it.ft&&typeof it.ft==='object')q.ft=it.ft;if(it.ets)q.lj=it.ets;o.push(q)})});return o}
 const OWNME=()=>(UID&&OWN[UID])||{rm:[],ed:{}};
-async function ownSet(fn){if(!DB||!UID)throw 0;const cur=OWNME(),nx=fn({rm:[...(cur.rm||[])],ed:{...(cur.ed||{})},items:[...(cur.items||[])]});nx.rm=nx.rm.slice(-300);await DB.collection('own').doc(UID).set(nx)}
+async function ownSet(fn){if(!DB||!UID)throw 0;const cur=OWNME(),nx=fn({rm:[...(cur.rm||[])],ed:{...(cur.ed||{})},items:[...(cur.items||[])]});nx.rm=nx.rm.slice(-300);if(cur.pf&&!nx.pf)nx.pf=cur.pf;await DB.collection('own').doc(UID).set(nx)}
 function mpItems(){const L=[];
   if(DB&&UID){mySubs().filter(i=>!i.k&&i.src==='enc').forEach(i=>{const p=pubL.find(x=>x.id===i.id),raw=pubRaw.find(x=>x.id===i.id),rm=(OWNME().rm||[]).includes(i.id);
     L.push({src:'sub',id:i.id,o:p||i,st:rm?'rm':i.st==='Aprovada'?(raw?'pub':'off'):i.st==='Recusada'?'no':'an'})});
@@ -522,7 +522,7 @@ function promoCard(x){
   const off=x.old?Math.round((1-x.p/x.old)*100):0,d=dist(hp(),x.s),kn=known(x),dl=Math.round((new Date(x.ate)-NOW)/DAY),up=unitP(x),q=qty(),dd=discOf(x.s.n,q);
   const m=kn?mv(d*2,1):null;
   const pk=x.s.n+'|'+x.n,po=(mem.pco&&pk in mem.pco)?!!mem.pco[pk]:(mem.pv==='enc'||!!mem.fback);
-  const src=x.src==='loj'?'Publicada pelo próprio comerciante':x.src==='enc'?'Encarte':x.crowd?'Etiqueta enviada por usuário, ainda não confirmada':x.user?'Enviado por comerciante':'Preço de exemplo';
+  const src=(x.src==='loj'||x.user)&&mVerName(x.s&&x.s.n)?'✔ Comércio verificado · publicada pelo próprio comerciante':x.src==='loj'?'Publicada pelo próprio comerciante':x.src==='enc'?'Encarte':x.crowd?'Etiqueta enviada por usuário, ainda não confirmada':x.user?'Enviado por comerciante':'Preço de exemplo';
   return `<div class="card" data-t="${x.s.t}"><div class="row sp"><span class="tag">${esc(TN[x.s.t]||'Comércio')}</span>${x.low?'<span class="tag ok">Mais barato da cidade</span>':''}${dl<=2?`<span class="tag warn">${dl<=0?'Termina hoje':dl===1?'Falta 1 dia':'Faltam 2 dias'}</span>`:''}${shBtn(shTxt(x.n,x.p,x.old,x.s.n,x.ate))}</div><span class="t">${esc(x.n)}</span><div class="row" style="align-items:baseline"><span class="price">${brl(x.p)}</span>${x.old?`<span class="old">${brl(x.old)}</span><span class="tag off">−${off}%</span>`:""}</div>${featTags(x)}${econLine(x)}${up?`<span class="m">${brl(up.v)} por ${up.u}</span>`:''}<span class="m"><b>${esc(x.s.n)}</b>${kn?' · '+km1(d):''}</span>${kn?`<span class="m">Total${q>1?' para '+q+' un':''} com deslocamento: <b style="color:var(--ink)">${brl(finalOf(x))}</b></span>`:'<span class="m">Local não marcado: sem cálculo de deslocamento.</span>'}${editBtn(x)} ${mem.pv==='enc'&&!mem.fback?'':`<button type="button" class="chip" data-pco="${esc(pk)}" data-pcur="${po?1:0}" aria-expanded="${po}" style="justify-self:start">${po?'−  Ver menos':'+  Ver mais'}</button>`}<div style="display:${po?'grid':'none'};gap:6px">${econBox(x)}${dlBox(x.s,x.p)}${kn?`<details><summary class="m" style="cursor:pointer;min-height:28px">Ver a conta</summary><div style="display:grid;gap:3px;padding-top:4px">${conta(m,x.p*q*dd.tot,q>1?q+'× produto':'Produto')}</div></details>`:''}${dd.dec>0?`<span class="m" style="color:var(--ok)"><b>Desconto da loja para quem compra lá: ${dd.parts.join(' + ')}</b> (informado pelo comerciante)${dd.note?'. '+esc(dd.note):''}. Você paga ${brl(x.p*(1-dd.dec))} por unidade.</span>`:''}${dd.ep>0?`<span class="m">${dd.epUsed?'Já incluído no total: ':'Possível desconto extra: '}cerca de ${Math.round(dd.ep*100)}% (estimativa de ${dd.nrep} relatos de clientes, sem garantia).</span>`:''}<span class="m">${src}${x.reg?' · registrado em '+fd(x.reg):''} · válido até ${fd(x.ate)}</span>${rev.some(r=>r.st==='Em análise'&&r.s===x.s.n&&r.n===x.n)?'<span class="tag warn" style="justify-self:start">Aviso de preço em análise pela equipe</span>':''}<button class="chip" data-rep="1" data-rs="${esc(x.s.n)}" data-rn="${esc(x.n)}" data-rp="${x.p}" style="justify-self:start">Preço mudou? Avise</button></div></div>`}
 let OFERL=[],OFERI=0,OFERP=0;['pointerdown','touchstart','mouseenter','focusin'].forEach(ev=>document.addEventListener(ev,x=>{if(x.target&&x.target.closest&&x.target.closest('#ofer'))OFERP=Date.now()+20000},true));
 function oferIn(){const cand=OFERL[OFERI];if(!cand)return '';
@@ -1029,7 +1029,88 @@ async function spModel(){
   const blob=new Blob(['﻿'+SP_MODEL],{type:'text/csv'});
   try{const dl=await claude.use('downloads');if(dl){await dl.save({filename:'modelo-promocoes.csv',data:blob});return}}catch(_){}
   try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='modelo-promocoes.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(_){toast('Não consegui baixar o modelo aqui.')}}
-function merchV(){
+/* ---- Cadastro do comércio: separa o comerciante do consumidor ---- */
+let MVER={};const MPF_LS='ab_mpf',MVER_LS='ab_mver';
+const mDig=s=>String(s||'').replace(/\D/g,'');
+function mDocOk(s){const d=mDig(s);if(/^(\d)\1+$/.test(d))return false;
+  if(d.length===11){let a=0;for(let i=0;i<9;i++)a+=+d[i]*(10-i);let r=a*10%11%10;if(r!==+d[9])return false;a=0;for(let i=0;i<10;i++)a+=+d[i]*(11-i);r=a*10%11%10;return r===+d[10]}
+  if(d.length===14){const c=(n)=>{const w=n===12?[5,4,3,2,9,8,7,6,5,4,3,2]:[6,5,4,3,2,9,8,7,6,5,4,3,2];let a=0;for(let i=0;i<n;i++)a+=+d[i]*w[i];const r=a%11;return r<2?0:11-r};return c(12)===+d[12]&&c(13)===+d[13]}
+  return false}
+const mDocFmt=s=>{const d=mDig(s).slice(0,14);return d.length<=11?d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'):d.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2')};
+const mTelFmt=s=>{const d=mDig(s).slice(0,11);return d.length>10?d.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3'):d.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3')};
+/* parte pública (aparece para os clientes) e parte privada (só o administrador vê) */
+function mPf(){if(DB&&UID){const o=OWN[UID];const pub=o&&o.pf&&typeof o.pf==='object'?o.pf:null;const pv=(mem.mpv&&mem.mpv.uid===UID)?mem.mpv.d:null;return pub?{...pub,...(pv||{})}:null}return LS.g(MPF_LS,null)}
+function mVerOf(uid){const m=DB?MVER:LS.g(MVER_LS,{});return (uid&&m[uid])||null}
+const mMe=()=>DB&&UID?UID:'local';
+function mNomeOf(uid){if(uid==='local'){const p=LS.g(MPF_LS,null);return p&&p.nome||''}const o=OWN[uid];return o&&o.pf&&o.pf.nome||''}
+function mSt(uid){const v=mVerOf(uid);if(!v)return 'pend';if(v.n&&nk(v.n)!==nk(mNomeOf(uid)))return 'pend';return v.st==='ok'?'ok':v.st==='no'?'no':'pend'}
+function mVerName(n){if(!n)return false;const k=nk(n);if(DB)return Object.keys(OWN).some(u=>{const o=OWN[u];return o&&o.pf&&nk(o.pf.nome||'')===k&&mSt(u)==='ok'});const p=LS.g(MPF_LS,null);return !!p&&nk(p.nome||'')===k&&mSt('local')==='ok'}
+async function mPrivLoad(){if(!DB||!UID||mem.mpvL)return;mem.mpvL=1;try{const d=await DB.collection('mlj').doc(UID).get();if(d.exists){mem.mpv={uid:UID,d:d.data()};render()}}catch(_){}}
+function mPfForm(p){p=p||{};const T=Object.keys(TN);
+  return `<form class="f box" id="mpff" novalidate style="gap:10px;border-left-color:var(--c-merch)"><b style="font-family:var(--f-d);font-size:20px">${p.nome?'Dados do seu comércio':'Cadastre o seu comércio'}</b>
+  <span class="m">${p.nome?'Altere o que precisar. Se mudar o nome ou o CNPJ/CPF, a equipe confere de novo.':'Esta área é para quem tem comércio. Com o cadastro, as suas promoções aparecem com o nome da sua loja e, depois que a equipe conferir, com o selo de Comércio verificado.'}</span>
+  <label for="mp_n">Nome do comércio<input id="mp_n" maxlength="60" value="${esc(p.nome||'')}" autocomplete="organization" placeholder="Ex.: Mercado Bom Preço"></label>
+  <label for="mp_t">Tipo de comércio<select id="mp_t">${T.map(k=>`<option value="${k}"${(p.tipo||'mercado')===k?' selected':''}>${esc(TN[k])}</option>`).join('')}</select></label>
+  <div class="row"><label for="mp_d" style="flex:1 1 180px">CNPJ ou CPF<input id="mp_d" inputmode="numeric" maxlength="18" value="${esc(p.doc?mDocFmt(p.doc):'')}" placeholder="00.000.000/0000-00"></label><label for="mp_r" style="flex:1 1 180px">Nome do responsável<input id="mp_r" maxlength="60" value="${esc(p.resp||'')}" autocomplete="name"></label></div>
+  <label for="mp_w">WhatsApp ou telefone da loja<input id="mp_w" inputmode="tel" maxlength="16" value="${esc(p.tel?mTelFmt(p.tel):'')}" placeholder="(34) 99999-9999"></label>
+  <label for="mp_e">Endereço (rua, número e bairro)<input id="mp_e" maxlength="100" value="${esc(p.end||'')}" autocomplete="street-address"></label>
+  <div class="row"><label for="mp_c" style="flex:2 1 160px">Cidade<input id="mp_c" maxlength="40" value="${esc(p.cid||'')}" autocomplete="address-level2"></label><label for="mp_u" style="flex:1 1 80px">UF<input id="mp_u" maxlength="2" value="${esc(p.uf||'')}" style="text-transform:uppercase" autocomplete="address-level1"></label></div>
+  <label for="mp_h">Horário de funcionamento (opcional)<input id="mp_h" maxlength="60" value="${esc(p.hor||'')}" placeholder="Ex.: seg a sáb, 7h às 20h"></label>
+  <label for="mp_g">Entrega<select id="mp_g"><option value="0"${!p.ent?' selected':''}>Não faz entrega</option><option value="1"${p.ent?' selected':''}>Faz entrega</option></select></label>
+  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input type="checkbox" id="mp_ok" ${p.nome?'checked':''} style="width:22px;height:22px;flex:none;margin-top:2px"> Declaro que represento este comércio e que as informações são verdadeiras.</label>
+  <span class="m">Os clientes veem o nome, o tipo, o endereço, a cidade, o horário, a entrega e o telefone da loja. O CNPJ/CPF e o nome do responsável ficam só com a equipe do app, para conferir o cadastro.</span>
+  <div class="err" id="mp_x" role="alert"></div>
+  <div class="row"><button class="btn acc" type="submit">${p.nome?'Salvar alterações':'Cadastrar meu comércio'}</button>${p.nome?'<button class="btn ghost" type="button" data-mpfx="1">Cancelar</button>':''}</div></form>`}
+function mPfCard(p){const st=mSt(mMe()),v=mVerOf(mMe())||{};
+  const tag=st==='ok'?'<span class="tag ok">✔ Comércio verificado</span>':st==='no'?'<span class="tag">Cadastro não aprovado</span>':'<span class="tag warn">Em conferência pela equipe</span>';
+  return `<section class="box" data-nc="1" style="gap:8px;border-left-color:var(--c-merch)"><div class="row sp" style="gap:8px;align-items:flex-start"><span style="min-width:0"><span class="m">🏪 Seu comércio</span><br><b style="font-family:var(--f-d);font-size:20px;overflow-wrap:anywhere">${esc(p.nome)}</b></span>${tag}</div>
+  <span class="m">${esc(TN[p.tipo]||'Comércio')}${p.cid?' · '+esc(p.cid)+(p.uf?'/'+esc(p.uf):''):''}${p.ent?' · faz entrega':''}</span>
+  ${st==='no'&&v.mo?`<span class="m" style="color:var(--bad)">Motivo: ${esc(v.mo)}. Corrija os dados e salve de novo.</span>`:st==='pend'?'<span class="m">Você já pode publicar. Quando a equipe conferir os dados, as suas promoções ganham o selo ✔ de Comércio verificado.</span>':''}
+  <div class="row"><button class="chip" type="button" data-mpfe="1">✏️ Editar dados do comércio</button></div></section>`}
+function merchV(){const p=mPf();if(DB&&UID&&p)mPrivLoad();
+  if(!p||mem.mpfEd)return `<div style="display:grid;gap:12px;max-width:560px">${mPfForm(p)}${!p?'<div class="box" data-nc="1"><b>É consumidor?</b><span class="m">Para mandar um preço que você viu numa loja, use a aba “Achei uma promoção”. Esta aba é só para quem tem comércio.</span></div>':''}</div>`;
+  return merchV0().replace('<div style="display:grid;gap:12px;max-width:560px">','<div style="display:grid;gap:12px;max-width:560px">'+mPfCard(p))}
+async function mPfSave(f){const g=id=>(f.querySelector('#'+id)||{}).value||'',x=f.querySelector('#mp_x'),bad=t=>{if(x)x.textContent=t};
+  const p={nome:g('mp_n').trim(),tipo:TN[g('mp_t')]?g('mp_t'):'mercado',doc:mDig(g('mp_d')),resp:g('mp_r').trim(),tel:mDig(g('mp_w')),end:g('mp_e').trim(),cid:g('mp_c').trim(),uf:g('mp_u').trim().toUpperCase(),hor:g('mp_h').trim(),ent:g('mp_g')==='1'};
+  if(p.nome.length<2)return bad('Escreva o nome do comércio.');
+  if(!mDocOk(p.doc))return bad('Confira o CNPJ ou CPF: o número não é válido.');
+  if(p.resp.length<3)return bad('Escreva o nome do responsável.');
+  if(p.tel.length<10)return bad('Escreva o telefone com DDD.');
+  if(p.end.length<5)return bad('Escreva o endereço da loja.');
+  if(p.cid.length<2||!/^[A-Z]{2}$/.test(p.uf))return bad('Escreva a cidade e a UF (ex.: MG).');
+  if(!f.querySelector('#mp_ok').checked)return bad('Marque a declaração para continuar.');
+  const old=mPf()||{},chg=old.nome&&(nk(old.nome)!==nk(p.nome)||mDig(old.doc)!==p.doc),pub={nome:p.nome,tipo:p.tipo,tel:p.tel,end:p.end,cid:p.cid,uf:p.uf,hor:p.hor,ent:p.ent,ts:new Date().toISOString()},pv={doc:p.doc,resp:p.resp,ts:pub.ts};
+  try{if(DB&&UID){const cur=OWNME();await DB.collection('mlj').doc(UID).set(pv);await DB.collection('own').doc(UID).set({...cur,pf:pub});mem.mpv={uid:UID,d:pv}}
+    else{LS.s(MPF_LS,{...pub,...pv});if(chg){const m=LS.g(MVER_LS,{});delete m.local;LS.s(MVER_LS,m)}}}catch(_){return bad('Não consegui salvar agora. Tente de novo.')}
+  mem.mpfEd=0;render();toast(old.nome?'Dados do comércio salvos.':'Comércio cadastrado! Agora é só publicar as suas promoções.')}
+/* preenche o nome do comércio nos formulários do comerciante */
+function mFill(){if(mem.tab!=='merch')return;const p=mPf();if(!p)return;const a=document.activeElement;
+  ['ml','fl','sp_l','ds_n','dl_n'].forEach(id=>{const e=document.getElementById(id);if(e&&!e.value&&e!==a)e.value=p.nome});const t=document.getElementById('mt');if(t&&!t.dataset.mpf){t.dataset.mpf=1;if(TN[p.tipo]&&t!==a&&!document.getElementById('ml').dataset.ed)t.value=p.tipo}}
+new MutationObserver(()=>{try{mFill()}catch(_){}}).observe(document.documentElement,{childList:true,subtree:true});
+document.addEventListener('reset',e=>{if(e.target&&e.target.id==='mf')setTimeout(()=>{try{const t=$('#mt');if(t)delete t.dataset.mpf;mFill()}catch(_){}},0)},true);
+document.addEventListener('input',e=>{const i=e.target;if(!i)return;if(i.id==='mp_d'){i.value=mDocFmt(i.value)}else if(i.id==='mp_w'){i.value=mTelFmt(i.value)}},true);
+document.addEventListener('submit',e=>{if(e.target&&e.target.id==='mpff'){e.preventDefault();e.stopImmediatePropagation();mPfSave(e.target)}},true);
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-mpfe],[data-mpfx],[data-mvok],[data-mvno],[data-mvun]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  if(b.dataset.mpfe){mem.mpfEd=1;render();const f=$('#mpff');if(f)f.scrollIntoView({block:'start'});return}
+  if(b.dataset.mpfx){mem.mpfEd=0;render();return}
+  if(!adm)return;const uid=b.dataset.mvok||b.dataset.mvno||b.dataset.mvun;let mo='';
+  if(b.dataset.mvno){mo=(document.getElementById('mvm_'+uid)||{}).value||'';mo=mo.trim().slice(0,120);if(mo.length<3){toast('Escreva o motivo para o comerciante.');return}}
+  const m={...(DB?MVER:LS.g(MVER_LS,{}))};if(b.dataset.mvun)delete m[uid];else m[uid]={st:b.dataset.mvok?'ok':'no',mo,n:mNomeOf(uid),ts:new Date().toISOString()};
+  try{if(DB){await DB.doc('config/mver').set({v:m});MVER=m}else LS.s(MVER_LS,m)}catch(_){toast('Não consegui salvar agora.');return}
+  render();toast(b.dataset.mvok?'Comércio verificado.':b.dataset.mvno?'Cadastro recusado, com o motivo.':'Verificação desfeita.')},true);
+/* administrador: lista de comerciantes para conferir */
+async function mAdmLoad(){if(!DB||!adm||mem.mlA)return;mem.mlA=1;try{DB.collection('mlj').onSnapshot(sn=>{mem.mlP={};sn.docs.forEach(d=>{mem.mlP[d.id]=d.data()});const a=document.activeElement;if(!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))render()},()=>{})}catch(_){}}
+function mAdmList(){if(DB)mAdmLoad();const L=[];
+  if(DB)Object.keys(OWN).forEach(u=>{const o=OWN[u];if(o&&o.pf&&o.pf.nome)L.push({uid:u,...o.pf,...((mem.mlP||{})[u]||{})})});
+  else{const p=LS.g(MPF_LS,null);if(p)L.push({uid:'local',...p})}
+  return L.map(x=>({...x,st:mSt(x.uid)})).sort((a,b)=>(a.st==='pend'?0:1)-(b.st==='pend'?0:1)||String(b.ts||'').localeCompare(String(a.ts||'')))}
+function mljAdm(){const L=mAdmList();if(!L.length)return '<span class="m">Nenhum comércio cadastrado ainda.</span>';
+  return `<span class="m">Confira os dados (por exemplo, o CNPJ na Receita Federal e o endereço) antes de verificar. O selo ✔ aparece nas promoções do comerciante.</span>`+L.map(x=>`<div class="box" style="gap:6px;padding:10px 12px"><div class="row sp" style="gap:8px;align-items:flex-start"><b style="overflow-wrap:anywhere">${esc(x.nome)}</b>${x.st==='ok'?'<span class="tag ok">✔ Verificado</span>':x.st==='no'?'<span class="tag">Recusado</span>':'<span class="tag warn">Aguardando</span>'}</div>
+   <span class="m">${esc(TN[x.tipo]||'Comércio')} · ${esc(x.end||'')} · ${esc(x.cid||'')}${x.uf?'/'+esc(x.uf):''}<br>Telefone: ${esc(mTelFmt(x.tel||''))}${x.doc?' · CNPJ/CPF: '+esc(mDocFmt(x.doc)):DB?' · CNPJ/CPF: carregando…':''}${x.resp?' · Responsável: '+esc(x.resp):''}${x.ts?'<br>Atualizado em '+esc(new Date(x.ts).toLocaleDateString('pt-BR')):''}</span>
+   <div class="row" style="gap:6px">${x.st!=='ok'?`<button class="chip" type="button" data-mvok="${esc(x.uid)}">✔ Verificar</button>`:''}${x.st!=='pend'?`<button class="chip" type="button" data-mvun="${esc(x.uid)}">Voltar para análise</button>`:''}</div>
+   ${x.st!=='no'?`<div class="row" style="gap:6px;flex-wrap:nowrap"><input id="mvm_${esc(x.uid)}" maxlength="120" placeholder="Motivo da recusa" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--card)"><button class="chip" type="button" data-mvno="${esc(x.uid)}">Recusar</button></div>`:''}</div>`).join('')}
+
+function merchV0(){
   return `<div style="display:grid;gap:12px;max-width:560px">${merchPanel()}
   ${flyBox()}
   ${planBox()}
@@ -1409,6 +1490,7 @@ function adminV(){
   return `<div style="display:grid;gap:12px;max-width:620px"><div class="box" style="border-left-color:var(--acc)"><b>Administrador</b><span class="m">Tudo que você faz aqui vale para todos os usuários. ${DB?'':'O armazenamento compartilhado não está ativo agora: o que você cadastra fica só neste aparelho.'}</span></div>
   ${sec('mod','Moderar envios ('+pend+' em análise)')}${modBox()}${ownAdm()}</div></details>
   ${sec('pts','Programa de pontos')}${ptsAdm()}</div></details>
+  ${sec('mlj','Comerciantes: cadastros para conferir ('+mAdmList().filter(x=>x.st==='pend').length+' aguardando)')}${mljAdm()}</div></details>
   ${sec('loj','Comércios cadastrados ('+shStores.length+')')}${storesAdmin()}</div></details>
   ${sec('pro','Inserir promoções e encartes')}${promoAdmin()}${flyBox()}</div></details>
   ${sec('onl','Lojas online e links de afiliado')}${adminBox()}</div></details>
@@ -1922,6 +2004,7 @@ render();
       DB.collection('stores').onSnapshot(sn=>{shStores=sn.docs.map(d=>({...d.data(),id:d.id,pr:{}}));try{syncUst()}catch(_){}rs()},()=>{});
       DB.collection('news').onSnapshot(sn=>{newsL=sn.docs.map(d=>({...d.data(),id:d.id}));rs()},()=>{});
       DB.doc('config/app').onSnapshot(d=>{if(d.exists&&typeof d.data().v==='string'){appUrl=d.data().v;rs()}},()=>{});
+      DB.doc('config/mver').onSnapshot(d=>{const v=d.exists?d.data():{};MVER=v&&typeof v.v==='object'&&v.v?v.v:{};rs()},()=>{});
       DB.doc('config/omod').onSnapshot(d=>{const v=d.exists?d.data():{};OMOD={hid:Array.isArray(v.hid)?v.hid:[],ok:Array.isArray(v.ok)?v.ok:[]};pubL=applyOwn();try{syncUst()}catch(_){}rs()},()=>{});
       DB.collection('comr').onSnapshot(()=>{setTimeout(()=>{pubL=applyOwn();try{syncUst()}catch(_){}rs()},0)},()=>{});
       DB.collection('own').onSnapshot(sn=>{OWN={};sn.docs.forEach(d=>{OWN[d.id]=d.data()});pubL=applyOwn();try{syncUst()}catch(_){}rs()},()=>{});
