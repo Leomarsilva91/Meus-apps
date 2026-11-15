@@ -1044,7 +1044,7 @@ function gResumo(g,tot,T,it,meses,need,falta,av){
     <div class="grs-n"><div><span class="muted small">Juntado</span><b class="num">${brl0(gu)}</b></div><div><span class="muted small">${g.tipo==='viagem'&&g.rota&&g.rota.escopo==='minha'?'Sua parte':!(T.total>0)?'Valor da meta':'Total'+(T.ip?' (+'+T.ip+'% margem)':'')}</span><b class="num">${tot>0?brl0(tot):'a calcular'}</b></div><div><span class="muted small">Falta</span><b class="num" style="color:var(--gc)">${tot>0?brl0(falta):'—'}</b></div></div>
    </div>
    <div class="grs-st ${stc}">${st}</div>
-   ${tot>0&&!done&&dias>=0?`<div class="grs-kp"><div><span>📅</span><b class="num">${meses}</b><small>${meses===1?'mês até o prazo':'meses até o prazo'}</small></div><div><span>💰</span><b class="num">${brl0(need)}</b><small>por mês para cumprir</small></div><div><span>📈</span><b class="num">${ritmo>0?brl0(ritmo):'—'}</b><small>seu ritmo atual por mês</small></div></div>`:''}
+   ${tot>0&&!done&&dias>=0?`<div class="grs-kp"><div><span>⏳</span><b class="num">${dias}</b><small>${dias===1?'dia':'dias'} para cumprir (${meses} ${meses===1?'mês':'meses'})</small></div><div><span>💰</span><b class="num">${brl0(need)}</b><small>por mês para cumprir</small></div><div><span>📈</span><b class="num">${ritmo>0?brl0(ritmo):'—'}</b><small>seu ritmo atual por mês</small></div></div>`:''}
    ${tot>0?`<div class="grs-ms" role="list" aria-label="Etapas da meta">${ms.map(m=>`<div role="listitem" class="${m.ok?'ok':m===nx?'nx':''}"><i>${m.ok?'✓':m.p===100?'🏁':''}</i><b>${m.p}%</b><span class="num">${brl0(m.v)}</span></div>`).join('')}</div>${nx?`<p class="small" style="margin:0">Próxima etapa: faltam <b class="num">${brl0(Math.max(0,nx.v-gu))}</b> para chegar a ${nx.p}%.</p>`:''}`:''}
    ${trip}
    ${tot>0&&!done&&dias>=0?`<div class="grs-sim"><div class="row sp" style="gap:6px"><b>E se eu guardar por mês?</b><b class="num grs-v" id="grs-v">${brl0(sv)}</b></div>
@@ -1052,6 +1052,7 @@ function gResumo(g,tot,T,it,meses,need,falta,av){
     <div class="chips grs-q"><button type="button" data-grq="${Math.max(10,Math.round(need*.5/10)*10)}">Metade</button><button type="button" data-grq="${sv}">No prazo</button><button type="button" data-grq="${Math.round(need*1.5/10)*10||sv}">+50%</button>${av>0?`<button type="button" data-grq="${Math.round(av/10)*10}">Meu orçamento</button>`:''}</div>
     <p class="grs-out" id="grs-out" aria-live="polite">${grsTxt(sv,falta,meses)}</p></div>`:''}
    ${segs.length?`<details class="grs-fold"><summary>Para onde vai o dinheiro</summary><div class="stack" role="img" aria-label="Divisão dos custos">${segs.map(s=>`<i style="flex:${s.v};background:${s.c}"></i>`).join('')}</div><div class="leg" style="gap:8px;margin-top:10px">${segs.map(s=>`<div class="r1"><span class="dot" style="background:${s.c}"></span><span>${esc(s.n)} <span class="muted small">${Math.round(s.v/sub*100)}%</span></span><b class="num">${brl0(s.v)}</b></div>`).join('')}</div></details>`:''}
+   ${typeof lembBox==='function'&&!done?lembBox(g):''}
    ${tot>0&&!done&&meses>=3?(()=>{const i=.008,n=meses,fv=gu*Math.pow(1+i,n)+need*((Math.pow(1+i,n)-1)/i),gan=Math.max(0,fv-(gu+need*n));return gan>=10?`<div class="grs-inv"><b>💹 Faça o dinheiro trabalhar por você</b><span class="small">Guardando ${brl0(need)} por mês numa aplicação que renda cerca de 0,8% ao mês, os juros somariam uns <b class="num">${brl0(gan)}</b> em ${n} meses. Você chegaria antes ou guardaria menos. É só um exemplo: o rendimento real muda e não é garantido.</span><button class="btn ghost sm" data-act="inv" style="justify-self:start">Ver formas de fazer render</button></div>`:''})():''}
    <div class="row">${cta}${done?'':`<button class="btn ${cta?'ghost':'meta'} sm" data-gr="dep">Lançar valor juntado</button>`}<button class="btn ghost sm" data-gr="edit" data-g="${g.id}">✏️ Editar meta</button></div>
    ${g.tipo!=='viagem'?`<button class="grs-ai" data-act="plansug">✨ Criar campos de custo do assunto "${esc(clipW(g.nome,5))}" com IA</button>`:''}
@@ -1067,7 +1068,7 @@ document.addEventListener('click',e=>{const q=e.target.closest&&e.target.closest
   else{const h=[...document.querySelectorAll('.card h3')].find(h=>/Dinheiro juntado/.test(h.textContent));el=h&&h.closest('.card')}
   if(!el)return;if(el.tagName==='H3')el=el.closest('.card')||el;if(el.tagName==='DETAILS')el.open=true;
   const y=el.getBoundingClientRect().top+scrollY-90;scrollTo({top:y,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
-  if(q.dataset.gr==='dep'){const i=el.querySelector('input[inputmode=decimal]');if(i)setTimeout(()=>{try{i.focus({preventScroll:true})}catch(_){}},450)}},true);
+  if(q.dataset.gr==='dep'){const i=el.querySelector('input[inputmode=decimal]');if(i&&q.dataset.lbv&&!i.value)i.value=q.dataset.lbv;if(i)setTimeout(()=>{try{i.focus({preventScroll:true})}catch(_){}},450)}},true);
 function vPlan(){
   const g0=S.goals.find(x=>x.id===UI.plan);if(g0){ctFit(g0);itemSync(g0);if(g0.tipo==='viagem'){const r0=rotaDef(g0);planItems(g0).forEach(x=>{if(x.auto&&x.man)delete x.man});planSync(g0)}save()}
   const g=S.goals.find(x=>x.id===UI.plan),t=GT[g.tipo]||GT.outro,it=planItems(g),T=planTotals(g),pl=S.orc?orcPlan():null,av=pl&&pl.livre>0?orcV(pl,'metas')+orcV(pl,'reserva')*0:0,meses=Math.max(1,Math.ceil(daysTo(g.prazo)/30.44));
@@ -3079,4 +3080,97 @@ function setup(){var f=document.getElementById('f-goal');if(!f||f.dataset.gc)ret
  h.addEventListener('click',tg);h.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' ')tg(e)})}
 document.addEventListener('submit',function(e){if(e.target&&e.target.id==='f-goal')setTimeout(function(){if(!document.getElementById('g-e')||document.getElementById('g-e').hidden){OPEN=null;var f=document.getElementById('f-goal'),h=f&&f.querySelector(':scope>h3');if(f&&h&&S.goals.length&&!busy(f)){f.classList.add('gcol');h.setAttribute('aria-expanded','false')}}},400)},true);
 new MutationObserver(setup).observe(document.documentElement,{childList:true,subtree:true});setup()})();</script>
+<style>
+.lb-al{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-radius:14px;padding:10px 12px;background:var(--sun-soft);color:var(--ink);font-weight:600;font-size:14px;border:1.5px solid var(--sun)}
+.lb-al.late{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.grs-lb>summary{justify-content:space-between;gap:8px}.grs-lb>summary .lbs{font-size:12px;font-weight:700;color:var(--muted);margin-left:auto}
+.lb-in{display:grid;gap:10px;margin-top:8px}
+.lb-sw{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 14px;min-height:48px;font:600 15px var(--f-body);cursor:pointer;text-align:left}
+.lb-sw i{flex:none;width:46px;height:26px;border-radius:99px;background:var(--line);position:relative}
+.lb-sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+.lb-sw[aria-checked=true] i{background:var(--ok)}.lb-sw[aria-checked=true] i::after{transform:translateX(20px)}
+.lb-g3{display:grid;grid-template-columns:1fr 1.3fr 1.3fr;gap:8px}.lb-g3 label{font-size:13px}
+.lb-nx{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:14px}
+.lb-cp{display:grid;gap:0}.lb-cp>div{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px dashed var(--line)}.lb-cp>div:first-child{border-top:0}
+.lb-cp .ok b{text-decoration:line-through;opacity:.6}.lb-cp .x{border:0;background:transparent;color:var(--muted);font:600 13px var(--f-body);min-height:36px;cursor:pointer;padding:0 4px}
+.lb-add{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lb-add .w{grid-column:1/-1}
+@media(max-width:360px){.lb-g3{grid-template-columns:1fr 1fr}.lb-g3 label:first-child{grid-column:1/-1}}
+</style>
+<script>
+/* ---------- lembretes de aporte e compromissos da meta ---------- */
+(function(){
+const LBK='prumo_lbo';
+const dim=(y,m)=>new Date(y,m+1,0).getDate();
+function lbD(g){if(!g.lemb||typeof g.lemb!=='object')g.lemb={on:false,dia:'',v:'',ant:1};return g.lemb}
+function lbNeed(g){try{const T=planTotals(g),tot=T.total>0?T.total:(+g.alvo||0),f=Math.max(0,tot-(+g.guardado||0)),m=Math.max(1,Math.ceil(daysTo(g.prazo)/30.44));return f/m}catch(_){return 0}}
+function lbVal(g){const L=lbD(g);return +L.v>0?+L.v:Math.round(lbNeed(g))}
+function mesAp(g,y,m){const k=y+'-'+pad(m+1);return (g.aportes||[]).filter(a=>a&&String(a.d).slice(0,7)===k).reduce((s,a)=>s+(+a.v||0),0)}
+function nextAp(g){const L=lbD(g);if(!L.on||!(+L.dia>=1))return null;const v=lbVal(g),d=Math.min(+L.dia,28);
+  const pago=mesAp(g,Y,M)>=Math.max(1,v*0.95-0.5);let y=Y,m=M;if(pago){m++;if(m>11){m=0;y++}}
+  const di=Math.min(d,dim(y,m)),dt=y+'-'+pad(m+1)+'-'+pad(di);if(g.prazo&&dt>g.prazo&&!(!pago&&dt<=TODAYISO))return null;
+  return{dt,dias:daysTo(dt),v,pago}}
+window.lembDue=function(g){const out=[],L=lbD(g),ant=+L.ant||0,n=nextAp(g);
+  if(n&&n.dias<=ant)out.push({k:'ap',id:g.id+':ap:'+n.dt,t:n.dias<0?'Aporte atrasado':n.dias===0?'Hoje é dia do aporte':'Aporte em '+n.dias+(n.dias===1?' dia':' dias'),d:n.dt,dias:n.dias,v:n.v});
+  (g.comp||[]).forEach(c=>{if(c.ok||!c.d)return;const dd=daysTo(c.d);if(dd<=Math.max(ant,1))out.push({k:'cp',id:g.id+':cp:'+c.id,t:(dd<0?'Atrasado: ':dd===0?'Hoje: ':'Em '+dd+(dd===1?' dia: ':' dias: '))+c.t,d:c.d,dias:dd,v:+c.v||0})});
+  return out};
+function lbStatus(g){const n=nextAp(g),L=lbD(g);if(!L.on)return 'desligado';if(!n)return +L.dia>=1?'em dia':'escolha o dia';
+  return n.dias<0?'atrasado':n.dias===0?'hoje':'em '+n.dias+(n.dias===1?' dia':' dias')}
+const ntSt=()=>typeof Notification==='undefined'?'none':Notification.permission;
+window.lembBox=function(g){const L=lbD(g),need=lbNeed(g),n=nextAp(g),C=(g.comp||[]).slice().sort((a,b)=>String(a.d).localeCompare(String(b.d))),o=(UI.lbo||{})[g.id],ns=ntSt();
+  const due=lembDue(g),al=due.map(x=>`<div class="lb-al${x.dias<0?' late':''}"><span>🔔 ${esc(x.t)}${x.v>0?' · '+brl0(x.v):''}</span>${x.k==='ap'?`<button class="btn meta sm" data-gr="dep" data-lbv="${Math.round(x.v)}">Lançar agora</button>`:`<button class="btn ghost sm" data-lbok="${esc(x.id.split(':cp:')[1])}">Feito</button>`}</div>`).join('');
+  return `${al}<details class="grs-fold grs-lb" data-lbg="${g.id}"${o?' open':''}><summary>🔔 Lembretes e compromissos<span class="lbs">${lbStatus(g)}</span></summary><div class="lb-in">
+   <button type="button" class="lb-sw" role="switch" aria-checked="${!!L.on}" data-lbon="${g.id}"><span>Me avisar do aporte todo mês</span><i></i></button>
+   ${L.on?`<div class="lb-g3"><label>Dia do mês<input inputmode="numeric" maxlength="2" data-lb="dia" value="${L.dia||''}" placeholder="1 a 28"></label><label>Valor do aporte (R$)<input inputmode="decimal" data-lb="v" value="${+L.v>0?String(L.v).replace('.',','):''}" placeholder="${brl0(need).replace('R$','').trim()}"></label><label>Avisar<select data-lb="ant">${[[0,'No dia'],[1,'1 dia antes'],[2,'2 dias antes'],[3,'3 dias antes'],[5,'5 dias antes']].map(([v,l])=>`<option value="${v}"${(+L.ant||0)===v?' selected':''}>${l}</option>`).join('')}</select></label></div>
+   <div class="lb-nx">${n?(n.pago&&n.dias>0?'✅ Aporte deste mês já feito. ':'')+`Próximo aporte: <b>${fd(n.dt)}</b>${n.dias>0?' (em '+n.dias+(n.dias===1?' dia)':' dias)'):n.dias===0?' (hoje)':' (atrasado)'} · <b class="num">${brl0(n.v)}</b>`:+L.dia>=1?'Sem próximos aportes até o prazo.':'Escolha o dia do mês em que você costuma guardar, por exemplo o dia em que recebe.'}</div>`:''}
+   <b style="font-size:14px">Compromissos da meta</b><span class="muted small" style="margin-top:-6px">Datas importantes para chegar lá: pagar um sinal, uma parcela, uma reserva.</span>
+   ${C.length?`<div class="lb-cp">${C.map(c=>`<div class="${c.ok?'ok':''}"><span style="min-width:0"><b style="overflow-wrap:anywhere">${esc(c.t)}</b><br><span class="muted small">${c.d?fd(c.d):'sem data'}${+c.v>0?' · '+brl0(+c.v):''}${!c.ok&&c.d&&daysTo(c.d)<0?' · atrasado':''}</span></span><span style="flex:none"><button class="x" data-lbok="${c.id}">${c.ok?'Desfazer':'Feito'}</button><button class="x" data-lbdel="${c.id}" aria-label="Apagar ${esc(c.t)}">Apagar</button></span></div>`).join('')}</div>`:''}
+   <div class="lb-add"><input class="w" id="lb-ct" maxlength="60" placeholder="Ex.: Pagar o sinal do buffet"><input id="lb-cd" type="date" min="${TODAYISO}" aria-label="Data do compromisso"><input id="lb-cv" inputmode="decimal" placeholder="Valor (opcional)" aria-label="Valor do compromisso"><button class="btn ghost sm w" data-lbadd="${g.id}">Adicionar compromisso</button></div>
+   <div class="row"><button class="btn ghost sm" data-lbics="${g.id}">📅 Pôr na agenda do celular</button>${ns==='none'?'':`<button class="btn ghost sm" data-lbnt="1"${ns==='granted'||ns==='denied'?' disabled':''}>${ns==='granted'?'🔔 Avisos no celular ligados':ns==='denied'?'🔕 Avisos bloqueados no celular':'🔔 Ligar avisos no celular'}</button>`}</div>
+   <p class="muted small" style="margin:0">O Prumo avisa aqui e no Início quando o dia estiver perto. ${ns==='granted'?'Com os avisos ligados, ele também avisa pelo celular quando você abre o app.':''} Para ser lembrado mesmo sem abrir o app, toque em "Pôr na agenda do celular".${ns==='denied'?' Para liberar os avisos, mude a permissão de notificações nas configurações do navegador.':''}</p>
+  </div></details>`};
+/* Início: compromissos e aportes perto do dia entram em "O que fazer agora" */
+if(typeof goalTasks==='function'){const _gt=goalTasks;goalTasks=function(){const L=[];(S.goals||[]).forEach(g=>{try{lembDue(g).forEach(x=>L.push({k:(x.dias<=0?'warn':'info')+' meta',t:x.t+' · '+g.nome,d:(x.v>0?brl0(x.v)+' · ':'')+fd(x.d),go:['metas','','plan:'+g.id]}))}catch(_){}});return L.concat(_gt())}}
+/* agenda do celular (.ics) */
+function icsTx(s){return String(s).replace(/[\\;,]/g,m=>'\\'+m).replace(/\n/g,'\\n')}
+function icsD(s){return s.replace(/-/g,'')}
+function ics(g){const L=lbD(g),ant=+L.ant||0,st=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''),ev=[];
+  const al=t=>`BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:${icsTx(t)}\r\nTRIGGER:${ant?'-P'+ant+'D':'PT0M'}\r\nEND:VALARM`+(ant?`\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:${icsTx(t)}\r\nTRIGGER:PT0M\r\nEND:VALARM`:'');
+  const n=nextAp(g);
+  if(L.on&&n){const t='💰 Aporte da meta: '+g.nome+' ('+brl0(n.v)+')',d=Math.min(+L.dia,28),until=g.prazo?';UNTIL='+icsD(g.prazo)+'T235959':'';
+    ev.push(`BEGIN:VEVENT\r\nUID:prumo-ap-${g.id}@prumo\r\nDTSTAMP:${st}\r\nDTSTART:${icsD(n.dt)}T090000\r\nDTEND:${icsD(n.dt)}T091500\r\nRRULE:FREQ=MONTHLY;BYMONTHDAY=${d}${until}\r\nSUMMARY:${icsTx(t)}\r\nDESCRIPTION:${icsTx('Guardar '+brl0(n.v)+' para a meta "'+g.nome+'". Depois, lance no Prumo.')}\r\n${al(t)}\r\nEND:VEVENT`)}
+  (g.comp||[]).filter(c=>!c.ok&&c.d&&c.d>=TODAYISO).forEach(c=>{const t='📌 '+c.t+(+c.v>0?' ('+brl0(+c.v)+')':'');
+    ev.push(`BEGIN:VEVENT\r\nUID:prumo-cp-${g.id}-${c.id}@prumo\r\nDTSTAMP:${st}\r\nDTSTART:${icsD(c.d)}T090000\r\nDTEND:${icsD(c.d)}T091500\r\nSUMMARY:${icsTx(t)}\r\nDESCRIPTION:${icsTx('Compromisso da meta "'+g.nome+'" no Prumo.')}\r\n${al(t)}\r\nEND:VEVENT`)});
+  if(!ev.length)return null;
+  return `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Prumo//Metas//PT\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n${ev.join('\r\n')}\r\nEND:VCALENDAR\r\n`}
+/* avisos no celular: mostra uma vez por dia por compromisso, quando o app está aberto */
+async function notify(){if(ntSt()!=='granted')return;let reg=null;try{reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration()}catch(_){}
+  (S.goals||[]).forEach(g=>{let L=[];try{L=lembDue(g)}catch(_){}L.forEach(x=>{const k='prumo_ln_'+x.id+'_'+TODAYISO;try{if(localStorage.getItem(k))return;localStorage.setItem(k,'1')}catch(_){return}
+    const ti='Prumo: '+x.t,bo=g.nome+(x.v>0?' · '+brl0(x.v):'');
+    try{if(reg&&reg.showNotification)reg.showNotification(ti,{body:bo,icon:'icon-192.png',tag:x.id});else new Notification(ti,{body:bo})}catch(_){}})})}
+setTimeout(notify,2500);setInterval(notify,30*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)notify()});
+/* eventos */
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.lbg){UI.lbo=UI.lbo||{};UI.lbo[d.dataset.lbg]=d.open}},true);
+document.addEventListener('change',e=>{const i=e.target;if(!i||!i.dataset||!i.dataset.lb)return;e.stopImmediatePropagation();const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;const L=lbD(g),k=i.dataset.lb;
+  if(k==='dia'){const d=parseInt(i.value,10);if(i.value.trim()===''){L.dia=''}else if(!(d>=1&&d<=31)){toast('Escolha um dia de 1 a 28.');return render(true)}else{L.dia=Math.min(d,28);if(d>28)toast('Usei o dia 28, que existe em todos os meses.')}}
+  else if(k==='v'){const v=num(i.value);L.v=i.value.trim()===''||isNaN(v)||v<0?'':v}
+  else if(k==='ant')L.ant=+i.value||0;
+  save();render(true)},true);
+document.addEventListener('input',e=>{const i=e.target;if(i&&i.dataset&&i.dataset.lb)e.stopImmediatePropagation()},true);
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-lbon],[data-lbadd],[data-lbok],[data-lbdel],[data-lbics],[data-lbnt],[data-sel^="plan:"]');if(!b)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(b.dataset.sel&&b.dataset.sel.startsWith('plan:')){const id=b.dataset.sel.slice(5);go('metas');if(S.goals.some(x=>x.id===id)){UI.plan=id;render()}return}
+  const g=S.goals.find(x=>x.id===(b.dataset.lbon||b.dataset.lbadd||b.dataset.lbics||UI.plan));if(!g)return;const L=lbD(g);
+  if(b.dataset.lbon){L.on=!L.on;if(L.on&&!(+L.dia>=1))L.dia=Math.min(28,TODAY.getDate());UI.lbo=UI.lbo||{};UI.lbo[g.id]=true;save();render(true);if(L.on)toast('Lembrete ligado. Confira o dia e o valor.');return}
+  if(b.dataset.lbadd){const t=($('#lb-ct')||{}).value||'',d=($('#lb-cd')||{}).value||'',v=num(($('#lb-cv')||{}).value||'');if(t.trim().length<2){toast('Escreva o compromisso.');return}if(!d){toast('Escolha a data do compromisso.');return}
+    g.comp=g.comp||[];g.comp.push({id:uid(),t:t.trim().slice(0,60),d,v:isNaN(v)||v<0?'':v,ok:false});save();render(true);toast('Compromisso adicionado.');return}
+  if(b.dataset.lbok){const c=(g.comp||[]).find(x=>x.id===b.dataset.lbok);if(c){c.ok=!c.ok;save();render(true);if(c.ok)toast('Feito! Um passo a mais para a meta.')}return}
+  if(b.dataset.lbdel){g.comp=(g.comp||[]).filter(x=>x.id!==b.dataset.lbdel);save();render(true);return}
+  if(b.dataset.lbics){const s=ics(g);if(!s){toast('Ligue o lembrete ou adicione um compromisso com data.');return}
+    try{const f=new File([s],'prumo-'+(g.nome||'meta').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g,'-').slice(0,30)+'.ics',{type:'text/calendar'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Lembretes da meta'});return}catch(er){if(er&&er.name==='AbortError')return}}
+      const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Arquivo da agenda baixado. Abra para salvar no calendário.')}catch(_){toast('Não consegui criar o arquivo da agenda aqui.')}return}
+  if(b.dataset.lbnt){try{const p=await Notification.requestPermission();if(p==='granted'){toast('Avisos ligados.');notify()}else toast('Os avisos não foram liberados.')}catch(_){toast('Este aparelho não permite avisos.')}render(true);return}
+},true);
+})();
+</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
