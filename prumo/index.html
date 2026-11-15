@@ -2967,8 +2967,9 @@ if(typeof docSpec==='function'){const _sp=docSpec;docSpec=function(kind,id){cons
     if(P.length)bl.push({t:'table',head:['Data','Quem avisou','Valor','Situação'],w:[1.6,3,1.8,2],al:['l','l','r','l'],rows:P.map(p=>[fd(String(p.ts).slice(0,10)),p.nick+(p.note?' · '+p.note:''),brl(p.v),st[p.id]==='ok'?'Confirmado':st[p.id]==='no'?'Não confirmado':'Aguardando'])})}
   if(nt)bl.push(nt);return {...sp,title:'Relatório: '+g.nome,subject:'Relatório da meta: '+g.nome,fname:'relatorio-'+(typeof fnameSlug==='function'?fnameSlug(g.nome):'meta'),blocks:bl}}catch(_){return sp}}}
 /* ---------- convites para quem está na lista ---------- */
-const APP_URL='https://claude.ai/artifact/Up1bvR1s6N8a64ach27Koi';
-function invTxt(meta,code,nome){return (nome?'Oi, '+nome+'! Te adicionei':'Oi! Você foi adicionado')+' na meta "'+meta+'" no Prumo, para acompanhar a viagem com o grupo.\n\n1) Abra o app: '+APP_URL+'\n2) Toque em Metas e depois em "Metas compartilhadas comigo"\n3) Digite o código: '+code+'\n4) Escolha o seu nome na lista'+(nome?' ('+nome+')':'')+'.\n\nLá você vê a sua parte, quanto falta e conversa com o grupo.'}
+const APP_URL=window.IA_URL?location.origin+location.pathname:'https://claude.ai/artifact/Up1bvR1s6N8a64ach27Koi';
+const invAutor=()=>{const n=(typeof nickG==='function'&&nickG())||((S.mei&&S.mei.nome)||'').split(' ')[0];return String(n||'').trim()};
+function invTxt(meta,code,nome){const au=invAutor();return (nome?'Oi, '+nome+'! ':'Oi! ')+(au?au+' criou':'Foi criada')+' a meta "'+meta+'" no Prumo e '+(au?'te convidou':'você foi convidado')+' para acompanhar com o grupo.\n\n1) Abra o app: '+APP_URL+'\n2) Toque em Metas e depois em "Metas compartilhadas comigo"\n3) Digite o código: '+code+'\n4) Escolha o seu nome na lista'+(nome?' ('+nome+')':'')+'.\n\nLá você vê a sua parte, quanto falta e conversa com o grupo.'}
 const ctOf=v=>{v=String(v||'').trim();if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return{t:'mail',v};const d=v.replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'');return /^\d{10,11}$/.test(d)?{t:'wa',v:d}:null};
 function joinedMem(code,mid){return MS.joins.some(j=>j.uid!==me()&&(j.codes||[]).includes(code)&&j.who&&j.who[code]===mid)}
 function invOpts(id,g,mid){const A=(c,l)=>`<button type="button" class="btn ghost sm" data-ms="invch" data-ch="${c}" data-g="${g}" data-m="${mid}">${l}</button>`;return `<div class="row" id="${id}" style="gap:6px">${A('wa','WhatsApp')}${A('mail','E-mail')}${A('sms','SMS')}${A('copy','Copiar')}${navigator.share?A('more','Mais opções…'):''}</div>`}
@@ -3200,7 +3201,7 @@ function pubAll(){clearTimeout(PUBT);PUBT=setTimeout(()=>{try{cofD().kids.forEac
 if(typeof save==='function'){const _s=save;save=function(){_s.apply(this,arguments);try{if(S.cof&&S.cof.kids&&S.cof.kids.some(k=>k.share))pubAll()}catch(_){}}}
 function subKid(k){const c=k.share&&k.share.code;if(!c||SUB[c]||!dbO())return;SUB[c]=1;
   try{dbO().collection('cofs/'+c+'/ajuda').onSnapshot(sn=>{AJ[c]=sn.docs.map(d=>({...d.data(),id:d.id}));const a=document.activeElement;if(UI.tab==='cofre'&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))render(true)},()=>{})}catch(_){}}
-const shTxt=k=>`Oi! ${k.nome} está juntando dinheiro no cofrinho${(()=>{const m=cofMetas(k).find(x=>cofSaldo(k)<x.v);return m?' para '+m.n:''})()}. Se quiser ajudar com qualquer valor e deixar uma mensagem, é por aqui: ${linkOf(k.share.code)}`;
+const shTxt=k=>`Oi! ${(()=>{const a=typeof invAutor==='function'?invAutor():'';return a?'Aqui é '+a+'. ':''})()}${k.nome} está juntando dinheiro no cofrinho${(()=>{const m=cofMetas(k).find(x=>cofSaldo(k)<x.v);return m?' para '+m.n:''})()}. Se quiser ajudar com qualquer valor e deixar uma mensagem, é por aqui: ${linkOf(k.share.code)}`;
 function famBox(k){if(VIS.kid)return '';const sh=k.share,L=sh?(AJ[sh.code]||[]):[],pend=L.filter(h=>h.st!=='ok'&&h.st!=='no').sort((a,b)=>String(b.ts).localeCompare(String(a.ts))),o=UI.cajo;
   const logged=!!(dbO()&&uidO());
   let body='';
