@@ -233,6 +233,26 @@
     ["Cadastrado por você neste protótipo.", "Listed by you in this prototype.", "Registrado por ti en este prototipo."],
     ["voce@exemplo.com", "you@example.com", "tu@ejemplo.com"],
     ["Duas visões: o que o lugar informa e o que os visitantes viveram. O número é quantas pessoas diferentes disseram aquilo: a mesma pessoa conta uma vez só, mesmo que faça a trilha várias vezes.", "Two views: what the place says and what visitors experienced. The number is how many different people said that: the same person counts only once, even if they do the trail several times.", "Dos visiones: lo que informa el lugar y lo que vivieron los visitantes. El número es cuántas personas distintas dijeron eso: la misma persona cuenta una sola vez, aunque haga el sendero varias veces."],
+    ["Traçado oficial", "Official track", "Trazado oficial"],
+    ["Traçado oficial da trilha", "Official trail track", "Trazado oficial del sendero"],
+    ["Enviado pelo dono do lugar", "Sent by the place owner", "Enviado por el dueño del lugar"],
+    ["Conferido pela equipe do Respiro", "Checked by the Respiro team", "Revisado por el equipo de Respiro"],
+    ["Traçado de exemplo do protótipo", "Prototype example track", "Trazado de ejemplo del prototipo"],
+    ["Use como referência. Confirme com o lugar e não use o app como única forma de se orientar.", "Use it as a reference. Check with the place and don't rely on the app as your only way to find your way.", "Úsalo como referencia. Confirma con el lugar y no uses la app como única forma de orientarte."],
+    ["Tirar traçado oficial", "Remove official track", "Quitar trazado oficial"],
+    ["Sem traçado oficial", "No official track", "Sin trazado oficial"],
+    ["Administrador: abra um relato de trilha deste lugar e toque em \"Tornar traçado oficial\".", "Admin: open a trail report for this place and tap \"Make official track\".", "Administrador: abre un relato de sendero de este lugar y toca \"Hacer trazado oficial\"."],
+    ["Tornar traçado oficial", "Make official track", "Hacer trazado oficial"],
+    ["Usar como traçado oficial do meu lugar", "Use as my place's official track", "Usar como trazado oficial de mi lugar"],
+    ["Agora é o traçado oficial do lugar.", "This is now the place's official track.", "Ahora es el trazado oficial del lugar."],
+    ["Agora é o traçado oficial do seu lugar.", "This is now your place's official track.", "Ahora es el trazado oficial de tu lugar."],
+    ["Traçado oficial retirado.", "Official track removed.", "Trazado oficial retirado."],
+    ["Toque de novo para confirmar.", "Tap again to confirm.", "Toca otra vez para confirmar."],
+    ["Traçado oficial (arquivo GPX, opcional)", "Official track (GPX file, optional)", "Trazado oficial (archivo GPX, opcional)"],
+    ["Exporte do Wikiloc, Strava ou outro app de trilha. Ou cadastre sem e depois grave a trilha com o Respiro e toque em \"Usar como traçado oficial do meu lugar\".", "Export it from Wikiloc, Strava or another trail app. Or list without it, then record the trail with Respiro and tap \"Use as my place's official track\".", "Expórtalo de Wikiloc, Strava u otra app de senderos. O regístrate sin él y luego graba el sendero con Respiro y toca \"Usar como trazado oficial de mi lugar\"."],
+    ["Arquivo grande demais (máximo 3 MB).", "File too large (maximum 3 MB).", "Archivo demasiado grande (máximo 3 MB)."],
+    ["Não achei o traçado neste arquivo. Confira se é um GPX de trilha.", "I couldn't find a track in this file. Check that it's a trail GPX.", "No encontré el trazado en este archivo. Verifica que sea un GPX de sendero."],
+    ["Não consegui ler este arquivo.", "I couldn't read this file.", "No pude leer este archivo."],
     ['🥾 Você tem uma trilha em andamento', '🥾 You have a trail in progress', '🥾 Tienes un sendero en curso'], ['🥾 Trilha em andamento', '🥾 Trail in progress', '🥾 Sendero en curso'], ['Voltar para a trilha', 'Back to the trail', 'Volver al sendero'], ['Suas trilhas aqui', 'Your trails here', 'Tus senderos aquí'], ['🥾 Minhas trilhas', '🥾 My trails', '🥾 Mis senderos'], ['Trilha', 'Trail', 'Sendero'],
     ['Marcando seu trajeto pelo GPS', 'Recording your route by GPS', 'Marcando tu recorrido por GPS'], ['Pausada', 'Paused', 'En pausa'], ['pausada', 'paused', 'en pausa'], ['Antes de começar, leia', 'Before you start, read this', 'Antes de empezar, lee esto'],
     ['• Deixe o Respiro', '• Keep Respiro', '• Deja Respiro'], ['aberto e com a tela ligada', 'open with the screen on', 'abierto y con la pantalla encendida'], ['. Se a tela apagar ou você trocar de app, o celular pode parar de marcar e o trecho sai em linha reta.', '. If the screen turns off or you switch apps, the phone may stop recording and that stretch shows as a straight line.', '. Si la pantalla se apaga o cambias de app, el celular puede dejar de marcar y ese tramo sale en línea recta.'],
@@ -294,6 +314,7 @@
     m = s.match(/^“(.+)”$/); if (m) { var q2 = tr(m[1]); if (q2 !== m[1]) return '“' + q2 + '”'; }
     m = s.match(/^(.+) \(exemplo\), (.+) quilômetros$/); if (m) return m[1] + (COL === 1 ? ' (example), ' + m[2] + ' kilometers' : ' (ejemplo), ' + m[2] + ' kilómetros');
     m = s.match(/^Entrada (\d+h)(?:, saída (\d+h))?$/); if (m) return COL === 1 ? 'Check-in ' + m[1] + (m[2] ? ', check-out ' + m[2] : '') : 'Entrada ' + m[1] + (m[2] ? ', salida ' + m[2] : '');
+    m = s.match(/^✅ Traçado lido: (\d+) pontos, (.+)\.$/); if (m) return COL === 1 ? '✅ Track read: ' + m[1] + ' points, ' + m[2] + '.' : '✅ Trazado leído: ' + m[1] + ' puntos, ' + m[2] + '.';
     m = s.match(/^Mostrando lugares perto de (.+)\.$/); if (m) return (COL === 1 ? 'Showing places near ' : 'Mostrando lugares cerca de ') + m[1] + '.';
     m = s.match(/^Perto de (.+)$/); if (m && !D[s]) return (COL === 1 ? 'Near ' : 'Cerca de ') + m[1];
     m = s.match(/^Avaliar (.+)$/); if (m && !D[s]) return (COL === 1 ? 'Review ' : 'Reseñar ') + m[1];
