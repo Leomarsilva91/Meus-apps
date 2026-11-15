@@ -8,9 +8,10 @@
   try { reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
   paused = reduce;
   var snd = false, sayTok = 0, hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window, vz = null;
-  function pickVoice() { if (!hasTTS) return; var L = speechSynthesis.getVoices() || [], k; for (k = 0; k < L.length; k++) if (/pt[-_]BR/i.test(L[k].lang) && /google|luciana|francisca|natural|online/i.test(L[k].name)) return (vz = L[k]); for (k = 0; k < L.length; k++) if (/pt[-_]BR/i.test(L[k].lang)) return (vz = L[k]); for (k = 0; k < L.length; k++) if (/^pt/i.test(L[k].lang)) return (vz = L[k]); return (vz = null); }
+  var LRX = new RegExp('^' + String(C.lang || 'pt-BR').replace('-', '[-_]'), 'i');
+  function pickVoice() { if (!hasTTS) return; var L = speechSynthesis.getVoices() || [], k; for (k = 0; k < L.length; k++) if (LRX.test(L[k].lang) && /google|luciana|francisca|natural|online/i.test(L[k].name)) return (vz = L[k]); for (k = 0; k < L.length; k++) if (LRX.test(L[k].lang)) return (vz = L[k]); for (k = 0; k < L.length; k++) if (/^pt/i.test(L[k].lang)) return (vz = L[k]); return (vz = null); }
   if (hasTTS) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {} }
-  function say(txt, onend) { if (!hasTTS) return; var tok = ++sayTok; try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; if (vz || pickVoice()) u.voice = vz; u.rate = 1.04; u.pitch = 1.15; u.onend = function () { if (tok === sayTok && onend) onend(); }; speechSynthesis.speak(u); } catch (e) {} }
+  function say(txt, onend) { if (!hasTTS) return; var tok = ++sayTok; try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(txt); u.lang = C.lang || 'pt-BR'; if (vz || pickVoice()) u.voice = vz; u.rate = 1.04; u.pitch = 1.15; u.onend = function () { if (tok === sayTok && onend) onend(); }; speechSynthesis.speak(u); } catch (e) {} }
   function hush() { sayTok++; try { if (hasTTS) speechSynthesis.cancel(); } catch (e) {} }
   function seen() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
   function mark() { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
