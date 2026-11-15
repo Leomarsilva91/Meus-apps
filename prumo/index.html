@@ -246,6 +246,20 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
 .pystep{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:700 24px/1 var(--f-body);cursor:pointer}
 #paysh .chips button[aria-pressed=true]{background:var(--debt);color:var(--on-debt);border-color:transparent}
 #paysh .chips button{min-height:40px;padding:6px 12px;font-size:13px}
+.grs{gap:12px;border:2px solid color-mix(in srgb,var(--gc) 45%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--gc) 10%,var(--surface)),var(--surface) 55%)}
+.grs-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.grs-d{font-weight:700;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+.grs-top{display:flex;gap:14px;align-items:center}.grs-top .ring{flex:none}.grs-n{display:grid;gap:6px;flex:1;min-width:0}.grs-n>div{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:4px}.grs-n>div:last-child{border:0}.grs-n b{font:700 17px var(--f-display);white-space:nowrap}
+.grs-st{border-radius:14px;padding:10px 12px;font-size:14px;font-weight:600;background:var(--bg)}.grs-st.ok{background:var(--mei-soft);color:var(--ink)}.grs-st.warn{background:var(--warn-bg);color:var(--warn)}.grs-st.bad{background:var(--bad-bg);color:var(--bad)}
+.grs-ms{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;position:relative}.grs-ms::before{content:"";position:absolute;left:12%;right:12%;top:15px;height:3px;background:var(--line);border-radius:3px}
+.grs-ms>div{display:grid;justify-items:center;gap:1px;position:relative;text-align:center}.grs-ms i{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;background:var(--surface);border:3px solid var(--line);color:#fff}
+.grs-ms .ok i{background:var(--gc);border-color:var(--gc)}.grs-ms .nx i{border-color:var(--gc);animation:grsp 1.6s ease-in-out infinite}.grs-ms b{font-size:13px}.grs-ms span{font-size:11px;color:var(--muted)}
+@keyframes grsp{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--gc) 25%,transparent)}}
+.grs-trip{display:flex;flex-wrap:wrap;gap:6px}.grs-trip span{background:var(--bg);border-radius:99px;padding:4px 10px;font-size:13px;font-weight:600}
+.grs-sim{display:grid;gap:8px;background:var(--bg);border-radius:16px;padding:12px}.grs-v{font:700 20px var(--f-display);color:var(--gc)}
+#grs-sl{min-height:0;padding:0;border:0;background:none;accent-color:var(--gc);height:32px}.grs-q button{min-height:36px;padding:4px 12px;font-size:13px}
+.grs-out{margin:0;font-size:14px}.grs-ok{color:var(--ok);font-weight:700}.grs-bad{color:var(--bad);font-weight:700}
+.grs-fold{border-top:1px solid var(--line);padding-top:6px}.grs-fold>summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center}
+@media(max-width:360px){.grs-top .ring{width:92px;height:92px}.grs-n b{font-size:15px}}
 /* cofrinho */
 .entry.cofre{background:var(--sun);color:var(--on-sun);padding:20px}.entry.cofre h2{font-size:28px}.entry.cofre .in{background:rgba(255,255,255,.45)}.entry.cofre .blob.b1{background:#fff;opacity:.5}
 .cof-kids button{min-height:44px;font-size:15px}
@@ -983,6 +997,57 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.pyr!=='ent')return;const g=pyGoal();if(!g)return;payD(g).ent=+t.value;pyLive()},true);
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.pyr!=='ent')return;save();render(true)},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.paySh){UI.paySh=null;render(true)}});
+/* ---------- resumo da meta (topo do planejador) ---------- */
+function gResumo(g,tot,T,it,meses,need,falta,av){
+  const t=GT[g.tipo]||GT.outro,gu=+g.guardado||0,pct=tot>0?Math.min(100,gu/tot*100):0,R=40,L=+(2*Math.PI*R).toFixed(2),dias=daysTo(g.prazo),done=tot>0&&gu>=tot;
+  const ap=(g.aportes||[]).filter(a=>a&&a.d),mk=k=>{const d=new Date(Y,M-k,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)},last3=[0,1,2].map(k=>ap.filter(a=>a.d.slice(0,7)===mk(k)).reduce((s,a)=>s+(+a.v||0),0)),ritmo=last3.reduce((a,b)=>a+b,0)/3;
+  let st,stc;
+  if(done){st='🎉 Meta completa! Agora é só aproveitar.';stc='ok'}
+  else if(!(tot>0)){st='🧮 Preencha os custos para o Prumo calcular o total.';stc=''}
+  else if(dias<0){st='⏰ O prazo passou. Mude a data para recalcular o plano.';stc='bad'}
+  else if(ritmo>0&&ritmo>=need*0.95){st='🚀 No ritmo! Guardando como nos últimos meses, você chega a tempo.';stc='ok'}
+  else if(ritmo>0){st='💪 Quase lá: nos últimos meses você guardou '+brl0(ritmo)+' por mês. Faltam '+brl0(Math.max(0,need-ritmo))+' por mês para chegar no prazo.';stc='warn'}
+  else{st='✨ Comece hoje: qualquer valor já faz a barra andar.';stc=''}
+  const ms=[25,50,75,100].map(p=>({p,v:tot*p/100,ok:tot>0&&gu>=tot*p/100-0.005})),nx=ms.find(m=>!m.ok);
+  let trip='';
+  if(g.tipo==='viagem'&&g.rota){try{const r=rotaDef(g),G=rotaGrp(g),h=tot>0?rotaShare(g):null,bits=[];
+    if(r.orig||r.dest)bits.push('📍 '+esc(r.orig||'?')+' → '+esc(r.dest||'?'));
+    if(r.modo)bits.push(r.modo==='carro'?'🚗 De carro':'✈️ De avião');
+    bits.push('👥 '+G.pes+(G.pes===1?' pessoa':' pessoas')+(G.pesPag!==G.pes?' ('+G.pesPag+(G.pesPag===1?' paga)':' pagam)'):''));
+    if(+r.noites>0)bits.push('🌙 '+r.noites+(+r.noites===1?' noite':' noites'));
+    trip=`<div class="grs-trip">${bits.map(b=>`<span>${b}</span>`).join('')}</div>${h&&h.G.rach>1&&r.escopo!=='minha'?`<p class="small" style="margin:0">Cada adulto pagante: <b class="num">${brl0(h.contrib)}</b></p>`:''}`}catch(_){}}
+  const fill=it.filter(x=>+x.v>0).sort((a,b)=>b.v-a.v),top=fill.slice(0,4),rest=fill.slice(4).reduce((a,x)=>a+(+x.v),0)+(T.imp||0),cols=['var(--meta)','var(--sky)','var(--mei)','var(--sun)','var(--plum)'],sub=top.reduce((a,x)=>a+(+x.v),0)+rest;
+  const segs=top.map((x,i)=>({n:x.n,v:+x.v,c:cols[i]}));if(rest>0)segs.push({n:fill.length>4?'Outros e margem':'Margem para imprevistos',v:rest,c:cols[4]});
+  const miss=it.length-T.n,sv=Math.max(10,Math.round((need>0?need:Math.max(50,falta/12))/10)*10),mx=Math.max(100,Math.ceil(sv*2.5/50)*50);
+  const cta=done?'':!(tot>0)||miss>0?`<button class="btn meta sm" data-gr="custos">${miss>0?'Preencher '+miss+(miss===1?' custo':' custos'):'Preencher os custos'}</button>`:'';
+  return `<div class="card grs" style="--gc:${t.c}">
+   <div class="grs-h"><span class="sticker">${esc(t.n)}</span><span class="small grs-d">${dias>=0?(dias===0?'É hoje!':'⏳ '+dias+(dias===1?' dia':' dias')):'Prazo passou'} · ${fd(g.prazo)}</span></div>
+   <h2 style="margin:0;overflow-wrap:anywhere">${esc(g.nome)}</h2>
+   <div class="grs-top">
+    <svg class="ring" width="112" height="112" viewBox="0 0 100 100" role="img" aria-label="${Math.round(pct)} por cento juntado"><circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--line)" stroke-width="10"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--gc)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L}" data-ring="${+(L*(1-pct/100)).toFixed(2)}" transform="rotate(-90 50 50)"/><text x="50" y="49" text-anchor="middle" style="font:700 22px var(--f-display);fill:var(--ink)">${Math.round(pct)}%</text><text x="50" y="66" text-anchor="middle" style="font:600 10px var(--f-body);fill:var(--muted)">juntado</text></svg>
+    <div class="grs-n"><div><span class="muted small">Juntado</span><b class="num">${brl0(gu)}</b></div><div><span class="muted small">${g.tipo==='viagem'&&g.rota&&g.rota.escopo==='minha'?'Sua parte':'Total'+(T.ip?' (+'+T.ip+'% margem)':'')}</span><b class="num">${tot>0?brl0(tot):'a calcular'}</b></div><div><span class="muted small">Falta</span><b class="num" style="color:var(--gc)">${tot>0?brl0(falta):'—'}</b></div></div>
+   </div>
+   <div class="grs-st ${stc}">${st}</div>
+   ${tot>0?`<div class="grs-ms" role="list" aria-label="Etapas da meta">${ms.map(m=>`<div role="listitem" class="${m.ok?'ok':m===nx?'nx':''}"><i>${m.ok?'✓':m.p===100?'🏁':''}</i><b>${m.p}%</b><span class="num">${brl0(m.v)}</span></div>`).join('')}</div>${nx?`<p class="small" style="margin:0">Próxima etapa: faltam <b class="num">${brl0(Math.max(0,nx.v-gu))}</b> para chegar a ${nx.p}%.</p>`:''}`:''}
+   ${trip}
+   ${tot>0&&!done&&dias>=0?`<div class="grs-sim"><div class="row sp" style="gap:6px"><b>E se eu guardar por mês?</b><b class="num grs-v" id="grs-v">${brl0(sv)}</b></div>
+    <input type="range" id="grs-sl" min="10" max="${mx}" step="10" value="${sv}" data-falta="${falta}" data-meses="${meses}" aria-label="Valor guardado por mês">
+    <div class="chips grs-q"><button type="button" data-grq="${Math.max(10,Math.round(need*.5/10)*10)}">Metade</button><button type="button" data-grq="${sv}">No prazo</button><button type="button" data-grq="${Math.round(need*1.5/10)*10||sv}">+50%</button>${av>0?`<button type="button" data-grq="${Math.round(av/10)*10}">Meu orçamento</button>`:''}</div>
+    <p class="grs-out" id="grs-out" aria-live="polite">${grsTxt(sv,falta,meses)}</p></div>`:''}
+   ${segs.length?`<details class="grs-fold"><summary>Para onde vai o dinheiro</summary><div class="stack" role="img" aria-label="Divisão dos custos">${segs.map(s=>`<i style="flex:${s.v};background:${s.c}"></i>`).join('')}</div><div class="leg" style="gap:8px;margin-top:10px">${segs.map(s=>`<div class="r1"><span class="dot" style="background:${s.c}"></span><span>${esc(s.n)} <span class="muted small">${Math.round(s.v/sub*100)}%</span></span><b class="num">${brl0(s.v)}</b></div>`).join('')}</div></details>`:''}
+   <div class="row">${cta}${done?'':`<button class="btn ${cta?'ghost':'meta'} sm" data-gr="dep">Lançar valor juntado</button>`}</div>
+  </div>`;
+}
+function grsTxt(v,falta,meses){if(!(v>0))return '';const n=Math.ceil(falta/v),d=n-meses;
+  return `Você completa em <b>${monthAfter(n)}</b> (${n} ${n===1?'mês':'meses'}). `+(d<0?`<span class="grs-ok">🎯 ${-d} ${d===-1?'mês':'meses'} antes do prazo!</span>`:d===0?`<span class="grs-ok">🎯 Bem no prazo.</span>`:`<span class="grs-bad">${d} ${d===1?'mês':'meses'} depois do prazo.</span>`)}
+document.addEventListener('input',e=>{const s=e.target;if(!s||s.id!=='grs-sl')return;e.stopImmediatePropagation();const v=+s.value,o=document.getElementById('grs-out'),b=document.getElementById('grs-v');if(b)b.textContent=brl0(v);if(o)o.innerHTML=grsTxt(v,+s.dataset.falta,+s.dataset.meses)},true);
+document.addEventListener('click',e=>{const q=e.target.closest&&e.target.closest('[data-grq],[data-gr]');if(!q)return;e.preventDefault();e.stopImmediatePropagation();
+  if(q.dataset.grq){const s=document.getElementById('grs-sl');if(!s)return;const v=+q.dataset.grq;if(v>+s.max)s.max=Math.ceil(v/50)*50;s.value=v;s.dispatchEvent(new Event('input',{bubbles:true}));return}
+  let el=null;if(q.dataset.gr==='custos')el=document.querySelector('.gbx')||[...document.querySelectorAll('.card h3')].find(h=>/Como você vai viajar|custo/i.test(h.textContent));
+  else{const h=[...document.querySelectorAll('.card h3')].find(h=>/Dinheiro juntado/.test(h.textContent));el=h&&h.closest('.card')}
+  if(!el)return;if(el.tagName==='H3')el=el.closest('.card')||el;if(el.tagName==='DETAILS')el.open=true;
+  const y=el.getBoundingClientRect().top+scrollY-90;scrollTo({top:y,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  if(q.dataset.gr==='dep'){const i=el.querySelector('input[inputmode=decimal]');if(i)setTimeout(()=>{try{i.focus({preventScroll:true})}catch(_){}},450)}},true);
 function vPlan(){
   const g0=S.goals.find(x=>x.id===UI.plan);if(g0){itemSync(g0);if(g0.tipo==='viagem'){const r0=rotaDef(g0);planItems(g0).forEach(x=>{if(x.auto&&x.man)delete x.man});planSync(g0)}save()}
   const g=S.goals.find(x=>x.id===UI.plan),t=GT[g.tipo]||GT.outro,it=planItems(g),T=planTotals(g),pl=S.orc?orcPlan():null,av=pl&&pl.livre>0?orcV(pl,'metas')+orcV(pl,'reserva')*0:0,meses=Math.max(1,Math.ceil(daysTo(g.prazo)/30.44));
@@ -1000,7 +1065,7 @@ function vPlan(){
      ${falta>0&&av>0&&av<need?`<p class="muted small">Para fechar a conta, você pode ampliar o prazo, cortar itens da lista ou guardar um pouco mais por mês.</p>`:''}
      ${g.tipo=='viagem'?'<div class="note info">O valor da meta acompanha este total automaticamente.</div>':`<button class="btn meta" data-act="planapply">Usar ${brl0(tot)} como valor da meta</button>`}<p class="muted small">Estimativa simples, sem rendimento e sem variação de preços. Confirme os valores antes de comprar ou contratar.</p></div>`}
   return `<div class="row"><button class="btn ghost sm" data-act="planback">Voltar para as metas</button></div>
-  <div class="hero" style="--hg:${t.c}"><span class="blob b1"></span><span class="sticker" style="justify-self:start">${t.n}</span><h2 style="margin:0">${esc(g.nome)}</h2><span>Total dos custos${g.tipo==='viagem'?' do grupo':''}${T.ip?' com '+T.ip+'% de margem':''}</span><div class="big num">${brl0(T.total)}</div><span>${T.n} de ${it.length} itens preenchidos</span>${g.tipo==='viagem'&&T.total>0?(()=>{const h=rotaShare(g);return h.G.rach>1?`<span>Dividido entre ${h.G.rach} adultos, cada um paga <b>${brl0(h.contrib)}</b></span>`:''})():''}</div>
+  ${gResumo(g,tot,T,it,meses,need,falta,av)}
   <div class="card"><label>Nome da meta<input data-gn="1" value="${esc(g.nome)}" maxlength="60" placeholder="Ex.: Viagem de fim de ano"></label></div>
   ${gdepCard(g,tot)}${payCard(g,tot)}${paySheet(g)}
   ${planBoxes(g,tot,T,it)}${g.tipo==='viagem'?shareCard(g):''}${proj}`;
