@@ -1396,7 +1396,49 @@ function queueBox(){
   return `<div class="box"><b>Fila de conferência da equipe (demonstração)</b><span class="m">Aqui a equipe do app confere os avisos de preço. No app de verdade, isso fica num painel protegido, não na tela do cliente.</span>${q.length?q.map(r=>`<div style="display:grid;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px"><span><b>${esc(r.n)}</b><br><span class="m">${esc(r.s)} · de ${brl(r.old)} para <b>${brl(r.np)}</b> · prova: ${r.proof} · ${fd(r.t)}${r.ob?' · '+esc(r.ob):''}</span></span>${r.ph?`<img src="${r.ph}" alt="Prova enviada" style="max-width:160px;border-radius:10px;border:1px solid var(--line)">`:''}<div class="row"><button class="btn" data-rvok="${r.id}" type="button">Confirmar novo preço</button><button class="btn ghost" data-rvno="${r.id}" type="button">Recusar</button></div></div>`).join(''):'<span class="m">Nenhum aviso esperando conferência.</span>'}</div>`}
 
 /* ---- compras online (afiliados) ---- */
-const MK={ml:{n:'Mercado Livre',c:'#FFE600',t:'#2D2A00'},sh:{n:'Shopee',c:'#EE4D2D',t:'#fff'},am:{n:'Amazon',c:'#232F3E',t:'#fff'},mg:{n:'Magalu',c:'#0086FF',t:'#fff'}};
+const MK=new Proxy({ml:{n:'Mercado Livre',c:'#FFE600',t:'#2D2A00'},sh:{n:'Shopee',c:'#EE4D2D',t:'#fff'},am:{n:'Amazon',c:'#232F3E',t:'#fff'},mg:{n:'Magalu',c:'#0086FF',t:'#fff'}},{get(o,k){return k in o?o[k]:(typeof k==='string'&&/^x/.test(k)?{n:'Loja online',c:'#64748B',t:'#fff'}:undefined)}});
+/* ---- Outras lojas online e grupos/canais de promoção (cadastro livre do administrador) ---- */
+let MKX=LS.g('ab_mkx',[]),GRP=LS.g('ab_grp',[]);if(!Array.isArray(MKX))MKX=[];if(!Array.isArray(GRP))GRP=[];
+const MKPAL=['#7C3AED','#0F766E','#B45309','#BE123C','#1D4ED8','#15803D','#334155','#C2410C'];
+function mkApply(){Object.keys(MK).forEach(k=>{if(/^x/.test(k)){delete MK[k];delete MKG[k]}});
+  MKX.forEach((s,i)=>{if(s&&typeof s.k==='string'&&/^x[a-z0-9]+$/.test(s.k)&&typeof s.n==='string'&&s.n.trim()){MK[s.k]={n:s.n.slice(0,30),c:MKPAL[i%MKPAL.length],t:'#fff',x:1};MKG[s.k]=s.n.trim().slice(0,2).toUpperCase()}})}
+mkApply();
+const mkSave=async()=>{LS.s('ab_mkx',MKX);mkApply();if(DB)await DB.doc('config/mkx').set({v:MKX})};
+const grpSave=async()=>{LS.s('ab_grp',GRP);if(DB)await DB.doc('config/grp').set({v:GRP})};
+const GTY={wa:['💬','WhatsApp','Entrar no grupo'],wc:['📢','Canal do WhatsApp','Seguir o canal'],ig:['📸','Instagram','Abrir no Instagram'],tg:['✈️','Telegram','Entrar no Telegram'],fb:['👥','Facebook','Abrir no Facebook'],tt:['🎵','TikTok','Abrir no TikTok'],yt:['▶️','YouTube','Abrir no YouTube'],site:['🌐','Site','Abrir o site']};
+function grpType(u){const h=(()=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(_){return ''}})();
+  if(/whatsapp\.com$/.test(h)&&/\/channel\//.test(u))return 'wc';if(/(^|\.)whatsapp\.com$|^wa\.me$/.test(h))return 'wa';if(/instagram\.com$/.test(h))return 'ig';if(/^t\.me$|telegram\.(me|org)$/.test(h))return 'tg';
+  if(/facebook\.com$|fb\.com$|fb\.me$/.test(h))return 'fb';if(/tiktok\.com$/.test(h))return 'tt';if(/youtube\.com$|youtu\.be$/.test(h))return 'yt';return 'site'}
+function mkAdmin(){const used=k=>allOwn().filter(x=>x.m===k).length;
+  return `<form class="f box" id="mkf" novalidate><b>Outras lojas online</b><span class="m">Mercado Livre, Shopee, Amazon e Magalu já vêm prontas. Adicione qualquer outra loja que você divulga, por exemplo AliExpress, Casas Bahia, Netshoes ou uma loja do Instagram. Ela aparece no filtro de lojas, no cadastro de ofertas e nos links de afiliado acima.</span>
+  <div class="row" style="flex-wrap:nowrap"><label class="sr" for="mk_n">Nome da loja</label><input id="mk_n" maxlength="30" placeholder="Nome da loja" style="flex:1;min-width:0"><button class="btn acc" type="submit" style="flex:none">Adicionar</button></div><div class="err" id="mk_e" role="alert"></div>
+  ${MKX.length?MKX.map(s=>`<div class="line"><span><span class="tag" style="background:${MK[s.k]?MK[s.k].c:'#64748B'};color:#fff;border:0">${esc(s.n)}</span> <span class="m">${used(s.k)} oferta${used(s.k)===1?'':'s'}</span></span><button class="chip" type="button" data-mkrm="${esc(s.k)}">Remover</button></div>`).join(''):'<span class="m">Nenhuma loja extra ainda.</span>'}</form>
+  <form class="f box" id="grf" novalidate><b>Grupos e canais de promoção</b><span class="m">Links de grupos e canais de WhatsApp, Instagram, Telegram, Facebook, TikTok, YouTube ou de um site. Aparecem para todos na aba Promoções online, para quem quiser seguir.</span>
+  <label for="gr_n">Nome<input id="gr_n" maxlength="50" placeholder="Ex.: Achei Barato Patos de Minas"></label>
+  <label for="gr_u">Link<input id="gr_u" type="url" inputmode="url" maxlength="300" placeholder="https://chat.whatsapp.com/…"></label>
+  <label for="gr_d">Descrição curta (opcional)<input id="gr_d" maxlength="120" placeholder="Ex.: ofertas do dia de mercados da cidade"></label>
+  <div class="err" id="gr_e" role="alert"></div><button class="btn acc" type="submit">Adicionar grupo ou canal</button>
+  ${GRP.length?GRP.map(g=>`<div class="line"><span>${GTY[g.ty]?GTY[g.ty][0]:'🔗'} <b>${esc(g.n)}</b> <span class="m">· ${GTY[g.ty]?GTY[g.ty][1]:'Link'}</span></span><button class="chip" type="button" data-grrm="${esc(g.id)}">Remover</button></div>`).join(''):'<span class="m">Nenhum grupo ou canal ainda.</span>'}</form>`}
+function grpBox(){if(!GRP.length)return '';const o=!!mem.grpo;
+  return `<details class="box" data-nc="1" id="grpd"${o?' open':''} style="gap:8px;border-left-color:var(--c-online)"><summary style="cursor:pointer;font-weight:800;min-height:44px;display:flex;align-items:center">📣 Grupos e canais de promoções (${GRP.length})</summary>
+  <span class="m">Siga os grupos e canais para receber as promoções no seu celular.</span>
+  ${GRP.map(g=>{const T=GTY[g.ty]||GTY.site;return `<div class="box" style="gap:4px;padding:10px 12px"><span><span aria-hidden="true">${T[0]}</span> <b>${esc(g.n)}</b> <span class="m">· ${T[1]}</span></span>${g.d?`<span class="m">${esc(g.d)}</span>`:''}<a class="btn ghost" href="${esc(g.u)}" target="_blank" rel="noopener noreferrer" style="justify-self:start;text-decoration:none;display:inline-flex;align-items:center">${T[2]}</a></div>`}).join('')}
+  <span class="m">Grupos e canais podem ser de outras pessoas, e o Achei Barato não controla o que é postado neles. Desconfie de preço bom demais e nunca pague fora do site ou do app oficial da loja.</span></details>`}
+document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='grpd')mem.grpo=e.target.open},true);
+document.addEventListener('submit',async e=>{const f=e.target;if(!f||(f.id!=='mkf'&&f.id!=='grf'))return;e.preventDefault();e.stopImmediatePropagation();if(!adm)return;
+  const er=(id,t)=>{const x=document.getElementById(id);if(x)x.textContent=t};
+  if(f.id==='mkf'){const n=($('#mk_n').value||'').replace(/\s+/g,' ').trim();if(n.length<2)return er('mk_e','Escreva o nome da loja.');
+    if(Object.keys(MK).some(k=>nz(MK[k].n)===nz(n)))return er('mk_e','Essa loja já está na lista.');if(MKX.length>=30)return er('mk_e','Limite de 30 lojas extras.');
+    MKX=[...MKX,{k:'x'+Date.now().toString(36),n:n.slice(0,30)}];try{await mkSave()}catch(_){return er('mk_e','Não consegui salvar agora. Confira se você está cadastrado como administrador.')}render();toast('Loja adicionada.');return}
+  const n=($('#gr_n').value||'').replace(/\s+/g,' ').trim(),u=($('#gr_u').value||'').trim(),d=($('#gr_d').value||'').replace(/\s+/g,' ').trim();
+  if(n.length<2)return er('gr_e','Escreva o nome do grupo ou canal.');
+  let ok=false;try{const x=new URL(u);ok=x.protocol==='https:'}catch(_){}if(!ok)return er('gr_e','Cole o link completo, começando com https://');
+  if(GRP.some(g=>g.u===u))return er('gr_e','Esse link já está na lista.');if(GRP.length>=50)return er('gr_e','Limite de 50 grupos e canais.');
+  GRP=[...GRP,{id:'g'+Date.now().toString(36),n:n.slice(0,50),u:u.slice(0,300),d:d.slice(0,120),ty:grpType(u)}];try{await grpSave()}catch(_){return er('gr_e','Não consegui salvar agora. Confira se você está cadastrado como administrador.')}render();toast('Grupo ou canal adicionado.')},true);
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-mkrm],[data-grrm]');if(!b||!adm)return;e.preventDefault();e.stopImmediatePropagation();
+  try{if(b.dataset.mkrm){const k=b.dataset.mkrm,n=allOwn().filter(x=>x.m===k).length;if(n){toast('Essa loja tem '+n+' oferta'+(n>1?'s':'')+'. Remova ou mude a loja delas antes.');return}MKX=MKX.filter(s=>s.k!==k);await mkSave();toast('Loja removida.')}
+    else{GRP=GRP.filter(g=>g.id!==b.dataset.grrm);await grpSave();toast('Removido.')}}catch(_){toast('Não consegui salvar agora.')}render()},true);
+
 const OFF=[
  {id:'o1',m:'ml',n:'Fone de ouvido Bluetooth com cancelamento de ruído',p:129.9,old:219.9,fr:0,d:3,u:2},
  {id:'o2',m:'sh',n:'Smartwatch com monitor de batimentos',p:89.9,old:159.9,fr:9.9,d:9,u:4,cup:'SHOPEE10'},
@@ -1464,7 +1506,7 @@ function adminBox(){return `<div class="box" style="border-left-color:var(--acc)
   <form class="f box" id="lkf" novalidate><b>Meus links das lojas online</b><span class="m">Link principal de afiliado de cada loja, gerado no programa oficial dela. Deixe em branco para não mostrar.</span>
   ${Object.keys(MK).map(k=>`<label for="lk_${k}">${MK[k].n}<input id="lk_${k}" type="url" inputmode="url" placeholder="https://…" value="${esc(lnk[k]||'')}"></label>`).join('')}
   <div class="err" id="lk_e" role="alert"></div><button class="btn acc" type="submit">Salvar links</button></form>
-  ${ownForm()}`}
+  ${ownForm()}${mkAdmin()}`}
 const shTxt=(n,p,old,loja,ate)=>`Achei Barato: ${n}${p>0?' por '+brl(p):''}${p>0&&old?' (era '+brl(old)+')':''}${loja?' em '+loja:''}${ate?', até '+fd(ate):''}. Confira o preço no local.${appUrl&&/^https:\/\//.test(appUrl)?' '+appUrl:''}`;
 const shBtn=t=>`<button class="chip" data-sh="${esc(encodeURIComponent(t))}" type="button" aria-label="Compartilhar no WhatsApp">Compartilhar</button>`;
 const shareNow=async t=>{try{if(navigator.share){await navigator.share({text:t});return}}catch(e){if(e&&e.name==='AbortError')return}
@@ -1590,7 +1632,8 @@ function parseHist(txt){
     const p=Number(m[4].replace(',','.'));if(!(p>0)||isNaN(dt))return;
     out.push({d:dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'),p})});
   return out}
-function onlineV(){
+function onlineV(){return onlineV0().replace('<div class="row"><label class="sr" for="ord2">',grpBox()+'<div class="row"><label class="sr" for="ord2">')}
+function onlineV0(){
   const mk=mem.mk||'',o=mem.ord2||'fin';
   let L=[...allOwn().map(x=>({...x,u:x.ate?Math.max(0,Math.round((new Date(x.ate+'T23:59:59')-NOW)/DAYMS)):null})),...OFF].filter(x=>!mk||x.m===mk).map(x=>({...x,tot:x.p>0?x.p+(x.fr||0):null,off:x.p>0&&x.old>x.p?Math.round((1-x.p/x.old)*100):0}));
   L.sort((a,b)=>o==='off'?b.off-a.off:o==='prazo'?(a.d||99)-(b.d||99):(a.tot==null?1e9:a.tot)-(b.tot==null?1e9:b.tot));
@@ -2019,6 +2062,8 @@ render();
       DB.collection('sub').onSnapshot(sn=>{subAll=sn.docs.map(d=>({uid:d.id,items:(d.data().items||[])}));rs()},()=>{});
       DB.doc('config/pts').onSnapshot(d=>{ptsStart=d.exists&&typeof d.data().v==='string'?d.data().v:'';rs()},()=>{});
       DB.doc('config/fuel').onSnapshot(d=>{if(d.exists&&d.data().v&&typeof d.data().v==='object'){FUo=d.data().v;rs()}},()=>{});
+      DB.doc('config/mkx').onSnapshot(d=>{if(d.exists&&Array.isArray(d.data().v)){MKX=d.data().v;LS.s('ab_mkx',MKX);mkApply();rs()}},()=>{});
+      DB.doc('config/grp').onSnapshot(d=>{if(d.exists&&Array.isArray(d.data().v)){GRP=d.data().v;LS.s('ab_grp',GRP);rs()}},()=>{});
       DB.doc('config/links').onSnapshot(d=>{if(d.exists){const v=d.data().v;if(v&&typeof v==='object')lnk=v;rs()}},()=>{})}catch(_){}}
   render()})();
 </script>
