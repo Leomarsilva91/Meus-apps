@@ -1,0 +1,20 @@
+rules_version = '2';
+// Regras do banco de dados dos apps (Firebase > Firestore > Regras).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function entrou() { return request.auth != null; }
+    function adm() { return entrou() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    // Dados pessoais de cada pessoa: só ela lê e grava.
+    match /apps/{app}/data/users/{uid}/{doc=**} {
+      allow read, write: if entrou() && request.auth.uid == uid;
+    }
+    // Áreas que só o administrador lê por inteiro (cada pessoa vê só o seu).
+    match /apps/{app}/{col}/{uid} {
+      allow read: if entrou() && (
+        !(col in ['resg', 'comr', 'interesse', 'contato', 'vis']) || request.auth.uid == uid || adm());
+      allow write: if entrou() && (
+        (!(col in ['config', 'comx']) && request.auth.uid == uid) || adm());
+    }
+  }
+}

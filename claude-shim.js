@@ -86,8 +86,8 @@
     isOwner: async function () { return isAdm(); },
     canEdit: async function () { return isAdm(); },
     can: async function () { return isAdm() ? true : null; },
-    id: async function () { return logado() ? uid() : null; },
-    me: async function () { return { id: logado() ? uid() : null }; },
+    id: async function () { if (!logado()) return null; var f = await fbUid(); return f || uid(); },
+    me: async function () { if (!logado()) return { id: null }; var f = await fbUid(); return { id: f || uid() }; },
     profiles: async function () { return {}; }
   };
   async function sha(t) {
@@ -127,6 +127,7 @@
     var a = document.createElement('div'); a.id = 'ia-admlink';
     a.style.cssText = 'text-align:center;padding:18px 12px 90px;font:13px system-ui,sans-serif';
     a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>';
+    if (isAdm()) fbUid().then(function (u) { if (!u) return; var s = document.createElement('div'); s.style.cssText = 'margin-top:10px;opacity:.75;font-size:12px;user-select:all;word-break:break-all'; s.textContent = 'Código da conta na nuvem (administrador): ' + u; a.appendChild(s); });
     var q = a.querySelector('a'); q.onclick = function (ev) { ev.preventDefault(); logado() ? sair() : entrar(); };
     document.body.appendChild(a);
   }
@@ -138,5 +139,30 @@
     if (taps.length >= 7) { taps = []; abrirAdmin(); }
   }, true);
 
-  window.claude = { use: async function (n) { return n === 'sample' ? sample : n === 'user' ? user : null; } };
+  /* ---- banco de dados na nuvem (Firebase), para compartilhar metas, comunidade, bate-papo e pontos entre aparelhos ---- */
+  var FBV = '10.12.5', FBP = null, FBU = null;
+  function appNome() { var s = location.pathname.split('/').filter(Boolean); if (s.length && s[s.length - 1].indexOf('.') >= 0) s.pop(); return (s.pop() || 'app').toLowerCase().replace(/[^a-z0-9-]/g, ''); }
+  function js(src) { return new Promise(function (ok, no) { var e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = no; document.head.appendChild(e); }); }
+  function fbIni() {
+    if (FBP) return FBP;
+    var cfg = window.FIREBASE_CONFIG;
+    if (!cfg || !cfg.apiKey || !cfg.projectId) { window.IA_SEM_NUVEM = true; FBP = Promise.resolve(null); return FBP; }
+    var b = 'https://www.gstatic.com/firebasejs/' + FBV + '/';
+    FBP = js(b + 'firebase-app-compat.js').then(function () { return Promise.all([js(b + 'firebase-auth-compat.js'), js(b + 'firebase-firestore-compat.js')]); }).then(function () {
+      if (!firebase.apps.length) firebase.initializeApp(cfg);
+      var au = firebase.auth();
+      return new Promise(function (ok) { var off = au.onAuthStateChanged(function (u) { if (u) { off(); ok(u); } }); au.signInAnonymously().catch(function () { off(); ok(null); }); });
+    }).then(function (u) {
+      if (!u) { window.IA_SEM_NUVEM = true; return null; }
+      FBU = u.uid; window.IA_NUVEM_UID = u.uid;
+      var fs = firebase.firestore(), pre = 'apps/' + appNome() + '/';
+      return { collection: function (p) { return fs.collection(pre + p); }, doc: function (p) { return fs.doc(pre + p); } };
+    }).catch(function () { window.IA_SEM_NUVEM = true; return null; });
+    return FBP;
+  }
+  async function fbUid() { await fbIni(); return FBU; }
+  async function fbDb() { if (!logado()) return null; return fbIni(); }
+  if (window.FIREBASE_CONFIG) fbIni(); else window.IA_SEM_NUVEM = true;
+
+  window.claude = { use: async function (n) { return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : null; } };
 })();
