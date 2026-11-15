@@ -164,5 +164,5 @@
   async function fbDb() { if (!logado()) return null; return fbIni(); }
   if (window.FIREBASE_CONFIG) fbIni(); else window.IA_SEM_NUVEM = true;
 
-  window.claude = { use: async function (n) { return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : null; } };
+  window.claude = { use: async function (n) { return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : n === 'dbany' ? fbIni() : null; } };
 })();

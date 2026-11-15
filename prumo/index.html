@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=9"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=10"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Prumo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3171,6 +3171,133 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
       const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Arquivo da agenda baixado. Abra para salvar no calendário.')}catch(_){toast('Não consegui criar o arquivo da agenda aqui.')}return}
   if(b.dataset.lbnt){try{const p=await Notification.requestPermission();if(p==='granted'){toast('Avisos ligados.');notify()}else toast('Os avisos não foram liberados.')}catch(_){toast('Este aparelho não permite avisos.')}render(true);return}
 },true);
+})();
+</script>
+<style>
+html.ajmode .tabbar,html.ajmode #ia-intro,html.ajmode #ia-chip,html.ajmode #navbar,html.ajmode #xapps,html.ajmode #ia-admlink,html.ajmode .savebar,html.ajmode .demo,html.ajmode #who{display:none!important}
+.aj-hero{border-radius:24px;padding:18px;background:linear-gradient(135deg,#FFE7A3,#FFC933);color:#2A1F00;display:grid;gap:8px;justify-items:center;text-align:center}
+.aj-hero h2{color:#2A1F00}.aj-q{display:flex;flex-wrap:wrap;gap:8px}.aj-q button{min-height:44px;padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer}
+.aj-q button.full{border-color:var(--ok);color:var(--ok)}.aj-rec{display:grid;gap:8px}.aj-rec>div{background:var(--bg);border-radius:14px;padding:10px 12px;display:grid;gap:2px}
+.aj-ad{border:2px dashed var(--meta);border-radius:20px;padding:16px;display:grid;gap:8px;background:color-mix(in srgb,var(--meta) 6%,var(--surface))}
+.aj-pend{border-left:4px solid var(--sun);padding-left:10px}
+</style>
+<script>
+/* ---------- Cofrinho: compartilhar com quem quer ajudar a criança ---------- */
+(function(){
+const AJP=(()=>{try{return new URLSearchParams(location.search).get('ajudar')}catch(_){return null}})();
+const CODE_OK=c=>typeof c==='string'&&/^[A-Z2-9]{8}$/.test(c);
+const CHS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',mk=()=>Array.from({length:8},()=>CHS[Math.floor(Math.random()*CHS.length)]).join('');
+const baseUrl=()=>location.origin+location.pathname;
+const linkOf=c=>baseUrl()+'?ajudar='+c;
+const dbO=()=>PT&&PT.db,uidO=()=>PT&&PT.uid;
+const AJ={},SUB={};let PUBT=null;
+/* ----- lado da família ----- */
+function snapOf(k){const MS=cofMetas(k),s=cofSaldo(k);
+  const rec=(k.mov||[]).filter(m=>m.de&&m.v>0).slice(-20).reverse().map(m=>({nome:String(m.de).slice(0,40),msg:String(m.msg||'').slice(0,200),v:m.v,d:m.d}));
+  return{owner:uidO(),nome:k.nome,metas:MS.map(m=>({n:m.n,v:m.v})),saldo:s,prazo:k.prazo||'',pix:(k.share&&k.share.pix)||'',msg:(k.share&&k.share.msg)||'',rec,t:new Date().toISOString()}}
+async function pubKid(k){if(!k||!k.share||!CODE_OK(k.share.code)||!dbO()||!uidO())return;try{await dbO().doc('cofs/'+k.share.code).set(snapOf(k))}catch(_){}}
+function pubAll(){clearTimeout(PUBT);PUBT=setTimeout(()=>{try{cofD().kids.forEach(k=>{if(k.share)pubKid(k)})}catch(_){}},1500)}
+if(typeof save==='function'){const _s=save;save=function(){_s.apply(this,arguments);try{if(S.cof&&S.cof.kids&&S.cof.kids.some(k=>k.share))pubAll()}catch(_){}}}
+function subKid(k){const c=k.share&&k.share.code;if(!c||SUB[c]||!dbO())return;SUB[c]=1;
+  try{dbO().collection('cofs/'+c+'/ajuda').onSnapshot(sn=>{AJ[c]=sn.docs.map(d=>({...d.data(),id:d.id}));const a=document.activeElement;if(UI.tab==='cofre'&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))render(true)},()=>{})}catch(_){}}
+const shTxt=k=>`Oi! ${k.nome} está juntando dinheiro no cofrinho${(()=>{const m=cofMetas(k).find(x=>cofSaldo(k)<x.v);return m?' para '+m.n:''})()}. Se quiser ajudar com qualquer valor e deixar uma mensagem, é por aqui: ${linkOf(k.share.code)}`;
+function famBox(k){if(VIS.kid)return '';const sh=k.share,L=sh?(AJ[sh.code]||[]):[],pend=L.filter(h=>h.st!=='ok'&&h.st!=='no').sort((a,b)=>String(b.ts).localeCompare(String(a.ts))),o=UI.cajo;
+  const logged=!!(dbO()&&uidO());
+  let body='';
+  if(!sh){body=`<span class="muted small">Avós, tios, padrinhos e amigos podem ver a meta de ${esc(k.nome)}, avisar quando depositarem e deixar um recado para a criança. Eles abrem só o cofrinho, por um link. Não precisam ter o Prumo.</span>
+   ${logged?`<label>Até quando ${esc(k.nome)} quer juntar (opcional)<input id="aj-pz" type="date" min="${TODAYISO}" value="${esc(k.prazo||'')}"></label>
+   <label>Chave Pix para receber a ajuda (opcional)<input id="aj-px" maxlength="80" placeholder="Ex.: seu celular, e-mail ou chave aleatória" autocomplete="off"></label>
+   <label>Recado para quem vai ajudar (opcional)<input id="aj-ms" maxlength="140" placeholder="Ex.: A Ana quer comprar uma bicicleta!"></label>
+   <button class="btn" data-caj="on">Criar link para ajudar</button>
+   <span class="muted small">Quem tiver o link vê o primeiro nome ou apelido da criança, as metas, quanto já guardou e os recados. Não aparece sobrenome, foto nem endereço.</span>`:`<div class="note">Para compartilhar, entre na sua conta (o cofrinho vai para a nuvem).</div>`}`}
+  else{const url=linkOf(sh.code),t=encodeURIComponent(shTxt(k));
+   body=`<span class="muted small">Mande o link para quem quiser ajudar. A pessoa vê só o cofrinho de ${esc(k.nome)}.</span>
+   <div class="row" style="gap:6px"><a class="btn sm" href="https://wa.me/?text=${t}" target="_blank" rel="noopener noreferrer">WhatsApp</a><a class="btn ghost sm" href="mailto:?subject=${encodeURIComponent('Cofrinho de '+k.nome)}&body=${t}">E-mail</a><a class="btn ghost sm" href="sms:?&body=${t}">SMS</a><button class="btn ghost sm" data-caj="copy">Copiar link</button>${navigator.share?'<button class="btn ghost sm" data-caj="share">Mais opções</button>':''}</div>
+   <pre class="msg" style="font-size:13px">${esc(url)}</pre>
+   ${pend.length?`<b>Ajudas para confirmar (${pend.length})</b>${pend.map(h=>`<div class="aj-pend" style="display:grid;gap:4px"><span><b>${esc(h.nome)}</b> avisou um depósito de <b class="num">${brl(+h.v)}</b> em ${fd(h.d)}</span>${h.msg?`<span class="muted small">“${esc(h.msg)}”</span>`:''}<div class="row" style="gap:6px"><button class="btn sm" data-caj="ok:${esc(h.id)}">Recebi, somar no cofrinho</button><button class="btn ghost sm" data-caj="no:${esc(h.id)}">Não recebi</button></div></div>`).join('')}`:'<span class="muted small">Nenhum aviso de depósito esperando confirmação.</span>'}
+   <details class="fold"><summary>Ajustar o compartilhamento</summary><div style="display:grid;gap:8px">
+   <label>Até quando quer juntar<input id="aj-pz" type="date" min="${TODAYISO}" value="${esc(k.prazo||'')}"></label>
+   <label>Chave Pix (opcional)<input id="aj-px" maxlength="80" value="${esc(sh.pix||'')}" autocomplete="off"></label>
+   <label>Recado para quem vai ajudar<input id="aj-ms" maxlength="140" value="${esc(sh.msg||'')}"></label>
+   <div class="row"><button class="btn sm" data-caj="upd">Salvar</button><button class="btn danger sm" data-caj="off">Parar de compartilhar</button></div></div></details>`}
+  const man=`<details class="fold"><summary>Registrar uma ajuda recebida</summary><div style="display:grid;gap:8px"><span class="muted small">Para quando alguém entrega o dinheiro em mãos ou faz o Pix sem avisar pelo link.</span>
+   <div class="grid2"><label>Valor (R$)<input id="ajm-v" inputmode="decimal" placeholder="0,00"></label><label>Data<input id="ajm-d" type="date" max="${TODAYISO}" value="${TODAYISO}"></label></div>
+   <label>Quem deu<input id="ajm-n" maxlength="40" placeholder="Ex.: Vó Maria"></label><label>Mensagem para ${esc(k.nome)} (opcional)<input id="ajm-m" maxlength="200"></label>
+   <button class="btn sm" data-caj="man">Somar no cofrinho</button></div></details>`;
+  return `<details class="card fold" id="cajd"${o?' open':''}><summary>🤝 Quem quer ajudar${pend.length?' ('+pend.length+' novo'+(pend.length>1?'s':'')+')':''}</summary><div style="display:grid;gap:10px">${body}${man}</div></details>`}
+function recBox(k){const R=(k.mov||[]).filter(m=>m.de&&m.v>0).slice(-30).reverse();if(!R.length)return '';
+  return `<details class="card fold"${VIS.kid?' open':''}><summary>💌 Recados para ${esc(k.nome)} (${R.length})</summary><div class="aj-rec">${R.map(m=>`<div><span><b>${esc(m.de)}</b> deu <b class="num">${brl(m.v)}</b> · ${fd(m.d)}</span>${m.msg?`<span>“${esc(m.msg)}”</span>`:''}</div>`).join('')}</div></details>`}
+const _cv=VIEWS.cofre;
+VIEWS.cofre=()=>{let h=_cv();const k=cofKid();if(!k||UI.cofNovo)return h;if(k.share)subKid(k);
+  const anc='<p class="muted small">O Prumo não guarda dinheiro';const i=h.lastIndexOf(anc);const ins=recBox(k)+famBox(k);
+  return i>=0?h.slice(0,i)+ins+h.slice(i):h+ins};
+document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='cajd')UI.cajo=e.target.open},true);
+const vv=id=>(document.getElementById(id)||{}).value||'';
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-caj]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  const k=cofKid();if(!k)return;const [a,id]=String(b.dataset.caj).split(':');
+  if(a==='on'){if(!dbO()||!uidO()){toast('Entre na sua conta para compartilhar.');return}
+    let c=mk();try{for(let i=0;i<3;i++){const d=await dbO().doc('cofs/'+c).get();if(!d.exists)break;c=mk()}}catch(_){}
+    const pz=vv('aj-pz');k.prazo=pz&&pz>=TODAYISO?pz:'';k.share={code:c,pix:vv('aj-px').trim().slice(0,80),msg:vv('aj-ms').trim().slice(0,140)};
+    try{await dbO().doc('cofs/'+c).set(snapOf(k))}catch(_){k.share=null;toast('Não consegui criar o link agora. Tente de novo.');return}
+    UI.cajo=true;save();render(true);toast('Link criado! Agora é só mandar.');return}
+  if(a==='copy'){copy(linkOf(k.share.code));return}
+  if(a==='share'){try{await navigator.share({title:'Cofrinho de '+k.nome,text:shTxt(k)})}catch(_){}return}
+  if(a==='upd'){const pz=vv('aj-pz');k.prazo=pz&&pz>=TODAYISO?pz:'';k.share.pix=vv('aj-px').trim().slice(0,80);k.share.msg=vv('aj-ms').trim().slice(0,140);save();await pubKid(k);render(true);toast('Salvo.');return}
+  if(a==='off'){const c=k.share.code;try{await dbO().doc('cofs/'+c).delete()}catch(_){}k.share=null;save();render(true);toast('O link parou de funcionar.');return}
+  if(a==='man'){const v=num(vv('ajm-v')),n=vv('ajm-n').trim().slice(0,40),m=vv('ajm-m').trim().slice(0,200);let d=vv('ajm-d');if(!(v>0)||v>1e6){toast('Escreva o valor.');return}if(n.length<2){toast('Escreva quem deu.');return}if(!d||d>TODAYISO)d=TODAYISO;
+    k.mov.push({id:uid(),d,v:Math.round(v*100)/100,de:n,msg:m});save();render(true);burst(innerWidth/2,innerHeight/2,40);toast('Somado no cofrinho!');return}
+  if(a==='ok'||a==='no'){const c=k.share&&k.share.code,h=(AJ[c]||[]).find(x=>x.id===id);if(!h)return;
+    try{const {id:_i,...rest}=h;await dbO().doc('cofs/'+c+'/ajuda/'+id).set({...rest,st:a})}catch(_){toast('Não consegui salvar agora.');return}
+    if(a==='ok'&&!(k.mov||[]).some(m=>m.aj===id)){let d=String(h.d||TODAYISO);if(d>TODAYISO)d=TODAYISO;k.mov.push({id:uid(),d,v:Math.round((+h.v||0)*100)/100,de:String(h.nome||'Alguém').slice(0,40),msg:String(h.msg||'').slice(0,200),aj:id});save();burst(innerWidth/2,innerHeight/2,40);toast('Somado no cofrinho de '+k.nome+'!')}
+    else toast('Marcado como não recebido.');render(true);return}
+},true);
+/* ----- lado de quem ajuda (abre só o cofrinho) ----- */
+if(!AJP)return;
+document.documentElement.classList.add('ajmode');
+const code=String(AJP).toUpperCase().replace(/[^A-Z0-9]/g,'');
+const MINE_K='prumo_ajudas';const mine=()=>{try{return JSON.parse(localStorage.getItem(MINE_K)||'[]').filter(x=>x&&x.code===code)}catch(_){return[]}};
+const A={st:'load',d:null,db:null,uid:null,err:'',sent:false};
+async function aload(){try{A.db=await claude.use('dbany')}catch(_){}if(!A.db){A.st='off';return rr()}
+  A.uid=window.IA_NUVEM_UID||null;
+  try{A.db.doc('cofs/'+code).onSnapshot(d=>{if(d.exists){A.d=d.data();A.st='ok'}else A.st='none';rr()},()=>{A.st='none';rr()})}catch(_){A.st='none';rr()}}
+function rr(){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;render(true)}
+function ajView(){const D=A.d;
+  const ad=`<div class="aj-ad"><b style="font:700 18px var(--f-display)">🧭 Conheça o Prumo</b><span>O app que ajuda a família a juntar dinheiro para os sonhos, organizar o mês, sair das dívidas e ensinar as crianças a poupar. É grátis.</span><a class="btn meta" href="${esc(baseUrl())}" style="justify-self:start;text-decoration:none">Conheça o Prumo</a></div>`;
+  if(A.st==='load')return `<div class="card"><p class="muted">Abrindo o cofrinho…</p></div>`;
+  if(A.st==='off')return `<div class="card"><h3>Não deu para abrir agora</h3><p class="muted">Confira a internet e tente de novo em instantes.</p></div>${ad}`;
+  if(A.st!=='ok'||!D)return `<div class="card"><h3>Cofrinho não encontrado</h3><p class="muted">O link pode estar errado ou a família parou de compartilhar. Peça o link de novo para quem te mandou.</p></div>${ad}`;
+  const s=+D.saldo||0,MS=Array.isArray(D.metas)?D.metas.filter(m=>m&&m.v>0):[],cur=MS.find(m=>s<m.v)||null,falta=cur?Math.max(0,cur.v-s):0,tot=MS.reduce((a,m)=>a+m.v,0),pct=cur?Math.min(100,s/cur.v*100):MS.length?100:0;
+  const dias=D.prazo?daysTo(D.prazo):null,meses=dias!=null&&dias>0?Math.max(1,Math.ceil(dias/30.44)):null,nm=esc(D.nome||'a criança');
+  const M=mine();
+  return `<div class="aj-hero">${cofPig(pct)}<h2 style="margin:0">Cofrinho de ${nm}</h2><span style="font:700 34px var(--f-display)" class="num">${brl(s)}</span><span>já guardados</span></div>
+  ${D.msg?`<div class="note info">💬 ${esc(D.msg)}</div>`:''}
+  <div class="card"><h3>🎯 O que ${nm} quer</h3>${MS.length?MS.map(m=>{const p=Math.min(100,s/m.v*100),f=Math.max(0,m.v-s);return `<div style="display:grid;gap:4px"><span><b>${esc(m.n)}</b>: ${brl(m.v)}</span><div class="bar"><i style="width:${p}%;background:var(--sun)"></i></div><span class="muted small">${f>0?'Faltam '+brl(f):'Meta alcançada! 🎉'}</span></div>`}).join(''):'<span class="muted">A meta ainda não foi definida.</span>'}
+   ${D.prazo?`<p>📅 Quer ter até <b>${fd(D.prazo)}</b>${dias>0?' (faltam '+dias+(dias===1?' dia':' dias')+')':dias===0?' (é hoje!)':''}.${cur&&meses&&falta>0?` Para chegar lá, faltam cerca de <b>${brl(falta/meses)}</b> por mês.`:''}</p>`:''}</div>
+  <form class="card" id="ajf" novalidate><h3>💛 Quero ajudar</h3>
+   <span class="muted small">Faça o depósito para a família (Pix ou em mãos) e avise aqui. A família confirma e o valor entra no cofrinho de ${nm}.</span>
+   ${D.pix?`<div class="note info" style="display:grid;gap:6px"><span>Chave Pix da família: <b style="overflow-wrap:anywhere">${esc(D.pix)}</b></span><button type="button" class="btn ghost sm" data-ajx="pix" style="justify-self:start">Copiar chave Pix</button></div>`:''}
+   <label>Quanto você vai dar (R$)<input id="ajv" inputmode="decimal" placeholder="0,00" autocomplete="off"></label>
+   <div class="aj-q">${[10,20,50,100].map(v=>`<button type="button" data-ajx="q:${v}">${brl0(v)}</button>`).join('')}${falta>0?`<button type="button" class="full" data-ajx="q:${falta.toFixed(2)}">Completar: ${brl(falta)}</button>`:''}${cur&&tot-s>falta+0.01?`<button type="button" class="full" data-ajx="q:${(tot-s).toFixed(2)}">Tudo: ${brl(tot-s)}</button>`:''}</div>
+   <div class="grid2"><label>Data do depósito<input id="ajd" type="date" value="${TODAYISO}"></label><label>Seu nome<input id="ajn" maxlength="40" placeholder="Ex.: Tia Carla" autocomplete="name"></label></div>
+   <label>Mensagem para ${nm} (opcional)<textarea id="ajm" maxlength="200" rows="3" placeholder="Ex.: Continue guardando, estou orgulhosa de você!"></textarea></label>
+   ${A.err?`<div class="note bad">${esc(A.err)}</div>`:''}<button class="btn meta" type="submit">Avisar a família</button></form>
+  ${M.length?`<details class="card fold"><summary>Seus avisos (${M.length})</summary><div class="aj-rec">${M.slice().reverse().map(x=>`<div><span><b class="num">${brl(x.v)}</b> · ${fd(x.d)}</span>${x.msg?`<span class="muted small">“${esc(x.msg)}”</span>`:''}</div>`).join('')}</div></details>`:''}
+  ${Array.isArray(D.rec)&&D.rec.length?`<details class="card fold" open><summary>💌 Quem já ajudou (${D.rec.length})</summary><div class="aj-rec">${D.rec.map(r=>`<div><span><b>${esc(r.nome)}</b> · ${fd(r.d)}</span>${r.msg?`<span>“${esc(r.msg)}”</span>`:''}</div>`).join('')}</div></details>`:''}
+  ${ad}
+  <p class="muted small">O Prumo não recebe nem guarda dinheiro: ele só anota. Confira com a família antes de transferir e desconfie de pedidos de dinheiro com pressa.</p>`}
+VIEWS.ajudar=()=>ajView();UI.tab='ajudar';{const _r=render;render=function(){UI.tab='ajudar';UI.plan=null;return _r.apply(this,arguments)}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ajx]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  const [a,v]=String(b.dataset.ajx).split(':');if(a==='pix'){copy(A.d&&A.d.pix||'');return}if(a==='q'){const i=document.getElementById('ajv');if(i){i.value=String(v).replace('.',',');i.focus()}}},true);
+document.addEventListener('submit',async e=>{if(!e.target||e.target.id!=='ajf')return;e.preventDefault();e.stopImmediatePropagation();
+  const v=num(vv('ajv')),n=vv('ajn').trim().slice(0,40),m=vv('ajm').trim().slice(0,200);let d=vv('ajd')||TODAYISO;
+  const er=t=>{A.err=t;render(true)};if(!(v>0)||v>100000)return er('Escreva o valor que você vai dar.');if(n.length<2)return er('Escreva o seu nome, para a criança saber quem ajudou.');
+  if(/https?:|www\./i.test(m))return er('A mensagem não pode ter links.');
+  if(!A.db)return er('Sem conexão agora. Tente de novo em instantes.');A.uid=A.uid||window.IA_NUVEM_UID;if(!A.uid)return er('Sem conexão agora. Tente de novo em instantes.');
+  const it={uid:A.uid,v:Math.round(v*100)/100,d,nome:n,msg:m,ts:new Date().toISOString(),st:'novo'};
+  try{await A.db.collection('cofs/'+code+'/ajuda').add(it)}catch(_){return er('Não consegui avisar agora. Tente de novo em instantes.')}
+  try{const L=JSON.parse(localStorage.getItem(MINE_K)||'[]');L.push({...it,code});localStorage.setItem(MINE_K,JSON.stringify(L.slice(-50)))}catch(_){}
+  A.err='';render(true);burst(innerWidth/2,innerHeight/3,60);toast('Obrigado! A família vai confirmar e o recado chega para '+(A.d&&A.d.nome||'a criança')+'.')},true);
+render(true);aload();
 })();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>

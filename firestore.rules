@@ -9,10 +9,23 @@ service cloud.firestore {
     match /apps/{app}/data/users/{uid}/{doc=**} {
       allow read, write: if entrou() && request.auth.uid == uid;
     }
+    // Cofrinho compartilhado (Prumo): só quem tem o link abre; só a família muda.
+    match /apps/{app}/cofs/{code} {
+      allow get: if entrou();
+      allow create: if entrou() && request.resource.data.owner == request.auth.uid;
+      allow update, delete: if entrou() && resource.data.owner == request.auth.uid;
+      match /ajuda/{hid} {
+        allow create: if entrou() && request.resource.data.uid == request.auth.uid
+          && request.resource.data.v is number && request.resource.data.v > 0 && request.resource.data.v <= 100000
+          && request.resource.data.nome is string && request.resource.data.nome.size() <= 40
+          && request.resource.data.msg is string && request.resource.data.msg.size() <= 200;
+        allow read, update, delete: if entrou() && get(/databases/$(database)/documents/apps/$(app)/cofs/$(code)).data.owner == request.auth.uid;
+      }
+    }
     // Áreas que só o administrador lê por inteiro (cada pessoa vê só o seu).
     match /apps/{app}/{col}/{uid} {
       allow read: if entrou() && (
-        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts']) || request.auth.uid == uid || adm());
+        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs']) || request.auth.uid == uid || adm());
       allow write: if entrou() && (
         (!(col in ['config', 'comx', 'pts', 'offers', 'pub', 'news', 'stores', 'ph', 'tips', 'ads']) && request.auth.uid == uid) || adm());
     }
