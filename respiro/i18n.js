@@ -181,6 +181,57 @@
     ["Ex.: 1h30", "E.g.: 1h30", "Ej.: 1h30"],
     ["Ex.: trilha fechada em dias de chuva forte", "E.g.: trail closed on days of heavy rain", "Ej.: sendero cerrado en días de lluvia fuerte"],
     ["Passo 3: no recado da trilha, não coloque telefone nem link.", "Step 3: don't put phone numbers or links in the trail message.", "Paso 3: en el mensaje del sendero, no pongas teléfono ni enlace."],
+    ["Funcionamento", "Opening hours", "Funcionamiento"],
+    ["Funciona", "Open on", "Abre"],
+    ["Sem day use", "No day use", "Sin day use"],
+    ["Entrada", "Entry", "Entrada"],
+    ["Ligada", "On", "Activada"],
+    ["Desligada", "Off", "Desactivada"],
+    ["Ligar a cobrança", "Turn on billing", "Activar el cobro"],
+    ["Desligar a cobrança", "Turn off billing", "Desactivar el cobro"],
+    ["Administrador: cobrança dos planos", "Admin: plan billing", "Administrador: cobro de los planes"],
+    ["Período de lançamento: as empresas se cadastram de graça e o passo 4 (planos) fica escondido. Ligue quando já tiver bastante gente usando.", "Launch period: businesses list for free and step 4 (plans) stays hidden. Turn it on once plenty of people are using the app.", "Período de lanzamiento: las empresas se registran gratis y el paso 4 (planes) queda oculto. Actívalo cuando ya haya bastante gente usando la app."],
+    ["As empresas veem o passo 4 e escolhem entre Grátis, Destaque e Destaque + Promoção.", "Businesses see step 4 and choose between Free, Featured and Featured + Promotion.", "Las empresas ven el paso 4 y eligen entre Gratis, Destacado y Destacado + Promoción."],
+    ["Só você, como administrador, vê este quadro. Quem já se cadastrou de graça continua no plano Grátis até escolher outro.", "Only you, as admin, see this box. Anyone already listed for free stays on the Free plan until they choose another.", "Solo tú, como administrador, ves este recuadro. Quien ya se registró gratis sigue en el plan Gratis hasta elegir otro."],
+    ["O painel só funciona com o app aberto pelo Claude, com login.", "The dashboard only works with the app opened through Claude, signed in.", "El panel solo funciona con la app abierta desde Claude, con sesión iniciada."],
+    ["Aqui os visitantes trocam dicas, tiram dúvidas, avisam sobre preço e horário e combinam passeios em grupo.", "Here visitors swap tips, ask questions, share updates on prices and hours and plan group outings.", "Aquí los visitantes intercambian consejos, resuelven dudas, avisan sobre precios y horarios y organizan paseos en grupo."],
+    ["Camping, por noite", "Camping, per night", "Camping, por noche"],
+    ["Aceita visitante pagando diária.", "Visitors welcome with a day rate.", "Acepta visitantes pagando la tarifa diaria."],
+    ["Almoço caseiro incluso. Tranquilo, sem som alto.", "Homemade lunch included. Quiet, no loud music.", "Almuerzo casero incluido. Tranquilo, sin música alta."],
+    ["Base para trilhas e cachoeiras da região.", "Base for the region's trails and waterfalls.", "Base para senderos y cascadas de la región."],
+    ["Beira de rio, sem energia elétrica.", "Riverside, no electricity.", "A orillas del río, sin electricidad."],
+    ["Caminhada em volta do lago, 5 km.", "Walk around the lake, 5 km.", "Caminata alrededor del lago, 5 km."],
+    ["Campo, quadras e restaurante.", "Field, courts and restaurant.", "Campo, canchas y restaurante."],
+    ["Colheita e ordenha para crianças.", "Harvesting and milking for kids.", "Cosecha y ordeño para niños."],
+    ["Day use com café colonial no fim de semana.", "Day use with a country-style breakfast on weekends.", "Day use con desayuno colonial el fin de semana."],
+    ["Day use com piscina natural e tirolesa.", "Day use with a natural pool and zipline.", "Day use con piscina natural y tirolesa."],
+    ["Entrada gratuita. Trilhas de 1 a 4 km.", "Free entry. Trails from 1 to 4 km.", "Entrada gratuita. Senderos de 1 a 4 km."],
+    ["Flutuação em rio de água transparente.", "Snorkeling in a crystal-clear river.", "Flotación en un río de agua transparente."],
+    ["Foco em descanso. Sem crianças menores de 12 anos.", "Focused on rest. No children under 12.", "Enfocado en el descanso. Sin niños menores de 12 años."],
+    ["Mirantes sobre o lago e passeio de lancha à parte.", "Lake viewpoints; boat trips cost extra.", "Miradores sobre el lago y paseo en lancha aparte."],
+    ["Nascer do sol. Subida de 40 minutos.", "Sunrise. 40-minute climb.", "Amanecer. Subida de 40 minutos."],
+    ["Perto de cachoeiras e mirante do pôr do sol.", "Near waterfalls and a sunset viewpoint.", "Cerca de cascadas y un mirador del atardecer."],
+    ["Parque urbano grande, bom para piquenique.", "Large city park, good for picnics.", "Parque urbano grande, bueno para picnic."],
+    ["Pequeno, pouca gente, com horta.", "Small, few people, with a vegetable garden.", "Pequeño, poca gente, con huerta."],
+    ["Pesca esportiva e restaurante no local.", "Sport fishing and an on-site restaurant.", "Pesca deportiva y restaurante en el lugar."],
+    ["Pesque e solte e restaurante.", "Catch and release, plus a restaurant.", "Pesca y suelta, y restaurante."],
+    ["Piscina, campo e área para churrasco.", "Pool, field and barbecue area.", "Piscina, campo y zona de parrilla."],
+    ["Poço onde a água empurra para cima.", "A pool where the water pushes you up.", "Poza donde el agua te empuja hacia arriba."],
+    ["Poço para banho. Agendar fim de semana.", "Swimming pool. Book ahead on weekends.", "Poza para bañarse. Reservar el fin de semana."],
+    ["Preço por pessoa na noite. Banheiros e cozinha comum.", "Price per person per night. Shared bathrooms and kitchen.", "Precio por persona por noche. Baños y cocina compartidos."],
+    ["Só com agendamento. Trilhas com guia.", "By appointment only. Guided trails.", "Solo con reserva. Senderos con guía."],
+    ["Só hospedagem. Café da manhã incluso.", "Lodging only. Breakfast included.", "Solo hospedaje. Desayuno incluido."],
+    ["Trilha curta com pequena queda.", "Short trail with a small waterfall.", "Sendero corto con una pequeña cascada."],
+    ["Trilha de 1 hora até a queda. Leve calçado fechado.", "1-hour trail to the waterfall. Wear closed shoes.", "Sendero de 1 hora hasta la cascada. Lleva calzado cerrado."],
+    ["Trilha guiada de 3 km com orquídeas nativas.", "3 km guided trail with native orchids.", "Sendero guiado de 3 km con orquídeas nativas."],
+    ["Trilhas até mirantes e poços. Guia recomendado.", "Trails to viewpoints and pools. Guide recommended.", "Senderos hasta miradores y pozas. Guía recomendado."],
+    ["Trilhas até praias e cachoeiras.", "Trails to beaches and waterfalls.", "Senderos hasta playas y cascadas."],
+    ["Três quedas em sequência. Trilha moderada.", "Three waterfalls in a row. Moderate trail.", "Tres cascadas seguidas. Sendero moderado."],
+    ["Águas naturais em piscinas.", "Natural water in pools.", "Aguas naturales en piscinas."],
+    ["Depois de chuva forte, a travessia do córrego fica fechada.", "After heavy rain, the stream crossing is closed.", "Después de lluvia fuerte, el cruce del arroyo queda cerrado."],
+    ["Trilhas abertas das 7h às 16h.", "Trails open from 7am to 4pm.", "Senderos abiertos de 7h a 16h."],
+    ["Cadastrado por você neste protótipo.", "Listed by you in this prototype.", "Registrado por ti en este prototipo."],
+    ["voce@exemplo.com", "you@example.com", "tu@ejemplo.com"],
     ['🥾 Você tem uma trilha em andamento', '🥾 You have a trail in progress', '🥾 Tienes un sendero en curso'], ['🥾 Trilha em andamento', '🥾 Trail in progress', '🥾 Sendero en curso'], ['Voltar para a trilha', 'Back to the trail', 'Volver al sendero'], ['Suas trilhas aqui', 'Your trails here', 'Tus senderos aquí'], ['🥾 Minhas trilhas', '🥾 My trails', '🥾 Mis senderos'], ['Trilha', 'Trail', 'Sendero'],
     ['Marcando seu trajeto pelo GPS', 'Recording your route by GPS', 'Marcando tu recorrido por GPS'], ['Pausada', 'Paused', 'En pausa'], ['pausada', 'paused', 'en pausa'], ['Antes de começar, leia', 'Before you start, read this', 'Antes de empezar, lee esto'],
     ['• Deixe o Respiro', '• Keep Respiro', '• Deja Respiro'], ['aberto e com a tela ligada', 'open with the screen on', 'abierto y con la pantalla encendida'], ['. Se a tela apagar ou você trocar de app, o celular pode parar de marcar e o trecho sai em linha reta.', '. If the screen turns off or you switch apps, the phone may stop recording and that stretch shows as a straight line.', '. Si la pantalla se apaga o cambias de app, el celular puede dejar de marcar y ese tramo sale en línea recta.'],
@@ -236,9 +287,12 @@
     m = s.match(/^(👥 )?Dos visitantes \((\d+) relatos?\)$/); if (m) return (m[1] || '') + (COL === 1 ? 'From visitors (' + m[2] + (m[2] === '1' ? ' report)' : ' reports)') : 'De los visitantes (' + m[2] + (m[2] === '1' ? ' relato)' : ' relatos)'));
     m = s.match(/^⚠️ Os visitantes contam diferente do lugar em: (.+)\.$/); if (m) { var EN = { guia: 'guide', dificuldade: 'difficulty', 'sinalização': 'signage' }, ES = { guia: 'guía', dificuldade: 'dificultad', 'sinalização': 'señalización' }; var w = m[1].split(', ').map(function (x) { return (COL === 1 ? EN : ES)[x] || x; }).join(', '); return COL === 1 ? '⚠️ Visitors report something different from the place on: ' + w + '.' : '⚠️ Los visitantes cuentan algo distinto al lugar en: ' + w + '.'; }
     m = s.match(/^(Guia|Dificuldade|Sinalização): (.+) \((\d+)\)$/); if (m) return tr(m[1]) + ': ' + tr(m[2]) + ' (' + m[3] + ')';
-    m = s.match(/^(\S+) (.+)$/); if (m && /^[^A-Za-zÀ-ú0-9]+$/.test(m[1]) && D[m[2]] !== undefined) return m[1] + ' ' + D[m[2]];
+    m = s.match(/^(\S+) (.+)$/); if (m && /^[^A-Za-zÀ-ú0-9]+$/.test(m[1])) { var r2 = tr(m[2]); if (r2 !== m[2]) return m[1] + ' ' + r2; }
     m = s.match(/^(🥾 )?Vai fazer trilha ou caminhada em (.+)\?$/); if (m) return (m[1] || '') + (COL === 1 ? 'Going on a trail or a walk in ' + m[2] + '?' : '¿Vas a hacer un sendero o una caminata en ' + m[2] + '?');
     m = s.match(/^(🥾 )?Trilha em (.+)$/); if (m && !D[s]) return (m[1] || '') + (COL === 1 ? 'Trail in ' : 'Sendero en ') + m[2];
+    m = s.match(/^“(.+)”$/); if (m) { var q2 = tr(m[1]); if (q2 !== m[1]) return '“' + q2 + '”'; }
+    m = s.match(/^(.+) \(exemplo\), (.+) quilômetros$/); if (m) return m[1] + (COL === 1 ? ' (example), ' + m[2] + ' kilometers' : ' (ejemplo), ' + m[2] + ' kilómetros');
+    m = s.match(/^Entrada (\d+h)(?:, saída (\d+h))?$/); if (m) return COL === 1 ? 'Check-in ' + m[1] + (m[2] ? ', check-out ' + m[2] : '') : 'Entrada ' + m[1] + (m[2] ? ', salida ' + m[2] : '');
     m = s.match(/^Mostrando lugares perto de (.+)\.$/); if (m) return (COL === 1 ? 'Showing places near ' : 'Mostrando lugares cerca de ') + m[1] + '.';
     m = s.match(/^Perto de (.+)$/); if (m && !D[s]) return (COL === 1 ? 'Near ' : 'Cerca de ') + m[1];
     m = s.match(/^Avaliar (.+)$/); if (m && !D[s]) return (COL === 1 ? 'Review ' : 'Reseñar ') + m[1];
