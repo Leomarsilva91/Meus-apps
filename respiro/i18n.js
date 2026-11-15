@@ -163,6 +163,24 @@
     ["Retirado: só o administrador vê", "Removed: only the admin sees it", "Retirado: solo el administrador lo ve"],
     ["Toque de novo em Excluir de vez para confirmar.", "Tap Delete permanently again to confirm.", "Toca Eliminar definitivamente otra vez para confirmar."],
     ["Trilha excluída.", "Trail deleted.", "Sendero eliminado."],
+    ["Como é a trilha", "What the trail is like", "Cómo es el sendero"],
+    ["Duas visões: o que o lugar informa e o que os visitantes viveram. O número entre parênteses é quantos visitantes disseram aquilo.", "Two views: what the place says and what visitors experienced. The number in parentheses is how many visitors said that.", "Dos visiones: lo que informa el lugar y lo que vivieron los visitantes. El número entre paréntesis es cuántos visitantes dijeron eso."],
+    ["Oficial do lugar", "Official from the place", "Oficial del lugar"],
+    ["O lugar ainda não informou os dados oficiais da trilha.", "The place hasn't shared official trail details yet.", "El lugar aún no informó los datos oficiales del sendero."],
+    ["Ainda ninguém contou como foi. Faça a trilha com o Respiro e seja o primeiro.", "Nobody has shared yet. Do the trail with Respiro and be the first.", "Nadie ha contado aún cómo fue. Haz el sendero con Respiro y sé el primero."],
+    ["O que mais marcaram no caminho:", "What people marked most along the way:", "Lo que más marcaron en el camino:"],
+    ["Confirme antes de ir.", "Check before you go.", "Confirma antes de ir."],
+    ["Trilha (se o lugar tiver)", "Trail (if the place has one)", "Sendero (si el lugar tiene)"],
+    ["Isto é a informação oficial do lugar. No app, ela aparece ao lado do que os visitantes contam.", "This is the place's official information. In the app, it appears next to what visitors say.", "Esta es la información oficial del lugar. En la app, aparece junto a lo que cuentan los visitantes."],
+    ["O lugar tem trilha", "The place has a trail", "El lugar tiene sendero"],
+    ["Distância (km)", "Distance (km)", "Distancia (km)"],
+    ["Tempo médio", "Average time", "Tiempo promedio"],
+    ["Avisos oficiais", "Official warnings", "Avisos oficiales"],
+    ["Recado do lugar sobre a trilha (opcional)", "Message from the place about the trail (optional)", "Mensaje del lugar sobre el sendero (opcional)"],
+    ["Ex.: 3 ou 1 a 4", "E.g.: 3 or 1 to 4", "Ej.: 3 o 1 a 4"],
+    ["Ex.: 1h30", "E.g.: 1h30", "Ej.: 1h30"],
+    ["Ex.: trilha fechada em dias de chuva forte", "E.g.: trail closed on days of heavy rain", "Ej.: sendero cerrado en días de lluvia fuerte"],
+    ["Passo 3: no recado da trilha, não coloque telefone nem link.", "Step 3: don't put phone numbers or links in the trail message.", "Paso 3: en el mensaje del sendero, no pongas teléfono ni enlace."],
     ['🥾 Você tem uma trilha em andamento', '🥾 You have a trail in progress', '🥾 Tienes un sendero en curso'], ['🥾 Trilha em andamento', '🥾 Trail in progress', '🥾 Sendero en curso'], ['Voltar para a trilha', 'Back to the trail', 'Volver al sendero'], ['Suas trilhas aqui', 'Your trails here', 'Tus senderos aquí'], ['🥾 Minhas trilhas', '🥾 My trails', '🥾 Mis senderos'], ['Trilha', 'Trail', 'Sendero'],
     ['Marcando seu trajeto pelo GPS', 'Recording your route by GPS', 'Marcando tu recorrido por GPS'], ['Pausada', 'Paused', 'En pausa'], ['pausada', 'paused', 'en pausa'], ['Antes de começar, leia', 'Before you start, read this', 'Antes de empezar, lee esto'],
     ['• Deixe o Respiro', '• Keep Respiro', '• Deja Respiro'], ['aberto e com a tela ligada', 'open with the screen on', 'abierto y con la pantalla encendida'], ['. Se a tela apagar ou você trocar de app, o celular pode parar de marcar e o trecho sai em linha reta.', '. If the screen turns off or you switch apps, the phone may stop recording and that stretch shows as a straight line.', '. Si la pantalla se apaga o cambias de app, el celular puede dejar de marcar y ese tramo sale en línea recta.'],
@@ -214,6 +232,9 @@
     m = s.match(/^Faltam (\d+) pontos para (\S+)\. Avaliação de lugar vale (\d+) pontos, avaliação de pessoa vale (\d+) e dica ou aviso vale (\d+)\. O limite é de (\d+) pontos por dia \(hoje você tem (\d+)\)\. Os prêmios ainda serão definidos\.$/);
     if (m) return COL === 1 ? m[1] + ' points left to reach ' + tr(m[2]) + '. A place review is worth ' + m[3] + ' points, a person review ' + m[4] + ' and a tip or update ' + m[5] + '. The limit is ' + m[6] + ' points per day (today you have ' + m[7] + '). Rewards are still to be defined.' : 'Faltan ' + m[1] + ' puntos para ' + tr(m[2]) + '. Una reseña de lugar vale ' + m[3] + ' puntos, una de persona ' + m[4] + ' y un consejo o aviso ' + m[5] + '. El límite es de ' + m[6] + ' puntos por día (hoy tienes ' + m[7] + '). Los premios aún se definirán.';
     m = s.match(/^Avaliar o organizador · (.+)$/); if (m) return (COL === 1 ? 'Review the organizer · ' : 'Reseñar al organizador · ') + m[1];
+    m = s.match(/^(Guia|Dificuldade|Sinalização): ([^()]+)$/); if (m) return tr(m[1]) + ': ' + tr(m[2]);
+    m = s.match(/^(👥 )?Dos visitantes \((\d+) relatos?\)$/); if (m) return (m[1] || '') + (COL === 1 ? 'From visitors (' + m[2] + (m[2] === '1' ? ' report)' : ' reports)') : 'De los visitantes (' + m[2] + (m[2] === '1' ? ' relato)' : ' relatos)'));
+    m = s.match(/^⚠️ Os visitantes contam diferente do lugar em: (.+)\.$/); if (m) { var EN = { guia: 'guide', dificuldade: 'difficulty', 'sinalização': 'signage' }, ES = { guia: 'guía', dificuldade: 'dificultad', 'sinalização': 'señalización' }; var w = m[1].split(', ').map(function (x) { return (COL === 1 ? EN : ES)[x] || x; }).join(', '); return COL === 1 ? '⚠️ Visitors report something different from the place on: ' + w + '.' : '⚠️ Los visitantes cuentan algo distinto al lugar en: ' + w + '.'; }
     m = s.match(/^(Guia|Dificuldade|Sinalização): (.+) \((\d+)\)$/); if (m) return tr(m[1]) + ': ' + tr(m[2]) + ' (' + m[3] + ')';
     m = s.match(/^(\S+) (.+)$/); if (m && /^[^A-Za-zÀ-ú0-9]+$/.test(m[1]) && D[m[2]] !== undefined) return m[1] + ' ' + D[m[2]];
     m = s.match(/^(🥾 )?Vai fazer trilha ou caminhada em (.+)\?$/); if (m) return (m[1] || '') + (COL === 1 ? 'Going on a trail or a walk in ' + m[2] + '?' : '¿Vas a hacer un sendero o una caminata en ' + m[2] + '?');
