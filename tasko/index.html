@@ -175,7 +175,7 @@ const migrate=u=>{if(!u.roles)u={name:u.name,email:u.email,phone:u.phone,h:u.h,r
   return u};
 const users=()=>{try{const l=JSON.parse(store.getItem('ms_users')||'[]');return Array.isArray(l)?l.map(migrate):[]}catch(e){return[]}};
 const saveUsers=l=>store.setItem('ms_users',JSON.stringify(l));
-const view=(u,k)=>{const b=String(k).replace('E',''),isE=k!==b,own=u.roles[k]&&typeof u.roles[k]==='object'?u.roles[k]:{},pd=b==='pro'?own:(u.roles.pro&&typeof u.roles.pro==='object'?u.roles.pro:(u.roles.proE||{}));return{emp:isE?{razao:own.razao||'',cnpj:own.cnpj||'',email:own.email||'',phone:own.phone||'',addr:own.addr||null}:null,uid:uidOf(u.email),name:u.name,email:u.email,phone:u.phone,roles:u.roles,role:b,pk:k,kind:(b==='pro'&&!isE)?(own.kind||''):'',cat:pd.cat||'',title:pd.title||'',area:pd.area||'',city:pd.city||''}};
+const view=(u,k)=>{const b=String(k).replace('E',''),isE=k!==b,own=u.roles[k]&&typeof u.roles[k]==='object'?u.roles[k]:{},pd=b==='pro'?own:(u.roles.pro&&typeof u.roles.pro==='object'?u.roles.pro:(u.roles.proE||{}));return{emp:isE?{razao:own.razao||'',cnpj:own.cnpj||'',email:own.email||'',emailP:own.emailP||'',email2:own.email2||'',email2P:own.email2P||'',phone:own.phone||'',addr:own.addr||null}:null,uid:uidOf(u.email),name:u.name,email:u.email,phone:u.phone,roles:u.roles,role:b,pk:k,kind:(b==='pro'&&!isE)?(own.kind||''):'',cat:pd.cat||'',title:pd.title||'',area:pd.area||'',city:pd.city||''}};
 function poutAll(){try{const o=JSON.parse(store.getItem('ms_pout')||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}}
 const poutGet=em=>{const a=poutAll()[em];return Array.isArray(a)?a:[]};
 function poutSet(em,a){const o=poutAll();if(a.length)o[em]=a;else delete o[em];try{store.setItem('ms_pout',JSON.stringify(o))}catch(e){}}
@@ -192,8 +192,17 @@ const OUT='Outros serviços',areaFld=(sel,val,cat)=>`<div id="${sel}ab"${cat===O
 const loginOf=u=>u&&(u.em2||u.email);
 const byLogin=e=>users().find(x=>x&&loginOf(x)===e);
 const emailUsado=e=>users().some(x=>x&&(loginOf(x)===e||x.email===e));
+const byDoc=v=>{const d=String(v||'').replace(/\D/g,'');if(d.length===11&&cpfOk(v)){const h=cpfH(v);return users().find(u=>u&&u.cpfh===h)}if(d.length===14&&cnpjOk(v))return users().find(u=>u&&Object.values(u.roles||{}).some(r=>r&&typeof r==='object'&&cnpjDig(r.cnpj||'')===d));return null};
+function sxCard(){const F=S.sxf||{};if(S.sx){const u=users().find(x=>x.email===S.sx);return `<div class="card" style="background:var(--bg)"><b>✅ Usando o cadastro de ${esc(fnm(u?u.name:''))}</b><p class="muted" style="margin:6px 0 0">Seus dados já estão preenchidos abaixo. O CPF e o CNPJ não mudam.</p><button class="link" data-act="sxsair">Não sou eu, começar do zero</button></div>`}
+ return `<div class="card"><b>Já tem cadastro no Tasko?</b><p class="muted" style="margin:6px 0 8px">Digite seu CPF ou CNPJ. Se achar, pedimos a senha e seus dados aparecem preenchidos.</p><div class="row" style="gap:8px;flex-wrap:nowrap"><input id="sxid" inputmode="numeric" maxlength="18" autocomplete="off" placeholder="CPF ou CNPJ" value="${esc(F.q||'')}" style="flex:1;min-width:0"><button class="btn" type="button" data-act="sxfind" style="flex:none;width:auto;padding:0 16px">Buscar</button></div>
+${F.err?`<p class="err" role="alert">${esc(F.err)}</p>`:''}${F.no?'<p class="muted" style="margin:8px 0 0">Não achamos cadastro com esse documento. Preencha os dados abaixo.</p>':''}
+${F.em?`<div style="margin-top:10px"><p style="margin:0">Encontramos uma conta: <b>${esc(emMask(F.mask))}</b></p><label for="sxpw" style="margin-top:8px">Senha dessa conta</label><input id="sxpw" type="password" autocomplete="current-password"><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn" type="button" data-act="sxok" style="width:auto;padding:0 16px">Usar meus dados</button><button class="link" type="button" data-act="findacc">Esqueci a senha</button></div></div>`:''}</div>`}
+function sxFill(){const u=users().find(x=>x.email===S.sx);if(!u)return;const set=(id,v)=>{const i=$('#'+id);if(i&&v!=null&&v!=='')i.value=v},lock=id=>{const i=$('#'+id);if(i&&i.value){i.readOnly=true;i.style.background='var(--line)'}};
+ set('name',u.name);set('email',loginOf(u));set('phone',u.phone?fmtPhone(String(u.phone)):'');if(u.cpf)set('pcpf',cpfFmt(u.cpf));lock('pcpf');
+ const er=Object.values(u.roles||{}).find(r=>r&&typeof r==='object'&&r.cnpj);if(er){set('razao',er.razao);set('cnpj',cnpjFmt(er.cnpj));lock('cnpj')}
+ const pr=Object.values(u.roles||{}).find(r=>r&&typeof r==='object'&&r.city);if(pr){set('city',pr.city);if(pr.cat){const c=$('#cat');if(c)c.value=pr.cat}}}
 function uidOf(e){let h=5381;for(const c of String(e||'').toLowerCase())h=((h*33)^c.charCodeAt(0))>>>0;return 'U-'+h.toString(36).toUpperCase().padStart(6,'0').slice(0,7)}
-const acctHdr=emp=>S.user?`<div class="card"><b>Mesma conta</b><p class="muted" style="margin:6px 0 0">${esc(S.user.name)} · ${esc(S.user.email)} · ID da conta ${uidOf(S.user.email)}</p><p style="margin:6px 0 0">O perfil novo fica nesta conta e usa seu nome, e-mail, telefone e senha de sempre${emp?(cpfNeed()?'':', e o CPF já cadastrado'):''}. Só pedimos o que é próprio ${emp?'da empresa':'do trabalho'}.</p></div>`:'';
+const acctHdr=emp=>S.user?`<div class="card"><b>Mesma conta</b><p class="muted" style="margin:6px 0 0">${esc(S.user.name)} · ${esc(loginOf(meU())||S.user.email)} (e-mail principal) · ID da conta ${uidOf(S.user.email)}</p><p style="margin:6px 0 0">O perfil novo fica nesta conta e usa seu nome, e-mail, telefone e senha de sempre${emp?(cpfNeed()?'':', e o CPF já cadastrado'):''}. Só pedimos o que é próprio ${emp?'da empresa':'do trabalho'}.</p></div>`:'';
 const fld=(id,lab,attrs,extra='')=>`<div><label for="${id}">${lab}</label><input id="${id}" ${attrs} aria-describedby="e-${id}">${extra}<div class="err" id="e-${id}"></div></div>`;
 const head=(t,back)=>`<header class="top">${back?`<button class="back" data-act="back" data-bk="${back}" aria-label="Voltar">←</button>`:''}<h1>${t}</h1>${back&&!['welcome','login'].includes(back)?`<button class="hmbtn" data-go="home" aria-label="Página inicial" title="Página inicial"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/></svg><span>Início</span></button>`:''}</header>`;
 
@@ -213,7 +222,7 @@ welcome:()=>`<div class="hero"><svg width="72" height="72" viewBox="0 0 64 64" r
 <button class="link" data-go="login">Já tenho conta</button>
 ${lfoot()}</main>`,
 signup:()=>`${head('Criar conta como '+ROLE[S.role].toLowerCase(),'welcome')}<main>
-<form class="pf" id="sform" autocomplete="on" style="display:contents"><p class="muted" style="margin:0">Já tem conta com outro perfil? Use o mesmo e-mail e a mesma senha para adicionar este perfil.</p>
+${sxCard()}<form class="pf" id="sform" autocomplete="on" style="display:contents"><p class="muted" style="margin:0">${S.sx?'Confira seus dados. Pode alterar o que quiser: os dados novos substituem os antigos, ligados ao mesmo CPF ou CNPJ.':'Já tem conta com outro perfil? Use o mesmo e-mail e a mesma senha para adicionar este perfil.'}</p>
 ${fld('name','Nome completo','type="text" autocomplete="name"')}
 ${fld('email','E-mail','type="email" name="username" autocomplete="username" inputmode="email"')}
 ${fld('phone','WhatsApp com DDD','type="tel" autocomplete="tel" inputmode="numeric" placeholder="(11) 91234-5678"')}
@@ -221,16 +230,19 @@ ${S.role.endsWith('E')?`${fld('razao','Razão social','type="text" autocomplete=
 ${S.role.startsWith('pro')?cpfProFld(S.role==='proE'):''}${S.role==='pro'?kindSel('kind',''):''}
 ${S.role.startsWith('pro')?`<div><label for="cat">Sua categoria</label><select id="cat" aria-describedby="e-cat"><option value="">Selecione</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select><div class="err" id="e-cat"></div></div>${areaFld('cat','','')}
 ${fld('city','Cidade de atuação','type="text" autocomplete="address-level2"')}`:''}
-${fld('pw','Senha','type="password" name="password" autocomplete="new-password"','<div class="muted" id="pwm" aria-live="polite"></div>')}
+${S.sx?'<div class="card" style="background:var(--bg)"><b>✅ Senha já conferida</b><p class="muted" style="margin:6px 0 0">O novo perfil fica na mesma conta e usa a senha de sempre.</p></div>':`${fld('pw','Senha','type="password" name="password" autocomplete="new-password"','<div class="muted" id="pwm" aria-live="polite"></div>')}
 ${fld('pw2','Confirmar senha','type="password" autocomplete="new-password"')}
-<label class="chk"><input type="checkbox" data-act="showpw"> Mostrar senhas</label>
+<label class="chk"><input type="checkbox" data-act="showpw"> Mostrar senhas</label>`}
 <div><label class="chk" style="align-items:flex-start"><input type="checkbox" id="terms" aria-describedby="e-terms"> <span>Li e aceito os ${dlk('terms','Termos de Uso')} e a ${dlk('privacy','Política de Privacidade')}</span></label><div class="err" id="e-terms"></div></div>
 <div><label class="chk"><input type="checkbox" id="age18" aria-describedby="e-age18"> <span>Declaro ter 18 anos ou mais</span></label><div class="err" id="e-age18"></div></div>
 <div><label class="chk" style="align-items:flex-start"><input type="checkbox" id="mkt"> <span>Quero receber novidades e ofertas (opcional)</span></label></div>
 <button class="btn" id="go" type="submit" data-act="signup">Criar conta</button></form>
 <button class="link" data-go="login">Já tenho conta</button></main>`,
 reset:()=>{const R=S.rs||{};return `${head('Recuperar senha','login')}<main><form class="pf" id="rform" autocomplete="on" style="display:contents">
-<div class="card"><b>Código enviado para ${esc(R.mk?emMask(R.em2||R.email):(R.em2||R.email||''))}</b><p class="muted" style="margin:6px 0 0">Ele vale por 10 minutos. Digite o código e escolha uma nova senha.</p><div style="margin-top:10px;padding:10px;border-radius:12px;background:var(--line)" role="note"><b>Demonstração:</b> o app ainda não envia e-mails de verdade. O código que chegaria no seu e-mail é <b style="letter-spacing:.15em">${esc(R.code||'')}</b>.</div></div>
+<div class="card"><b>${R.ch==='sms'?'Código enviado por SMS para '+esc(telMask(R.tel)):R.mk?'Código enviado para '+esc(emMask(R.em2||R.email)):'Se houver uma conta com '+esc(R.login||R.email||'')+', o código chega nesse e-mail.'}</b><p class="muted" style="margin:6px 0 0">Ele vale por 10 minutos e aceita até 5 tentativas. Nunca passe esse código para ninguém: o Tasko não pede código por telefone nem por mensagem.</p>
+${R.ok&&R.tel?`<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><span class="muted" style="flex-basis:100%;font-size:13px">Receber por:</span><button type="button" class="chip" data-act="rsch" data-ch="em" aria-pressed="${R.ch!=='sms'}">E-mail</button><button type="button" class="chip" data-act="rsch" data-ch="sms" aria-pressed="${R.ch==='sms'}">SMS no celular ${esc(telMask(R.tel))}</button></div>`:''}
+<button type="button" class="link" data-act="rsnew" style="margin-top:6px">Não chegou? Enviar outro código</button>
+<div style="margin-top:10px;padding:10px;border-radius:12px;background:var(--line)" role="note"><b>Demonstração:</b> o app ainda não envia e-mail nem SMS de verdade. O código que chegaria é <b style="letter-spacing:.15em">${esc(R.code||'')}</b>.</div></div>
 <input type="email" name="username" autocomplete="username" value="${R.mk?'':esc(R.email||'')}" hidden>
 ${fld('rcode','Código de 6 dígitos','type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"')}
 ${fld('rpw','Nova senha','type="password" name="password" autocomplete="new-password"','<div class="muted" id="rpwm" aria-live="polite"></div>')}
@@ -783,12 +795,14 @@ function applyTheme(){let id='pad';try{if(S.user){const r=plRec();id=(r.themes||
  m=dk?{'--pri':t[7],'--link':t[8],'--head':t[9],'--accbg':t[9],'--bg':t[11]}:{'--pri':t[3],'--link':t[3],'--head':t[4],'--acc':t[5],'--accbg':t[6],'--bg':t[10]};
  V.forEach(v=>{if(m[v])r.style.setProperty(v,m[v]);else r.style.removeProperty(v)})}
 try{if(window.matchMedia)matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>applyTheme())}catch(e){}
+const EMP_P=['Administração','Contabilidade','Financeiro','Comercial','Compras','Outro'];
+const emPSel=(id,v)=>`<div><label for="${id}">Para quê</label><select id="${id}">${EMP_P.map(x=>`<option${v===x?' selected':''}>${x}</option>`).join('')}</select></div>`;
 function compFlds(e){const a=e.addr||{};return `<p class="muted" style="margin:6px 0 0">Mesma conta e mesmo CPF: ${esc(S.user.name)} · ID ${uidOf(S.user.email)}</p>${fld('razao2','Razão social','type="text" value="'+esc(e.razao)+'"')}${fld('cnpj2','CNPJ','type="text" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" value="'+esc(cnpjFmt(e.cnpj))+'"'+(cnpjOk(e.cnpj||'')?' readonly aria-readonly="true" style="background:var(--line)"':''))}${cnpjOk(e.cnpj||'')?'<p class="muted" style="margin:-6px 0 0;font-size:13px">O CNPJ não pode ser trocado depois do cadastro. Para outra empresa, adicione um novo perfil.</p>':''}
-<p class="muted" style="margin:4px 0 0">Contato e endereço da empresa (opcionais). Em branco, usamos o e-mail e o telefone da sua conta.</p>${fld('cemail2','E-mail da empresa','type="email" inputmode="email" autocomplete="off" maxlength="90" value="'+esc(e.email||'')+'"')}${fld('cphone2','Telefone da empresa com DDD','type="tel" inputmode="numeric" maxlength="15" autocomplete="off" value="'+esc(e.phone?fmtPhone(String(e.phone)):'')+'"')}${fld('crua2','Endereço (rua e número)','type="text" maxlength="90" autocomplete="off" value="'+esc(a.rua||'')+'"')}${fld('cbairro2','Bairro','type="text" maxlength="50" autocomplete="off" value="'+esc(a.bairro||'')+'"')}${fld('ccidade2','Cidade','type="text" maxlength="50" autocomplete="off" value="'+esc(a.cidade||'')+'"')}${fld('cuf2','UF','type="text" maxlength="2" autocomplete="off" style="text-transform:uppercase" value="'+esc(a.uf||'')+'"')}`}
+<p class="muted" style="margin:4px 0 0">Contato e endereço da empresa (opcionais). Em branco, usamos o e-mail e o telefone da sua conta.</p><p class="muted" style="margin:0;font-size:13px">E-mail principal (entrada na conta): <b>${esc(loginOf(meU())||S.user.email)}</b>. Os e-mails abaixo são secundários: servem para a empresa receber avisos em outra área, como a contabilidade.</p>${fld('cemail2','E-mail secundário 1 (opcional)','type="email" inputmode="email" autocomplete="off" maxlength="90" value="'+esc(e.email||'')+'"')}${emPSel('cep2',e.emailP)}${fld('cemail3','E-mail secundário 2 (opcional)','type="email" inputmode="email" autocomplete="off" maxlength="90" value="'+esc(e.email2||'')+'"')}${emPSel('cep3',e.email2P)}${fld('cphone2','Telefone da empresa com DDD','type="tel" inputmode="numeric" maxlength="15" autocomplete="off" value="'+esc(e.phone?fmtPhone(String(e.phone)):'')+'"')}${fld('crua2','Endereço (rua e número)','type="text" maxlength="90" autocomplete="off" value="'+esc(a.rua||'')+'"')}${fld('cbairro2','Bairro','type="text" maxlength="50" autocomplete="off" value="'+esc(a.bairro||'')+'"')}${fld('ccidade2','Cidade','type="text" maxlength="50" autocomplete="off" value="'+esc(a.cidade||'')+'"')}${fld('cuf2','UF','type="text" maxlength="2" autocomplete="off" style="text-transform:uppercase" value="'+esc(a.uf||'')+'"')}`}
 function compCard(){const e=S.user.emp||{razao:'',cnpj:''};return `<div class="card"><b>Dados da empresa</b><p class="muted" style="margin:6px 0 10px">Aparecem nos pedidos, nas propostas e nos comprovantes do perfil ${esc(ROLE[S.user.pk].toLowerCase())}. Você pode alterar os dados; o CPF, o CNPJ e a conta continuam os mesmos.</p>
 ${compFlds(e)}
 <button class="btn" style="margin-top:12px" data-act="savecomp">Salvar dados da empresa</button><div id="cmsg" class="muted" role="status" aria-live="polite" style="margin-top:6px"></div></div>`}
-function emCard(){const u=meU()||{};return `<div class="card"><b>E-mail da conta</b><p class="muted" style="margin:6px 0 10px">Você entra com <b>${esc(loginOf(u)||S.user.email)}</b>. Pode trocar o e-mail, a senha e os outros dados. O CPF não muda: ele é a identidade da conta.${cpfOk(u.cpf||'')?' CPF: '+esc(cpfFmt(u.cpf).replace(/^(\d{3})\.\d{3}\.\d{3}/,'$1.***.***'))+'.':''}</p>
+function emCard(){const u=meU()||{};return `<div class="card"><b>E-mail principal da conta</b><p class="muted" style="margin:6px 0 10px">Você entra com <b>${esc(loginOf(u)||S.user.email)}</b>. Pode trocar o e-mail, a senha e os outros dados. O CPF não muda: ele é a identidade da conta.${cpfOk(u.cpf||'')?' CPF: '+esc(cpfFmt(u.cpf).replace(/^(\d{3})\.\d{3}\.\d{3}/,'$1.***.***'))+'.':''}</p>
 <details class="mm"><summary class="chip fill" style="display:inline-flex;width:auto">Trocar e-mail</summary><form class="pf" autocomplete="on" style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
 ${fld('nem','Novo e-mail','type="email" inputmode="email" autocomplete="email" maxlength="90"')}
 ${fld('nempw','Sua senha atual','type="password" autocomplete="current-password"')}
@@ -2259,6 +2273,7 @@ const cpfSave=d=>{const l=users(),u=l.find(x=>x.email===S.user.email);if(u&&!(u.
 const CPFFIX='O CPF não pode ser trocado depois do cadastro. Ele é a identidade da conta.';
 const cpfDupPro=(d,email)=>{const h=cpfH(d);return users().some(u=>u&&u.email!==email&&u.cpfh===h&&u.roles&&(u.roles.pro||u.roles.proE))};
 const cpfProFld=(isE)=>fld('pcpf',isE?'CPF do responsável pela empresa':'CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Usado na análise de idoneidade de quem presta serviços na plataforma. Fica só neste aparelho e não aparece para ninguém.</p><button type="button" class="link" data-act="findacc" style="justify-self:start">CPF já usado em outra conta? Encontrar minha conta</button>';
+const telMask=t=>{const d=String(t||'').replace(/\D/g,'');return d.length>=4?'('+d.slice(0,2)+') *****-'+d.slice(-4):'seu celular'};
 const emMask=e=>{const[a,b]=String(e||'').split('@');return b?(a.slice(0,2)+'***@'+b):'outra conta'};
 const cpfDonoMsg=(d,email,f)=>{const h=cpfH(d),u=users().find(u=>u&&u.email!==email&&u.cpfh===h&&f(u));return u?CPFDUP+' Ele está na conta '+emMask(u.em2||u.email)+'. Entre nela para usar esse perfil, ou use outro CPF.':CPFDUP};
 const cpfProChk=(E,email)=>{const i=$('#pcpf');if(!i)return;if(!cpfOk(i.value))E.pcpf='Informe um CPF válido.';else if(cpfDupPro(i.value,email))E.pcpf=cpfDonoMsg(i.value,email,u=>u.roles&&(u.roles.pro||u.roles.proE))};
@@ -2481,27 +2496,30 @@ function addPro(){
 }
 
 async function signup(){
-  const v=id=>($('#'+id)?$('#'+id).value:'').trim(),E={},email=v('email').toLowerCase(),pw=$('#pw').value;
+  const v=id=>($('#'+id)?$('#'+id).value:'').trim(),E={},email=v('email').toLowerCase(),pw=$('#pw')?$('#pw').value:'',sx=S.sx?users().find(x=>x.email===S.sx):null,key=sx?sx.email:email;
   if(v('name').length<3)E.name='Informe seu nome completo.';
   if(!EMAIL.test(email))E.email='Informe um e-mail válido.';
-  else if((users().find(u=>u.email===email)||{roles:{}}).roles[S.role])E.email='Este e-mail já tem perfil de '+ROLE[S.role].toLowerCase()+'. Entre na sua conta.';
+  else if(sx&&sx.roles[S.role])E.email='Sua conta já tem perfil de '+ROLE[S.role].toLowerCase()+'. Entre na sua conta.';
+  else if(!sx&&(users().find(u=>loginOf(u)===email)||{roles:{}}).roles[S.role])E.email='Este e-mail já tem perfil de '+ROLE[S.role].toLowerCase()+'. Entre na sua conta.';
+  else if(sx&&email!==loginOf(sx)&&emailUsado(email))E.email='Este e-mail já está em uso em outra conta.';
   if(v('phone').replace(/\D/g,'').length<10)E.phone='Informe o telefone com DDD.';
-  const isE=S.role.endsWith('E'),isP=S.role.startsWith('pro');if(isE){if(v('razao').length<3)E.razao='Informe a razão social.';if(!cnpjOk(v('cnpj')))E.cnpj='Informe um CNPJ válido.';else if(cnpjDup(v('cnpj'),email))E.cnpj='Este CNPJ já está cadastrado em outra conta.'}
+  const isE=S.role.endsWith('E'),isP=S.role.startsWith('pro');if(isE){if(v('razao').length<3)E.razao='Informe a razão social.';if(!cnpjOk(v('cnpj')))E.cnpj='Informe um CNPJ válido.';else if(cnpjDup(v('cnpj'),key))E.cnpj='Este CNPJ já está cadastrado em outra conta.'}
   if(S.role==='pro'&&!v('kind'))E.kind='Escolha como você atua.';
-  if(isP)cpfProChk(E,email);
+  if(isP&&!(sx&&cpfOk(sx.cpf||'')))cpfProChk(E,key);
   if(isP){if(!v('cat'))E.cat='Escolha sua categoria.';if(v('city').length<2)E.city='Informe sua cidade.';if(v('cat')===OUT&&v('catar').length<3)E.catar='Informe sua área de atuação.'}
-  if(pw.length<8||!/[A-Za-z]/.test(pw)||!/\d/.test(pw))E.pw='Use ao menos 8 caracteres, com letras e números.';
-  if($('#pw2').value!==pw)E.pw2='As senhas não coincidem.';
+  if(!sx){if(pw.length<8||!/[A-Za-z]/.test(pw)||!/\d/.test(pw))E.pw='Use ao menos 8 caracteres, com letras e números.';
+  if($('#pw2').value!==pw)E.pw2='As senhas não coincidem.';}
   if(!$('#terms').checked)E.terms='Aceite os Termos e a Política para continuar.';
   if(!$('#age18').checked)E.age18='Confirme que você tem 18 anos ou mais.';
   if(showErrors(E))return;
   $('#go').disabled=true;
-  const list=users(),old=list.find(x=>loginOf(x)===email),resv=!old&&list.some(x=>x.email===email),h=await hash((old?old.email:email)+':'+pw),emp=isE?{razao:v('razao'),cnpj:cnpjDig(v('cnpj'))}:null,prof=isP?{cat:v('cat'),city:v('city'),...(v('cat')===OUT?{area:v('catar').slice(0,60)}:{}),...(emp||{}),...(S.role==='pro'?{kind:v('kind')}:{})}:(emp||1);
+  const list=users(),old=sx?list.find(x=>x.email===sx.email):list.find(x=>loginOf(x)===email),resv=!old&&list.some(x=>x.email===email),h=sx?old.h:await hash((old?old.email:email)+':'+pw),emp=isE?{razao:v('razao'),cnpj:cnpjDig(v('cnpj'))}:null,prof=isP?{cat:v('cat'),city:v('city'),...(v('cat')===OUT?{area:v('catar').slice(0,60)}:{}),...(emp||{}),...(S.role==='pro'?{kind:v('kind')}:{})}:(emp||1);
   if(resv){$('#go').disabled=false;showErrors({email:'Este e-mail já foi usado em outra conta e não pode ser usado de novo.'});return}
   let u;
   if(old){
     if(old.h!==h){$('#go').disabled=false;showErrors({pw:'Este e-mail já tem conta. Use a mesma senha dela para adicionar o novo perfil.'});return}
     old.roles[S.role]=prof;old.last=S.role;u=old;
+    if(sx){old.name=v('name');old.phone=v('phone').replace(/\D/g,'');if(email!==loginOf(old)){old.emHist=[...(old.emHist||[]),{de:loginOf(old),at:new Date().toISOString()}].slice(-10);old.em2=email===old.email?'':email}S.sx=null}
   }else{u={name:v('name'),email,phone:v('phone').replace(/\D/g,''),h,roles:{[S.role]:prof},last:S.role};list.push(u)}
   if(isP)cpfProSet(u);
   u.consent={v:LEGAL_V,at:new Date().toISOString(),age18:true,mkt:$('#mkt').checked};
@@ -2514,16 +2532,26 @@ async function login(){
   if(!pw)E.lpw='Informe a senha.';
   if(showErrors(E))return;
   $('#go').disabled=true;
-  const u=byLogin(email);
+  const u=byLogin(email),lk=lkGet(),lr=u&&lk[u.email]||{n:0,t:0};
+  if(u&&lr.n>=5&&Date.now()-lr.t<9e5){$('#go').disabled=false;$('#lerr').textContent='Muitas tentativas erradas. Por segurança, espere 15 minutos ou use "Esqueci minha senha".';return}
+  if(u&&u.h!==await hash(u.email+':'+pw)){const m=lkGet(),r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m))}
+  if(u&&u.h===await hash(u.email+':'+pw)){const m=lkGet();if(m[u.email]){delete m[u.email];store.setItem('ms_lk',JSON.stringify(m))}}
   if(!u||u.h!==await hash(u.email+':'+pw)){$('#go').disabled=false;$('#lerr').textContent='E-mail ou senha incorretos.';return}
   if(u.susp){$('#go').disabled=false;$('#lerr').textContent='Esta conta está suspensa. Fale com o administrador.';return}
   poutSet(u.email,[]);enter(u);
 }
+/* recuperação de senha no padrão seguro: código aleatório de 6 dígitos, vale 10 min, 5 tentativas,
+   reenviar só depois de 60 s, no máximo 5 pedidos por hora, resposta igual exista ou não a conta,
+   e depois da troca as outras sessões saem e a pessoa recebe aviso */
+const rsCode=()=>{try{const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+a[0]%900000)}catch(e){return String(Math.floor(100000+Math.random()*900000))}};
+const rsLim=k=>{let m={};try{m=JSON.parse(store.getItem('ms_rsl')||'{}')}catch(e){}const n=Date.now(),L=(m[k]||[]).filter(t=>n-t<36e5);if(L.length>=5)return 'Muitos pedidos de código. Tente de novo daqui a 1 hora.';if(L.length&&n-L[L.length-1]<6e4)return 'Espere 1 minuto para pedir outro código.';L.push(n);m[k]=L;store.setItem('ms_rsl',JSON.stringify(m));return ''};
+function rsStart(email,mk){const fu=byLogin(email)||users().find(x=>x&&x.email===email),key=fu?fu.email:email,lim=rsLim(key);if(lim)return lim;
+  S.rs={email:key,em2:fu&&fu.em2?fu.em2:'',login:email,ok:!!fu,tel:fu&&fu.phone?String(fu.phone):'',ch:'em',code:rsCode(),exp:Date.now()+600000,tries:0,at:Date.now(),mk:mk?1:0};return ''}
+const lkGet=()=>{try{return JSON.parse(store.getItem('ms_lk')||'{}')}catch(e){return{}}};
 function forgot(){
   const email=$('#lemail').value.trim().toLowerCase();
   if(showErrors(EMAIL.test(email)?{}:{lemail:'Informe seu e-mail para recuperar a senha.'}))return;
-  const code=String(Math.floor(100000+Math.random()*900000));
-  {const fu=byLogin(email);S.rs={email:fu?fu.email:email,em2:fu&&fu.em2?fu.em2:'',code,exp:Date.now()+600000,tries:0};}go('reset');
+  const lim=rsStart(email,0);if(lim){$('#lerr').textContent=lim;return}go('reset');
 }
 async function doReset(){
   const R=S.rs;if(!R)return go('login');const code=$('#rcode').value.trim(),pw=$('#rpw').value,E={};$('#rerr').textContent='';
@@ -2535,7 +2563,7 @@ async function doReset(){
   R.tries=(R.tries||0)+1;if(R.tries>5){$('#rerr').textContent='Muitas tentativas. Volte e peça um novo código.';return}
   const l=users(),u=l.find(x=>x.email===R.email);
   if(code!==R.code||!u){$('#rerr').textContent='Código incorreto.';return}
-  u.h=await hash(R.email+':'+pw);saveUsers(l);S.rs=null;
+  u.h=await hash(R.email+':'+pw);u.pwAt=Date.now();u.sv=(u.sv||0)+1;saveUsers(l);logC('senha_alterada',u.email,{por:'recuperacao',aviso:'enviado para o e-mail da conta'});S.rs=null;{const m=lkGet();delete m[u.email];store.setItem('ms_lk',JSON.stringify(m))}
   go('login');setTimeout(()=>{const m=$('#lmsg');if(m)m.textContent='Senha alterada. Entre com a nova senha.';const e=$('#lemail');if(e)e.value=loginOf(u)},30);
 }
 async function changePw(){
@@ -2628,12 +2656,12 @@ document.addEventListener('click',e=>{
   if(D.act==='addemp')return addEmp();
   if(D.act==='savecomp'){const rz=$('#razao2').value.trim(),cn=$('#cnpj2').value,m=$('#cmsg'),E={};
     if(rz.length<3)E.razao2='Informe a razão social.';if(S.user.emp&&cnpjOk(S.user.emp.cnpj||'')&&cnpjDig(cn)!==cnpjDig(S.user.emp.cnpj))E.cnpj2='O CNPJ não pode ser trocado depois do cadastro.';else if(!cnpjOk(cn))E.cnpj2='Informe um CNPJ válido.';else if(cnpjDup(cn,S.user.email))E.cnpj2='Este CNPJ já está cadastrado em outra conta.';
-    const g=i=>String(($('#'+i)||{}).value||'').replace(/[<>]/g,'').trim(),ce=g('cemail2').toLowerCase(),cp=g('cphone2').replace(/\D/g,''),ar=g('crua2'),ab=g('cbairro2'),ac=g('ccidade2'),au=g('cuf2').toUpperCase();
-    if(ce&&!EMAIL.test(ce))E.cemail2='Informe um e-mail válido ou deixe em branco.';
+    const g=i=>String(($('#'+i)||{}).value||'').replace(/[<>]/g,'').trim(),ce=g('cemail2').toLowerCase(),ce3=g('cemail3').toLowerCase(),cp=g('cphone2').replace(/\D/g,''),ar=g('crua2'),ab=g('cbairro2'),ac=g('ccidade2'),au=g('cuf2').toUpperCase();
+    if(ce&&!EMAIL.test(ce))E.cemail2='Informe um e-mail válido ou deixe em branco.';if(ce3&&!EMAIL.test(ce3))E.cemail3='Informe um e-mail válido ou deixe em branco.';
     if(cp&&(cp.length<10||cp.length>11))E.cphone2='Informe o telefone com DDD ou deixe em branco.';
     if(ar||ab||ac||au){if(ar.length<3)E.crua2='Informe a rua e o número.';if(ac.length<2)E.ccidade2='Informe a cidade.';if(!/^[A-Z]{2}$/.test(au))E.cuf2='Informe a UF com 2 letras.'}
     if(showErrors(E))return;
-    const l=users(),u=l.find(x=>x.email===S.user.email),k=S.user.pk;if(!u||!u.roles[k])return;const nr={...u.roles[k],razao:rz,cnpj:cnpjDig(cn)};delete nr.email;delete nr.phone;delete nr.addr;if(ce)nr.email=ce;if(cp)nr.phone=cp;if(ar||ab||ac||au)nr.addr={rua:ar.slice(0,90),bairro:ab.slice(0,50),cidade:ac.slice(0,50),uf:au};u.roles[k]=nr;
+    const l=users(),u=l.find(x=>x.email===S.user.email),k=S.user.pk;if(!u||!u.roles[k])return;const nr={...u.roles[k],razao:rz,cnpj:cnpjDig(cn)};delete nr.email;delete nr.emailP;delete nr.email2;delete nr.email2P;delete nr.phone;delete nr.addr;if(ce){nr.email=ce;nr.emailP=g('cep2')}if(ce3){nr.email2=ce3;nr.email2P=g('cep3')}if(cp)nr.phone=cp;if(ar||ab||ac||au)nr.addr={rua:ar.slice(0,90),bairro:ab.slice(0,50),cidade:ac.slice(0,50),uf:au};u.roles[k]=nr;
     saveUsers(l);S.user=view(u,k);m.textContent='Dados da empresa salvos.';return}
   if(D.act==='saveprof2'){const tt=$('#ptitle').value.trim().slice(0,40),cc=$('#pcat2').value,cy=$('#pcity2').value.trim(),m=$('#pmsg2');if(cy.length<2){m.textContent='Informe sua cidade.';return}const ar=cc===OUT?$('#pcat2ar').value.trim().slice(0,60):'';if(cc===OUT&&ar.length<3){m.textContent='Informe sua área de atuação.';return}
     const l=users(),u=l.find(x=>x.email===S.user.email);const k=S.user.pk,kd=$('#pkind')?$('#pkind').value:undefined;if(!u||!u.roles[k]||S.user.role!=='pro')return;if(k==='pro'&&!kd){m.textContent='Escolha como você atua.';return}u.roles[k]={...u.roles[k],cat:cc,city:cy,title:tt,area:ar,...(k==='pro'?{kind:kd}:{})};saveUsers(l);S.user=view(u,k);m.textContent='Profissão atualizada.';return}
@@ -2753,10 +2781,16 @@ document.addEventListener('click',e=>{
   if(D.act==='dict')return dictToggle();
   if(D.act==='notifon'){try{const r=Notification.requestPermission();(r&&r.then?r:Promise.resolve(r)).then(()=>render())}catch(e){}return}
   if(D.act==='forgot')return forgot();
+  if(D.act==='rsch'&&S.rs){S.rs.ch=D.ch==='sms'?'sms':'em';return render()}
+  if(D.act==='rsnew'&&S.rs){const R=S.rs,lim=rsLim(R.email);if(lim){const e=$('#rerr');if(e)e.textContent=lim;return}Object.assign(R,{code:rsCode(),exp:Date.now()+600000,tries:0,at:Date.now()});render();toast('Enviamos um código novo. O anterior não vale mais.');return}
+  if(D.act==='sxfind'){const q=($('#sxid')||{}).value||'',d=q.replace(/\D/g,'');S.sxf={q};if(!(d.length===11&&cpfOk(q))&&!(d.length===14&&cnpjOk(q))){S.sxf.err='Digite um CPF ou CNPJ válido.';return render()}const u=byDoc(q);if(u){S.sxf.em=u.email;S.sxf.mask=loginOf(u)}else S.sxf.no=1;return render()}
+  if(D.act==='sxok'){const F=S.sxf||{},u=users().find(x=>x.email===F.em);if(!u)return;const pw=($('#sxpw')||{}).value||'',lk=lkGet(),lr=lk[u.email]||{n:0,t:0};if(lr.n>=5&&Date.now()-lr.t<9e5){F.err='Muitas tentativas erradas. Espere 15 minutos ou use "Esqueci a senha".';return render()}
+   hash(u.email+':'+pw).then(h=>{const m=lkGet();if(h!==u.h){const r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m));F.err='Senha incorreta.';return render()}delete m[u.email];store.setItem('ms_lk',JSON.stringify(m));S.sx=u.email;S.sxf=null;render();setTimeout(sxFill,30)});return}
+  if(D.act==='sxsair'){S.sx=null;S.sxf=null;return render()}
   if(D.act==='findacc'){S.fa={};return go('findacc')}
   if(D.act==='findgo'){const v=($('#facpf')||{}).value||'',dg=v.replace(/\D/g,'');S.fa={q:v};if(dg.length===11&&cpfOk(v)){const h=cpfH(v);S.fa.list=users().filter(u=>u&&u.cpfh===h)}else if(dg.length>=10){S.fa.list=users().filter(u=>u&&String(u.phone||'').replace(/\D/g,'').slice(-dg.length)===dg)}else{S.fa.err='Digite um CPF válido ou um celular com DDD.'}
    if(S.fa.list)S.fa.list=S.fa.list.map(u=>({email:u.email,em2:u.em2||'',desc:Object.keys(u.roles||{}).filter(k=>(u.roles||{})[k]).map(k=>ROLE[k]||k).join(', ')||'Conta'}));return go('findacc')}
-  if(D.fga!=null){const u=(S.fa&&S.fa.list||[])[+D.fga];if(!u)return;S.rs={email:u.email,code:String(Math.floor(100000+Math.random()*900000)),exp:Date.now()+600000,tries:0,mk:1,em2:u.em2||''};S.fa=null;return go('reset')}
+  if(D.fga!=null){const u=(S.fa&&S.fa.list||[])[+D.fga];if(!u)return;const lim=rsStart(u.em2||u.email,1);if(lim){S.fa.err=lim;return go('findacc')}S.fa=null;return go('reset')}
   if(D.act==='doreset')return doReset();
   if(D.act==='chpw')return changePw();
   if(D.act==='chem')return changeEm();
