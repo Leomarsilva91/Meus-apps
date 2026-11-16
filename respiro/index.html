@@ -210,7 +210,7 @@ function viewEx(){const L=lista(),ri=Math.max(0,RADS.findIndex(x=>x>=S.rad));
 <div class="hero"><h1>Natureza e descanso perto de você ou em qualquer lugar do Brasil</h1><p>Veja parques, cachoeiras, hotéis fazenda, clubes, day use e mais ${S.br?'no Brasil todo':'num raio de '+S.rad.toLocaleString('pt-BR')+' km'}. Sem precisar saber o nome. Vai viajar? Escolha a cidade do destino e se programe antes.</p><span class="tag sun" style="justify-self:start">Protótipo · lugares, preços e contatos são exemplos</span></div>
 <div class="card pop"><div class="row sp"><b>Onde procurar</b><button class="chip" data-act="geo" type="button">Usar minha localização</button></div>
 <div class="row">${Object.entries(CEN).map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${!S.cx&&!S.cll&&S.c===k}">${v[0]}</button>`).join('')}</div>
-<form id="endf" class="f" novalidate style="gap:6px"><label for="end_q">Digite um endereço, bairro, cidade ou lugar<div class="row" style="flex-wrap:nowrap;gap:6px"><input id="end_q" maxlength="120" data-dr="end_q" value="${esc(dv('end_q',''))}" placeholder="Ex.: Rua das Flores, Goiânia" autocomplete="street-address" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)"><button class="btn" type="submit" style="flex:none">Buscar</button></div></label><div id="endr" aria-live="polite">${S.endr?S.endr:''}</div></form>
+<form id="endf" class="f" novalidate style="gap:6px"><label for="end_q">Procure pelo nome do lugar, endereço ou cidade<div class="row" style="flex-wrap:nowrap;gap:6px"><input id="end_q" maxlength="120" data-dr="end_q" value="${esc(dv('end_q',''))}" placeholder="Ex.: Parque Nacional, Cachoeira do Tabuleiro, Goiânia" autocomplete="off" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)"><button class="btn" type="submit" style="flex:none">Buscar</button></div></label><div id="endr" aria-live="polite">${S.endr?S.endr:''}</div></form>
 <label class="lab" for="cid">Outra cidade ou destino do Brasil<select id="cid" style="width:100%;min-height:46px;border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--bg);font-size:15px"><option value="">Escolha uma cidade…</option>${CID.map(c=>`<option value="${c[0]}"${S.cll&&S.cll.k===c[0]?' selected':''}>${c[1]}</option>`).join('')}</select></label>
 <div class="rad"${S.br?' style="opacity:.55"':''}><label for="rad" class="row sp"><b>Raio de busca</b><b id="radv">${S.rad.toLocaleString('pt-BR')} km</b></label><input type="range" id="rad" min="0" max="${RADS.length-1}" step="1" value="${ri}" aria-valuetext="${S.rad} quilômetros"></div>
 <button class="chip" data-f="br" aria-pressed="${!!S.br}" style="justify-self:start">🇧🇷 Ver o Brasil todo</button>
@@ -871,7 +871,7 @@ async function buscaG(){if(GS.st==='load')return;var c=cLL(),km=Math.min(S.rad,M
    P0.push({id:'g'+String(x.id).replace(/[^\w-]/g,'').slice(0,60),osm:1,gp:1,n:nm.slice(0,80),t:T[0],sub:T[1],lat:+x.lat,lon:+x.lon,x:0,y:0,du:0,dias:TODOS,hor:'Não informado',pr:[0,0],prx:1,k:1,pet:0,pis:0,tri:0,est:0,ob:'',tel:'',site:'',ou:/^https:\/\//.test(x.url)?x.url:'https://www.google.com/maps/search/?api=1&query='+(+x.lat).toFixed(5)+','+(+x.lon).toFixed(5)});n++});
   GS.st='ok';GS.n=n}catch(_){GS.st='err';GS.why='sem internet ou servidor fora do ar'}rr()}
 function tipo(t){if(t.natural==='waterfall')return 'waterfall';if(t.tourism==='viewpoint')return 'viewpoint';if(t.tourism==='camp_site')return 'camp_site';if(t.boundary==='national_park')return 'national_park';if(t.leisure==='nature_reserve')return 'nature_reserve';return 'park'}
-function aplica(L,c){for(var i=P0.length-1;i>=0;i--)if(P0[i]&&P0[i].osm)P0.splice(i,1);
+function aplica(L,c){for(var i=P0.length-1;i>=0;i--)if(P0[i]&&P0[i].osm&&!P0[i].keep)P0.splice(i,1);
  var vis={},out=[];
  L.forEach(function(x){var t=x.tags||{},n=String(t.name||'').trim(),la=x.lat!=null?x.lat:x.center&&x.center.lat,lo=x.lon!=null?x.lon:x.center&&x.center.lon;
   if(!n||la==null||lo==null||NAO.test(n))return;var k=n.toLowerCase()+'|'+(+la).toFixed(2)+'|'+(+lo).toFixed(2);if(vis[k])return;vis[k]=1;
@@ -879,7 +879,7 @@ function aplica(L,c){for(var i=P0.length-1;i>=0;i--)if(P0[i]&&P0[i].osm)P0.splic
   out.push({id:'o'+x.type.charAt(0)+x.id,osm:1,n:n.slice(0,80),t:S2[0],sub:S2[1],lat:+la,lon:+lo,x:0,y:0,du:0,dias:TODOS,hor:String(t.opening_hours||'').slice(0,80)||'Não informado',pr:[0,0],prx:fee==='no'?0:1,
    k:1,pet:t.dog==='yes'||t.dog==='leashed'?1:0,pis:0,tri:0,est:0,ob:String(t.description||'').slice(0,240),tel:String(t.phone||t['contact:phone']||'').slice(0,40),site:url(t.website||t['contact:website']),ou:'https://www.openstreetmap.org/'+x.type+'/'+x.id})});
  out.sort(function(a,b){return hav(c,a)-hav(c,b)});out=out.slice(0,MAXN);
- out.forEach(function(p){P0.push(p)});OS.n=out.length}
+ out.forEach(function(p){if(!P0.some(function(q){return q.id===p.id}))P0.push(p)});OS.n=out.length}
 function quieto(){var a=document.activeElement;return !(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))}
 function rr(){try{if((S.v==='ex'||S.v==='fav')&&quieto())render()}catch(_){}}
 function check(){try{if(S.v!=='ex'||S.br)return;var c=cLL();if(!c||!isFinite(c.lat)||!isFinite(c.lon))return;var km=Math.min(S.rad,MAXKM),key=c.lat.toFixed(2)+','+c.lon.toFixed(2)+'|'+km;
@@ -1165,6 +1165,33 @@ document.addEventListener('keydown',function(e2){if(e2.key==='Escape'&&G)fecha()
 var bt=function(tipo,id,n){return n>=2?'<button class="btn sun" type="button" data-seg="'+tipo+'|'+e(id)+'" style="width:100%">🧭 Seguir esta trilha com o GPS</button>':''};
 var _v1=viewTrv;viewTrv=function(){var h=_v1.apply(this,arguments),t=null;try{t=TRL.find(function(x){return x.id===S.id})}catch(_){}if(!t)return h;var i=h.indexOf('</svg>');return i<0?h:h.slice(0,i+6)+bt('mine',t.id,(t.pts||[]).length)+h.slice(i+6)};
 var _v2=viewTrs;viewTrs=function(){var h=_v2.apply(this,arguments),r=null;try{r=flat(trlAll).find(function(x){return x.id===S.id})}catch(_){}if(!r)return h;var i=h.indexOf('</svg>');return i<0?h:h.slice(0,i+6)+bt('pub',r.id,(r.pts||[]).length)+h.slice(i+6)};
+})();
+</script>
+<script>
+/* ---- Busca pelo nome: mostra na hora os lugares do app e, do mapa, os parques e lugares de natureza com esse nome ---- */
+(function(){
+var NOM=[],TM=0;
+var NAT={park:['parque','Parque'],nature_reserve:['parque','Reserva natural'],national_park:['parque','Parque nacional'],protected_area:['parque','Área protegida'],waterfall:['cachoeira','Cachoeira'],viewpoint:['parque','Mirante'],camp_site:['camping','Camping'],garden:['parque','Jardim'],peak:['parque','Pico'],beach:['parque','Praia'],water_park:['clube','Parque aquático'],picnic_site:['parque','Área de piquenique'],spring:['cachoeira','Nascente'],cave_entrance:['parque','Gruta']};
+function e(x){try{return esc(x)}catch(_){return String(x)}}
+var nq=function(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim()};
+function locais(q){var t=nq(q);if(t.length<2)return [];var L=[];try{L=all()}catch(_){}return L.filter(function(p){return p&&p.n&&nq(p.n).indexOf(t)>=0}).map(function(p){var d=Infinity;try{d=dist(p)}catch(_){}return {p:p,d:d}}).sort(function(a,b){return a.d-b.d}).slice(0,6)}
+function htmlLocais(q){var L=locais(q);if(!L.length)return '';return '<b style="font-size:14.5px">No Respiro</b>'+L.map(function(x){var p=x.p,T='';try{T=p.sub||TIPOS[p.t][0]}catch(_){}return '<button class="tile" type="button" data-lugo="'+e(p.id)+'"><span class="row sp"><span>🌿 <b>'+e(String(p.n).replace(' (exemplo)',''))+'</b></span><span class="m">'+(isFinite(x.d)?kmTxt(x.d)+' km':'')+'</span></span><span class="m">'+e(T)+'</span></button>'}).join('')}
+function htmlNom(){if(!NOM.length)return '';return '<b style="font-size:14.5px">No mapa</b>'+NOM.map(function(x,i){return '<button class="tile" type="button" data-nomi="'+i+'"><span>'+(x.nat?'🌳 <b>'+e(x.nome)+'</b>':'📍 '+e(x.n))+'</span>'+(x.nat?'<span class="m">'+e(x.sub)+' · '+e(x.lug)+'</span>':'')+'</button>'}).join('')}
+function mostra(q,extra){var box=document.getElementById('endr');if(!box)return;var h=htmlLocais(q)+htmlNom()+(extra||'');box.innerHTML=h?'<div style="display:grid;gap:6px">'+h+'</div>':'';try{S.endr=box.innerHTML}catch(_){}}
+document.addEventListener('input',function(ev){var t=ev.target;if(!t||t.id!=='end_q')return;NOM=[];var q=t.value;clearTimeout(TM);TM=setTimeout(function(){mostra(q,'')},150)},true);
+document.addEventListener('submit',async function(ev){if(!ev.target||ev.target.id!=='endf')return;ev.preventDefault();ev.stopImmediatePropagation();
+ var inp=document.getElementById('end_q'),q=String(inp?inp.value:'').trim(),box=document.getElementById('endr');if(q.length<3){if(box)box.innerHTML='<p class="err">Digite pelo menos 3 letras.</p>';return}
+ NOM=[];mostra(q,'<p class="m">Procurando no mapa…</p>');
+ try{var r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=br&accept-language=pt-BR&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}});var L=r.ok?await r.json():[];
+  NOM=L.map(function(x){var ty=x.type,nat=NAT[ty],dn=String(x.display_name||'');return {n:dn.split(',').slice(0,3).join(',').trim(),nome:x.name||dn.split(',')[0],lug:dn.split(',').slice(1,3).join(',').trim(),lat:+x.lat,lon:+x.lon,nat:!!nat,t:nat?nat[0]:'',sub:nat?nat[1]:'',id:x.osm_type&&x.osm_id?'o'+String(x.osm_type).charAt(0)+x.osm_id:''}}).filter(function(x){return isFinite(x.lat)&&isFinite(x.lon)}).sort(function(a,b){return b.nat-a.nat});
+  try{ENDR=NOM.map(function(x){return {n:x.n,lat:x.lat,lon:x.lon}})}catch(_){}
+  mostra(q,NOM.length||locais(q).length?'':'<p class="m">Não achei. Tente escrever de outro jeito, com a cidade e o estado.</p>')}catch(_){mostra(q,'<p class="m">Não consegui buscar no mapa agora. Confira a internet e tente de novo.</p>')}},true);
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-lugo],[data-nomi]');if(!b)return;ev.preventDefault();ev.stopPropagation();
+ if(b.dataset.lugo){go('det',{id:b.dataset.lugo});return}
+ var x=NOM[+b.dataset.nomi];if(!x)return;S.cll={k:'end',n:x.nat?x.nome:x.n,lat:x.lat,lon:x.lon};S.cx=null;S.br=false;S.endr='';S.dr.end_q='';if(S.rad<20)S.rad=20;
+ if(x.nat&&x.id){var ex=null;try{ex=byId(x.id)}catch(_){}if(!ex){P0.push({id:x.id,osm:1,keep:1,n:String(x.nome).slice(0,80),t:x.t,sub:x.sub,lat:x.lat,lon:x.lon,x:0,y:0,du:0,dias:TODOS,hor:'Não informado',pr:[0,0],prx:1,k:1,pet:0,pis:0,tri:0,est:0,ob:'',tel:'',site:'',ou:'https://www.openstreetmap.org/'+({n:'node',w:'way',r:'relation'}[x.id.charAt(1)]||'node')+'/'+x.id.slice(2)})}else ex.keep=1;
+  NOM=[];go('det',{id:x.id});return}
+ NOM=[];render();try{toast('Mostrando lugares perto de '+x.n.split(',')[0]+'.')}catch(_){}},true);
 })();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
