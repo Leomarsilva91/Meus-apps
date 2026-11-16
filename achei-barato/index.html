@@ -1453,8 +1453,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   if(b.dataset.grlx!=null){const v=grKeep();v.L.splice(+b.dataset.grlx,1);mem.grN=Math.max(1,v.L.length);render();document.querySelectorAll('[data-gru]').forEach(i=>i.value='');grPut(v);return}
   if(b.dataset.grx){mem.grEd=null;mem.grN=0;render();return}
   if(b.dataset.gred){mem.grEd=b.dataset.gred;mem.grN=0;if(b.dataset.grgo){mem.tab='admin';mem.adm={...(mem.adm||{}),onl:1}}render();setTimeout(()=>{const f=$('#grf');if(f){f.scrollIntoView({block:'start'});const n=$('#gr_n');if(n)n.focus({preventScroll:true})}},80);return}
-  try{if(b.dataset.mkrm){const k=b.dataset.mkrm,n=allOwn().filter(x=>x.m===k).length;if(n){toast('Essa loja tem '+n+' oferta'+(n>1?'s':'')+'. Remova ou mude a loja delas antes.');return}MKX=MKX.filter(s=>s.k!==k);await mkSave();toast('Loja removida.')}
-    else{if(mem.grEd===b.dataset.grrm)mem.grEd=null;GRP=GRP.filter(g=>g.id!==b.dataset.grrm);await grpSave();toast('Removido.')}}catch(_){toast('Não consegui salvar agora.')}render()},true);
+  try{if(b.dataset.mkrm){const k=b.dataset.mkrm,n=allOwn().filter(x=>x.m===k).length;if(n){toast('Essa loja tem '+n+' oferta'+(n>1?'s':'')+'. Remova ou mude a loja delas antes.');return}const oldM=MKX;MKX=MKX.filter(s=>s.k!==k);try{await mkSave()}catch(x){MKX=oldM;LS.s('ab_mkx',oldM);mkApply();throw x}toast('Loja removida.')}
+    else{if(mem.grEd===b.dataset.grrm)mem.grEd=null;const oldG=GRP;GRP=GRP.filter(g=>g.id!==b.dataset.grrm);try{await grpSave()}catch(x){GRP=oldG;LS.s('ab_grp',oldG);throw x}toast('Removido.')}}catch(_){toast('Não consegui salvar. O banco de dados não reconheceu este aparelho como administrador. Veja o código da conta no rodapé e cadastre no Firebase.')}render()},true);
 
 const OFF=[
  {id:'o1',m:'ml',n:'Fone de ouvido Bluetooth com cancelamento de ruído',p:129.9,old:219.9,fr:0,d:3,u:2},
