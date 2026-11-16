@@ -829,17 +829,22 @@ var NAO=/^(pra[cç]a|largo|canteiro|rotat[oó]ria|jardim\s+(da|do)\s+pra[cç]a)\
 function e(s){try{return esc(s)}catch(_){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}}
 function url(u){u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;return /^https?:\/\/[^\s<>"']+$/i.test(u)?u:''}
 function sf(n,p){try{return typeof window[n]==='function'?window[n](p):''}catch(_){return ''}}
-function q(c,km){var a='(around:'+Math.round(km*1000)+','+c.lat.toFixed(5)+','+c.lon.toFixed(5)+')';
- return '[out:json][timeout:20];(wr["leisure"="park"]["name"]'+a+';nwr["leisure"="nature_reserve"]["name"]'+a+';wr["boundary"="national_park"]["name"]'+a+';node["natural"="waterfall"]["name"]'+a+';node["tourism"="viewpoint"]["name"]'+a+';nwr["tourism"="camp_site"]["name"]'+a+';);out center tags 400;'}
+function qs(c,km){var A=function(k){return '(around:'+Math.round(k*1000)+','+c.lat.toFixed(4)+','+c.lon.toFixed(4)+')'},a=A(km),ap=A(Math.min(km,15));
+ return ['[out:json][timeout:25];(wr["leisure"="park"]["name"]'+ap+';);out center tags 250;',
+  '[out:json][timeout:25];(wr["leisure"="nature_reserve"]["name"]'+a+';wr["boundary"="national_park"]["name"]'+a+';node["natural"="waterfall"]["name"]'+a+';node["tourism"="viewpoint"]["name"]'+a+';nwr["tourism"="camp_site"]["name"]'+a+';);out center tags 250;']}
+function servs(){var L=EPS.slice();try{if(window.IA_URL)L.unshift(String(window.IA_URL).replace(/\/$/,'')+'/osm')}catch(_){}return L}
 function umServ(u,qq,ctl){return fetch(u+'?data='+encodeURIComponent(qq),{signal:ctl.signal,headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(j){if(!j||!Array.isArray(j.elements))throw new Error('resposta');if(!j.elements.length&&j.remark&&/error|timed out/i.test(j.remark))throw new Error('ocupado');return j.elements})}
-async function busca(c,km){var ck='rs_osm_'+c.lat.toFixed(2)+','+c.lon.toFixed(2)+'|'+km;
+function umaConsulta(qq){var S2=servs(),ctls=S2.map(function(){return new AbortController()}),tm=setTimeout(function(){ctls.forEach(function(x){try{x.abort()}catch(_){}})},40000);
+ var ps=S2.map(function(u,i){return new Promise(function(ok,no){setTimeout(function(){if(ctls[i].signal.aborted)return no(new Error('cancelado'));umServ(u,qq,ctls[i]).then(ok,no)},i*2000)})});
+ return Promise.any(ps).then(function(L){clearTimeout(tm);ctls.forEach(function(x){try{x.abort()}catch(_){}});return L},function(er){clearTimeout(tm);var ms=(er&&er.errors||[]).map(function(x){return x&&x.name==='AbortError'?'demorou demais':(x&&x.message)||'?'}).filter(function(m){return m!=='cancelado'});throw new Error(ms.join(', ')||'sem resposta')})}
+async function busca(c,km){var ck='rs_osm2_'+c.lat.toFixed(2)+','+c.lon.toFixed(2)+'|'+km;
  try{var m=JSON.parse(localStorage.getItem(ck)||'null');if(m&&Date.now()-m.t<864e5&&Array.isArray(m.L))return m.L}catch(_){}
- var qq=q(c,km),ctls=EPS.map(function(){return new AbortController()}),tm=setTimeout(function(){ctls.forEach(function(x){try{x.abort()}catch(_){}})},30000);
- var ps=EPS.map(function(u,i){return new Promise(function(ok,no){setTimeout(function(){umServ(u,qq,ctls[i]).then(ok,no)},i*1500)})});
- try{var L=await Promise.any(ps);ctls.forEach(function(x){try{x.abort()}catch(_){}});clearTimeout(tm);
-  try{var mini=L.map(function(x){return {type:x.type,id:x.id,lat:x.lat,lon:x.lon,center:x.center,tags:x.tags}});localStorage.setItem(ck,JSON.stringify({t:Date.now(),L:mini}))}catch(_){}
-  return L}
- catch(er){clearTimeout(tm);var ms=(er&&er.errors||[]).map(function(x){return x&&x.name==='AbortError'?'demorou demais':(x&&x.message)||'?'});OS.why=ms[0]||'sem resposta';throw er}}
+ var R=await Promise.allSettled(qs(c,km).map(umaConsulta)),L=[],falhas=[];
+ R.forEach(function(r){if(r.status==='fulfilled')L=L.concat(r.value);else falhas.push(r.reason&&r.reason.message)});
+ if(falhas.length===R.length){OS.why=falhas[0]||'sem resposta';throw new Error('osm')}
+ OS.why=falhas.length?'parte dos lugares não carregou':'';
+ try{var mini=L.map(function(x){return {type:x.type,id:x.id,lat:x.lat,lon:x.lon,center:x.center,tags:x.tags}});if(!falhas.length)localStorage.setItem(ck,JSON.stringify({t:Date.now(),L:mini}))}catch(_){}
+ return L}
 function tipo(t){if(t.natural==='waterfall')return 'waterfall';if(t.tourism==='viewpoint')return 'viewpoint';if(t.tourism==='camp_site')return 'camp_site';if(t.boundary==='national_park')return 'national_park';if(t.leisure==='nature_reserve')return 'nature_reserve';return 'park'}
 function aplica(L,c){for(var i=P0.length-1;i>=0;i--)if(P0[i]&&P0[i].osm)P0.splice(i,1);
  var vis={},out=[];
@@ -860,7 +865,7 @@ async function roda(key,c,km){OS.busy=1;OS.key=key;OS.st='load';rr();
 function aviso(){if(S.br)return '<div class="card"><span class="m">🗺️ Os lugares reais do mapa aparecem quando você usa a sua localização ou escolhe uma cidade.</span></div>';
  if(OS.st==='load')return '<div class="card"><b>🗺️ Buscando parques e lugares de natureza reais perto daqui…</b><span class="m">Dados do mapa aberto OpenStreetMap.</span></div>';
  if(OS.st==='err')return '<div class="card"><b>Não consegui buscar os lugares reais agora</b><span class="m">Pode ser a internet ou o serviço do mapa ocupado'+(OS.why?' ('+e(OS.why)+')':'')+'.</span><button class="btn gh" type="button" data-osm="1" style="justify-self:start">Tentar de novo</button></div>';
- if(OS.st==='ok')return '<div class="card"><span class="m">🗺️ '+(OS.n?OS.n+(OS.n>1?' lugares reais':' lugar real'):'Nenhum lugar real')+' do mapa aberto OpenStreetMap'+(S.rad>MAXKM?' (até '+MAXKM+' km)':'')+'. Os dados são de voluntários e podem estar incompletos. Fonte: © colaboradores do OpenStreetMap.</span></div>';
+ if(OS.st==='ok')return '<div class="card"><span class="m">🗺️ '+(OS.n?OS.n+(OS.n>1?' lugares reais':' lugar real'):'Nenhum lugar real')+' do mapa aberto OpenStreetMap'+(S.rad>MAXKM?' (até '+MAXKM+' km)':'')+(OS.why?' ('+e(OS.why)+')':'')+'. Os dados são de voluntários e podem estar incompletos. Fonte: © colaboradores do OpenStreetMap.</span></div>';
  return ''}
 /* cartão resumido e tela do lugar real */
 var _t=tileP;tileP=function(p){if(!p||!p.osm)return _t.apply(this,arguments);var fav=S.fav.includes(p.id);

@@ -124,12 +124,43 @@ async function pagina(req, o, env) {
   return resp(out, 200, o);
 }
 
+
+// Lugares de natureza do OpenStreetMap (Overpass), pedidos pelo servidor e guardados por 1 dia.
+const OVP = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+async function osm(req, o, ctx) {
+  const q = new URL(req.url).searchParams.get('data') || '';
+  if (!/^\[out:json\]/.test(q) || q.length > 3000 || !/around:\d+,/.test(q)) return resp({ erro: 'consulta' }, 400, o);
+  const cache = caches.default, chave = new Request('https://cache.local/osm-v1?' + encodeURIComponent(q));
+  const hit = await cache.match(chave);
+  if (hit) return new Response(await hit.text(), { status: 200, headers: { 'Content-Type': 'application/json', ...cors(o) } });
+  let ult = 'sem resposta';
+  for (const s of OVP) {
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 25000);
+    try {
+      const r = await fetch(s, { method: 'POST', body: 'data=' + encodeURIComponent(q), signal: ac.signal, headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Respiro/1.0 (app de natureza)' } });
+      clearTimeout(tm);
+      if (!r.ok) { ult = 'HTTP ' + r.status; continue; }
+      const t = await r.text();
+      let j; try { j = JSON.parse(t); } catch (_) { ult = 'resposta'; continue; }
+      if (!Array.isArray(j.elements)) { ult = 'resposta'; continue; }
+      if (!j.elements.length && j.remark && /error|timed out/i.test(j.remark)) { ult = 'ocupado'; continue; }
+      const res = new Response(t, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=86400' } });
+      ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(chave, res.clone())) : await cache.put(chave, res.clone());
+      return new Response(t, { status: 200, headers: { 'Content-Type': 'application/json', ...cors(o) } });
+    } catch (_) { clearTimeout(tm); ult = 'demorou demais'; }
+  }
+  return resp({ erro: 'osm', motivo: ult }, 502, o);
+}
+
 export default {
   async fetch(req, env, ctx) {
     const o = req.headers.get('Origin') || '';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(o) });
     if (req.method === 'GET' && new URL(req.url).pathname === '/taxas') {
       try { return await taxas(req, o, ctx); } catch (_) { return resp({ erro: 'bcb' }, 502, o); }
+    }
+    if (req.method === 'GET' && new URL(req.url).pathname === '/osm') {
+      try { return await osm(req, o, ctx); } catch (_) { return resp({ erro: 'osm' }, 502, o); }
     }
     if (req.method === 'GET' && new URL(req.url).pathname === '/pagina') {
       try { return await pagina(req, o, env); } catch (_) { return resp({ erro: 'pagina' }, 502, o); }
