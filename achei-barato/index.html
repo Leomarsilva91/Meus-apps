@@ -1521,7 +1521,7 @@ function storeLinks(){const ks=Object.keys(MK).filter(k=>lnk[k]&&/^https:\/\//.t
   return `<div class="box"><b>Ir direto para a loja</b><span class="m">Links de afiliado do Achei Barato. A compra é concluída no site da loja, sem custo extra para você.</span><div class="row">${ks.map(k=>`<a class="btn" style="background:${MK[k].c};color:${MK[k].t};border:0;text-decoration:none" href="${esc(lnk[k])}" target="_blank" rel="noopener noreferrer sponsored">${MK[k].n}</a>`).join('')}</div></div>`}
 function adminBox(){return `<div class="box" style="border-left-color:var(--acc)"><b>Área do administrador</b><span class="m">Só você vê esta área. O que você cadastra aqui aparece para todos os usuários que abrirem o app${DB?'':' (neste momento, o armazenamento compartilhado não está ativo: o cadastro fica só neste aparelho)'}. Os usuários só consultam e usam os links.</span></div>
   <form class="f box" id="lkf" novalidate><b>Meus links das lojas online</b><span class="m">Link principal de afiliado de cada loja, gerado no programa oficial dela. Deixe em branco para não mostrar.</span>
-  ${Object.keys(MK).map(k=>`<label for="lk_${k}">${MK[k].n}<input id="lk_${k}" type="url" inputmode="url" placeholder="https://…" value="${esc(lnk[k]||'')}"></label>`).join('')}
+  ${Object.keys(MK).map(k=>`<label for="lk_${k}"><span class="row sp"><span>${MK[k].n}${lnk[k]?' <span class="tag ok">✓ link salvo</span>':''}</span>${lnk[k]?`<button class="chip" type="button" data-lkrm="${k}" style="min-height:32px;font-size:12.5px">Tirar</button>`:''}</span><input id="lk_${k}" type="url" inputmode="url" placeholder="${lnk[k]?'Cole outro link só se quiser trocar':'https://…'}" value=""></label>`).join('')}<span class="m">Depois de salvar, o campo fica limpo e aparece “✓ link salvo”. Os links salvos continuam valendo para todos.</span>
   <div class="err" id="lk_e" role="alert"></div><button class="btn acc" type="submit">Salvar links</button></form>
   ${ownForm()}${mkAdmin()}`}
 const shTxt=(n,p,old,loja,ate)=>`Achei Barato: ${n}${p>0?' por '+brl(p):''}${p>0&&old?' (era '+brl(old)+')':''}${loja?' em '+loja:''}${ate?', até '+fd(ate):''}. Confira o preço no local.${appUrl&&/^https:\/\//.test(appUrl)?' '+appUrl:''}`;
@@ -1582,7 +1582,7 @@ function promoAdmin(){
   <div class="row"><label for="ad_p" style="flex:1">Preço (R$)<input id="ad_p" inputmode="decimal"></label><label for="ad_o" style="flex:1">Preço normal (R$)<input id="ad_o" inputmode="decimal"></label></div>
   <label for="ad_a">Válido até<input id="ad_a" type="date"></label>
   <label class="row" style="gap:8px;align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" id="ad_rl" checked style="width:22px;height:22px;margin-top:2px"><span class="m" style="color:var(--ink)"><b>Dados reais (preços conferidos)</b>. Entram no histórico de preços de todos os usuários. Desmarque se for teste ou exemplo.</span></label>
-  <div class="err" id="ad_e" role="alert"></div><button class="btn acc" type="submit">Publicar promoção</button></form>`+insList()}
+  <div class="err" id="ad_e" role="alert"></div><button class="btn acc" type="submit">Publicar promoção</button><span class="m">Depois de publicar, os campos ficam limpos para a próxima. Para alterar ou tirar uma promoção, abra-a na aba Físicas: os botões ✏️ Alterar e 🗑️ Retirar aparecem só para você.</span></form>`}
 function mySubBox(){const L=mySubs();if(!L.length)return '';
   return `<div class="box" data-nc="1" data-ins="1"><b>Seus envios (${L.length})</b>${L.map((i,q)=>`<div class="line"><span>${q+1}. ${esc(i.n)} <span class="m">· ${esc(i.loja)}${i.k==='dl'?' · entrega':i.k==='tip'?' · dica':' · '+brl(i.p)}</span></span><span class="tag ${i.st==='Aprovada'?'ok':i.st==='Em análise'?'warn':''}">${esc(i.live&&i.st==='Em análise'?'No ar · pontos em análise':i.st==='Aprovada'&&i.live?'Confirmado':i.st==='Recusada'&&i.live?'Tirado do ar':i.st)}</span></div>`).join('')}</div>`}
 function modBox(){if(!DB)return `<div class="box"><b>Moderação</b><span class="m">O armazenamento compartilhado não está ativo neste momento, então não há envios de outros usuários para analisar.</span></div>`;
@@ -1638,7 +1638,7 @@ function ownForm(){
   <label for="of_x">Descrição da oferta (opcional)<textarea id="of_x" rows="6" maxlength="3000" placeholder="Escreva ou cole aqui o que o site diz sobre o produto: características, tamanho, cor, voltagem, o que vem na caixa, garantia…" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%"></textarea><span class="m" style="font-weight:400">Ao buscar pelo link ou pelo print, a IA escreve a descrição sozinha se o campo estiver vazio. Confira e edite o que quiser.</span><span class="m" id="of_xc" style="font-weight:400">Até 3.000 letras. Aparece para o cliente, recolhida, em “Descrição da oferta”.</span></label>
   <label for="of_h">Histórico anterior de preço (opcional)<textarea id="of_h" rows="4" placeholder="Uma linha por data, ex.:&#10;15/10 189,90&#10;01/10 199,90" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%"></textarea></label>
   <span class="m">Sem histórico anterior, o app começa a contar de hoje e mostra “Histórico curto” por 14 dias, em vez de dizer que é promoção.</span>
-  <div class="err" id="of_e" role="alert"></div><button class="btn acc" type="submit">Salvar oferta</button></form>`+ownList()}
+  <div class="err" id="of_e" role="alert"></div><button class="btn acc" type="submit">Salvar oferta</button><span class="m">Depois de salvar, os campos ficam limpos para a próxima. Para editar ou remover uma oferta, abra-a na aba Online: os botões ✏️ Editar e Remover aparecem só para você.</span></form>`}
 function ownList(){const L=allOwn().slice().sort((a,b)=>String(a.id).localeCompare(String(b.id)));
   return `<div class="box" data-nc="1" data-ins="1"><b>Ofertas cadastradas (${L.length})</b>${L.length?L.map((x,k)=>`<div class="line"><span>${k+1}. ${esc(x.n)} <span class="m">· ${MK[x.m]?MK[x.m].n:''} · ${x.p>0?brl(x.p):'sem preço'}</span></span><span class="row" style="gap:6px;flex-wrap:nowrap"><button class="chip" data-ofedit="${esc(x.id)}" type="button">✏️ Editar</button><button class="chip" data-ofdel="${esc(x.id)}" type="button">Remover</button></span></div>`).join(''):'<span class="m">Nenhuma ainda. Cada oferta que você salvar aparece aqui embaixo, uma abaixo da outra, na ordem em que cadastrou.</span>'}</div>`}
 function parseHist(txt){
@@ -1991,7 +1991,7 @@ document.addEventListener('submit',e=>{
     if([gs,et,di].some(v=>isNaN(v)||v<0||v>20))return er('Informe valores entre 1 e 20 reais por litro.');if(!gs&&!et&&!di)return er('Informe ao menos um preço.');
     const k=cy?r+'|'+cy:r,nv={...FUo,[k]:{...(FUo[k]||{}),...(gs?{gas:gs}:{}),...(et?{eth:et}:{}),...(di?{die:di}:{}),at:today()}};
     saveFuo(nv).then(()=>{toast('Preços salvos.');render()}).catch(()=>er('Não foi possível salvar agora.'));return}
-  if(e.target.id==='lkf'){e.preventDefault();if(!adm)return;const v={};let bad='';Object.keys(MK).forEach(k=>{const t=$('#lk_'+k).value.trim();if(!t)return;if(!/^https:\/\/[^\s]+$/i.test(t))bad=MK[k].n;else v[k]=t});
+  if(e.target.id==='lkf'){e.preventDefault();if(!adm)return;const v={...lnk};let bad='';Object.keys(MK).forEach(k=>{const t=$('#lk_'+k).value.trim();if(!t)return;if(!/^https:\/\/[^\s]+$/i.test(t))bad=MK[k].n;else v[k]=t});
     if(bad){$('#lk_e').textContent='O link de '+bad+' deve começar com https://';return}
     putLnk(v).then(()=>{boom(null,null,1);toast('Links salvos.');render()}).catch(()=>{$('#lk_e').textContent='Não foi possível salvar agora.'});return}
   if(e.target.id==='off'){e.preventDefault();if(!adm)return;const _u=(($('#of_u')||{}).value||'').trim();if(/^https:\/\/[^\s]+$/i.test(_u)&&!$('#of_p').value.trim()&&!OFTRY[_u]){OFTRY[_u]=1;const b=$('#of_e');if(b)b.textContent='';fetchLink().then(()=>{if($('#off'))$('#off').requestSubmit()});return}const g=id=>$('#'+id).value.trim(),n=x=>Number(String(x).replace(/\./g,'').replace(',','.')),er=t=>{$('#of_e').textContent=t};
@@ -3017,4 +3017,9 @@ const r0=window.render;window.render=function(){const r=r0.apply(this,arguments)
 })();
 </script>
 <style>details.ofd>summary::-webkit-details-marker{display:none}details.ofd>summary::after{content:none!important}details.ofd .ofd-m::before{content:'+ Ver descrição completa'}details.ofd[open] .ofd-m::before{content:'− Ver menos'}details.ofd[open] .ofd-c{display:none}details.ofd[open]{display:flex;flex-direction:column-reverse}</style>
-<script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
+<script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script><script>
+/* tirar um link principal de loja (administrador) */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-lkrm]');if(!b)return;e.preventDefault();e.stopPropagation();if(!adm)return;const v={...lnk};delete v[b.dataset.lkrm];
+ putLnk(v).then(()=>{toast('Link removido.');render()}).catch(()=>toast('Não consegui salvar. Confira se você está cadastrado como administrador no Firebase.'))},true);
+</script>
+</body></html>
