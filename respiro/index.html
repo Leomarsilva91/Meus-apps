@@ -900,9 +900,18 @@ check();
 })();
 </script>
 <script>
-/* "Teve dificuldade ou sentiu falta de algo?" só nas partes gerais do app, não dentro de um lugar ou trilha */
-(function(){var LUG=['det','trv','trs','env'];function aj(){try{var b=document.getElementById('fblk');if(b)b.hidden=LUG.indexOf(S.v)>=0}catch(_){}}
-var r0=window.render;window.render=function(){var x=r0.apply(this,arguments);aj();return x};aj()})();
+/* "Teve dificuldade ou sentiu falta de algo?" só nas partes gerais do app. Dentro de um lugar fica a conversa da comunidade sobre ele. */
+(function(){var LUG=['det','trv','trs','env'];
+function aj(){try{var b=document.getElementById('fblk');if(b)b.style.display=LUG.indexOf(S.v)>=0?'none':''}catch(_){}}
+function comLigada(){try{return comOn||ADM}catch(_){return true}}
+function cardCom(p){if(!p||!comLigada())return '';var L=[],G=[];
+ try{L=posts().filter(function(x){return x.pid===p.id&&!x.re}).sort(function(a,b){return b.at-a.at}).slice(0,3)}catch(_){}
+ try{G=groups().filter(function(g){return g.pid===p.id&&grpAtivo(g)}).slice(0,3)}catch(_){}
+ var ps='';try{ps=L.map(postCard).join('')}catch(_){}var gs='';try{gs=G.map(grpTile).join('')}catch(_){}
+ return '<div class="card" style="border:1.5px dashed var(--pri)"><b style="font-size:17px">💬 Converse sobre este lugar</b><p class="m">Conte como foi, tire dúvidas com quem já veio ou chame gente para vir junto.</p>'+gs+(ps||'<p class="m">Ninguém comentou este lugar ainda. Seja a primeira pessoa.</p>')+'<div class="row"><button class="btn" type="button" data-act="postpl" data-id="'+p.id+'">✍️ Escrever sobre este lugar</button><button class="btn gh" type="button" data-cmgrp="'+p.id+'">👥 Quero companhia</button></div></div>'}
+var _d=viewDet;viewDet=function(){var h=_d.apply(this,arguments);var p=null;try{p=byId(S.id)}catch(_){}return h+cardCom(p)};
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-cmgrp]');if(!b)return;e.preventDefault();e.stopPropagation();S.dr.g_p=b.dataset.cmgrp;S.cs='grp';S.op.ng=true;go('com')},true);
+var r0=window.render;window.render=function(){var x=r0.apply(this,arguments);aj();return x};aj();try{render()}catch(_){}})();
 </script>
 <script>
 /* ---- Mapa de ruas (OpenStreetMap + Leaflet) com os lugares marcados; tocar na bolinha mostra o lugar e o caminho ---- */
