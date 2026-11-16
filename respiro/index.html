@@ -960,4 +960,40 @@ var r0=window.render;window.render=function(){var x=r0.apply(this,arguments);if(
 try{render()}catch(_){}
 })();
 </script>
+<script>
+/* ---- Época do ano: o que foi visto (ou não) em cada mês na trilha do lugar ---- */
+(function(){
+var MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+var SAZ=['ani','cob','abe','crr','crf','poc','agu','lix','esc'];
+var OBN=[],ini=0,tr=0;
+function e(x){try{return esc(x)}catch(_){return String(x)}}
+function eu(){try{return UID}catch(_){return null}}
+function dados(pid){var M={};function add(k,u,at,v){if(!at||!k)return;var m=new Date(at).getMonth();var a=M[k]=M[k]||{s:[],n:[],ult:{}};var key=u+'|'+m;if(v==='s'){if(a.s.indexOf(key)<0)a.s.push(key)}else{if(a.n.indexOf(key)<0)a.n.push(key)}var l=a.ult[u];if(!l||at>l.at)a.ult[u]={at:at,v:v}}
+ try{relatos(pid).forEach(function(r){var ks={};(r.obs||[]).forEach(function(o){ks[o.k]=1});Object.keys(ks).forEach(function(k){add(k,r.uid,r.at,'s')})})}catch(_){}
+ OBN.forEach(function(d){(d.items||[]).forEach(function(x){if(x&&x.pid===pid)add(x.k,d.uid,x.at,x.v)})});return M}
+function resumo(a){var ms=[],mn=[],cs=[],cn=[];for(var m=0;m<12;m++){var s=a.s.filter(function(x){return x.split('|')[1]==m}).length,n=a.n.filter(function(x){return x.split('|')[1]==m}).length;cs.push(s);cn.push(n);if(s&&s>=n)ms.push(m);else if(n>s)mn.push(m)}
+ var agora=Date.now(),rs=0,rn=0;Object.keys(a.ult).forEach(function(u){var l=a.ult[u];if(agora-l.at<60*864e5){if(l.v==='s')rs++;else rn++}});
+ var pessoas={};a.s.concat(a.n).forEach(function(x){pessoas[x.split('|')[0]]=1});
+ return {ms:ms,mn:mn,cs:cs,cn:cn,rs:rs,rn:rn,np:Object.keys(pessoas).length}}
+function faixa(ms){if(!ms.length)return '';var r=[],i=0,L=ms.slice().sort(function(a,b){return a-b});while(i<L.length){var j=i;while(j+1<L.length&&L[j+1]===L[j]+1)j++;r.push(j>i?MES[L[i]]+' a '+MES[L[j]]:MES[L[i]]);i=j+1}return r.join(', ')}
+function linha(k,a,pid){var O=OBK[k]||['📌',k],x=resumo(a),hoje=new Date().getMonth();
+ var tira='<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:2px" aria-hidden="true">'+MES.map(function(m,i){var bg=x.cs[i]&&x.cs[i]>=x.cn[i]?'var(--warn,#B26A00)':x.cn[i]?'var(--ok,#1B7345)':'var(--soft,#ddd)';return '<span style="display:grid;gap:1px;text-align:center;font-size:10px;font-weight:700'+(i===hoje?';outline:2px solid var(--ink);border-radius:4px':'')+'"><span style="height:10px;border-radius:3px;background:'+bg+(x.cs[i]||x.cn[i]?'':';opacity:.45')+'"></span>'+m.charAt(0).toUpperCase()+'</span>'}).join('')+'</div>';
+ var ag=x.rs&&x.rs>=x.rn?'<span class="tag warn">Visto nos últimos 2 meses ('+x.rs+')</span>':x.rn?'<span class="tag ok">Não visto nos últimos 2 meses ('+x.rn+')</span>':'';
+ var t=(x.ms.length?'Visto em: <b style="color:var(--ink)">'+faixa(x.ms)+'</b>. ':'')+(x.mn.length?'Não visto em: <b style="color:var(--ink)">'+faixa(x.mn)+'</b>. ':'')+x.np+' pessoa'+(x.np>1?'s contaram.':' contou.');
+ return '<div class="card" style="background:var(--bg);gap:6px;padding:10px 12px"><div class="row sp"><b>'+O[0]+' '+e(O[1])+'</b>'+ag+'</div>'+tira+'<p class="m">'+t+'</p><div class="row"><button class="chip" type="button" data-obn="s" data-k="'+k+'" data-pid="'+e(pid)+'" style="min-height:36px;font-size:13px">Vi hoje</button><button class="chip" type="button" data-obn="n" data-k="'+k+'" data-pid="'+e(pid)+'" style="min-height:36px;font-size:13px">Passei e não vi</button></div></div>'}
+function epoca(p){if(!p)return '';var M=dados(p.id),ks=Object.keys(M).filter(function(k){return SAZ.indexOf(k)>=0||M[k].n.length}).sort(function(a,b){return (OBP.indexOf(b)>=0)-(OBP.indexOf(a)>=0)});
+ var falta=SAZ.filter(function(k){return ks.indexOf(k)<0&&OBK[k]});
+ var corpo=(ks.length?ks.map(function(k){return linha(k,M[k],p.id)}).join(''):'<p class="m">Ninguém contou ainda o que aparece em cada época aqui.</p>')+(falta.length?'<details data-k="epx"'+(function(){try{return ' '+op('epx',false)}catch(_){return ''}})()+'><summary>Marcar o que você viu hoje</summary><div class="dbody"><div class="row">'+falta.map(function(k){return '<button class="chip" type="button" data-obn="s" data-k="'+k+'" data-pid="'+e(p.id)+'" style="min-height:36px;font-size:13px">'+OBK[k][0]+' '+e(OBK[k][1])+'</button>'}).join('')+'</div><p class="m">Vale mesmo sem gravar o trajeto.</p></div></details>':'');
+ var aberto='';try{aberto=op('epo',true)}catch(_){aberto='open'}
+ return '<div class="card"><details data-k="epo" '+aberto+'><summary>📅 O que aparece em cada época do ano</summary><div class="dbody"><p class="m">Bichos, água e outras coisas mudam com a época. Aqui juntamos o que cada visitante viu ou não viu, mês a mês. Cada pessoa conta uma vez por mês. Laranja: visto. Verde: não visto. O mês atual tem contorno.</p>'+corpo+'</div></details></div>'}
+var _tc=trCard;trCard=function(p){var h=_tc.apply(this,arguments);return epoca(p)+h};
+document.addEventListener('click',async function(ev){var b=ev.target.closest&&ev.target.closest('[data-obn]');if(!b)return;ev.preventDefault();ev.stopPropagation();
+ if(typeof DB==='undefined'||!DB||!eu()){try{toast('Entre na sua conta para contar o que viu.')}catch(_){}return}
+ var it={pid:b.dataset.pid,k:b.dataset.k,v:b.dataset.obn,at:Date.now()},d=new Date().toDateString();
+ try{var ref=DB.collection('obn').doc(eu()),sn=await ref.get(),cur=sn.exists?sn.data()||{}:{},L=(cur.items||[]).filter(function(x){return !(x.pid===it.pid&&x.k===it.k&&new Date(x.at).toDateString()===d)});L.push(it);await ref.set({items:L.slice(-300)});
+  toast(it.v==='s'?'Obrigado! Marcado que você viu hoje.':'Obrigado! Marcado que você passou e não viu hoje.')}catch(_){try{toast('Não consegui salvar agora.')}catch(__){}}},true);
+var iv=setInterval(function(){if(ini)return;var d=null;try{d=DB}catch(_){}if(!d){if(++tr>40)clearInterval(iv);return}ini=1;clearInterval(iv);
+ try{d.collection('obn').onSnapshot(function(sn){OBN=sn.docs.map(function(x){return {uid:x.id,items:(x.data()||{}).items||[]}});try{if(S.v==='det'){var a=document.activeElement;if(!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))render()}}catch(_){}},function(){})}catch(_){}},500);
+})();
+</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
