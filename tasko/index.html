@@ -1366,7 +1366,7 @@ ${plan==='m'?`<a class="btn" style="margin-top:10px;display:flex;align-items:cen
 async function dlPdf(name,data){const m=$('#taxmsg')||$('#rcmsg');try{const dl=window.claude&&await window.claude.use('downloads');if(!dl){if(m)m.textContent='O download não está disponível neste acesso ao app.';return}await dl.save({filename:name,data})}catch(e){if(!e||e.code!=='declined'){if(m)m.textContent='Não consegui baixar o arquivo. Tente de novo.'}}}
 async function taxGps(){const T=S.tx=S.tx||{},C=taxComps(),comp=T.c||C[0],plan=S.user.kind==='mei'?'m':(T.p||'n'),e=$('#taxerr');
   if(!cpfOk(T.cpf!=null?T.cpf:meU().cpf)){if(e)e.textContent='Informe um CPF válido.';return}
-  if(cpfDup(T.cpf!=null?T.cpf:meU().cpf)){if(e)e.textContent=CPFDUP;return}
+  {const cv=T.cpf!=null?T.cpf:meU().cpf;if(cpfDup(cv)){if(e)e.textContent=cpfDonoMsg(cv,S.user.email,u=>(u.roles||{})[S.user.role]);return}}
   const cpf=cpfDig(T.cpf!=null?T.cpf:meU().cpf);cpfSave(cpf);
   const me=S.user.email,earn=jget('ms_jobs').filter(j=>j&&!j.sample&&j.email===me&&String(new Date(j.at).getFullYear()+'-'+String(new Date(j.at).getMonth()+1).padStart(2,'0'))===comp).reduce((a,j)=>a+(Number(j.price)||0),0),I=inssCalc(plan,earn),due=dueOf(comp),P=pdfWriter(),L=50,R=545;
   P.line([['Pré-guia de recolhimento ao INSS (GPS)',L]],16,true,4);P.line([['Tasko · documento de apoio, sem valor de pagamento',L]],10,false,6);P.hr();
@@ -2233,13 +2233,15 @@ const cnpjDup=(cn,email)=>{const d=cnpjDig(cn);return users().some(u=>u&&u.email
 const cpfSave=d=>{const l=users(),u=l.find(x=>x.email===S.user.email);if(u){u.cpf=cpfDig(d);u.cpfh=cpfH(d);saveUsers(l)}};
 const cpfDupPro=(d,email)=>{const h=cpfH(d);return users().some(u=>u&&u.email!==email&&u.cpfh===h&&u.roles&&(u.roles.pro||u.roles.proE))};
 const cpfProFld=(isE)=>fld('pcpf',isE?'CPF do responsável pela empresa':'CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Usado na análise de idoneidade de quem presta serviços na plataforma. Fica só neste aparelho e não aparece para ninguém.</p>';
-const cpfProChk=(E,email)=>{const i=$('#pcpf');if(!i)return;if(!cpfOk(i.value))E.pcpf='Informe um CPF válido.';else if(cpfDupPro(i.value,email))E.pcpf=CPFDUP};
+const emMask=e=>{const[a,b]=String(e||'').split('@');return b?(a.slice(0,2)+'***@'+b):'outra conta'};
+const cpfDonoMsg=(d,email,f)=>{const h=cpfH(d),u=users().find(u=>u&&u.email!==email&&u.cpfh===h&&f(u));return u?CPFDUP+' Ele está na conta '+emMask(u.email)+'. Entre nela para usar esse perfil, ou use outro CPF.':CPFDUP};
+const cpfProChk=(E,email)=>{const i=$('#pcpf');if(!i)return;if(!cpfOk(i.value))E.pcpf='Informe um CPF válido.';else if(cpfDupPro(i.value,email))E.pcpf=cpfDonoMsg(i.value,email,u=>u.roles&&(u.roles.pro||u.roles.proE))};
 const cpfProSet=(u)=>{const i=$('#pcpf');if(i&&cpfOk(i.value)){u.cpf=cpfDig(i.value);u.cpfh=cpfH(i.value)}};
 const CPFDUP='Este CPF já está cadastrado em outro perfil. Cada pessoa usa um único cadastro.';
 const cpfNeed=()=>!!S.user&&!S.user.emp&&!cpfOk(meU().cpf);
 const cpfFld=why=>`<div class="card" style="background:var(--bg)"><label for="paycpf"><b>Seu CPF</b></label><p class="muted" style="margin:4px 0 8px;font-size:13px">${why} Fica guardado só neste aparelho e não aparece para ninguém.</p><input id="paycpf" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"><p class="err" id="paycpferr" role="alert"></p></div>`;
 function cpfTake(){if(!cpfNeed())return true;const i=$('#paycpf'),e=$('#paycpferr');if(!i||!cpfOk(i.value)){if(e)e.textContent='Informe um CPF válido.';if(i)i.focus();return false}
-  if(cpfDup(i.value)){if(e)e.textContent=CPFDUP;i.focus();return false}
+  if(cpfDup(i.value)){if(e)e.textContent=cpfDonoMsg(i.value,S.user.email,u=>(u.roles||{})[S.user.role]);i.focus();return false}
   cpfSave(i.value);return true}
 function cpfCard(){if(!cpfNeed()||S.user.role==='pro')return'';const R=jget('ms_requests').filter(q=>q&&q.email===S.user.email&&!q.acc),P=jget('ms_proposals');
   if(!R.some(q=>P.some(p=>p&&p.reqId===q.id)))return'';
