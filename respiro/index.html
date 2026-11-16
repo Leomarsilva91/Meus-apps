@@ -688,7 +688,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,[data-ope
  if(a==='delr'){if(!DB||!UID)return;updOwn('rev',it=>it.filter(x=>x.id!==D.id),60).then(()=>toast('Avaliação apagada.')).catch(()=>toast('Não foi possível apagar agora.'));return}
  if(a==='del'){S.mine=S.mine.filter(x=>x.id!==D.id);S.fav=S.fav.filter(x=>x!==D.id);return render()}
  if(a==='geo'){if(!navigator.geolocation)return toast('Este aparelho não deixa usar a localização. Digite um endereço abaixo.');const b=e.target.closest('button');if(b){b.disabled=true;b.textContent='Procurando você…'}
-  const ok=pos=>{S.cll={k:'eu',n:'você',lat:pos.coords.latitude,lon:pos.coords.longitude};S.cx=null;S.br=false;render();toast(lista().length?'Pronto! Mostrando os lugares perto de você.':'Achei você, mas ainda não há lugares cadastrados neste raio. Aumente o raio ou veja o Brasil todo.')},
+  const ok=pos=>{S.cll={k:'eu',n:'você',lat:pos.coords.latitude,lon:pos.coords.longitude};S.cx=null;S.br=false;render();toast(lista().length?'Pronto! Mostrando os lugares perto de você.':'Achei você! Buscando os parques e lugares de natureza perto daqui.')},
    fim=m=>{const x=document.querySelector('[data-act=geo]');if(x){x.disabled=false;x.textContent='Usar minha localização'}toast(m)},
    err=(er,tent)=>{if(er.code===1)return fim('A localização está bloqueada para o Respiro. Libere nas configurações do navegador ou digite um endereço abaixo.');if(!tent)return navigator.geolocation.getCurrentPosition(ok,e2=>err(e2,1),{enableHighAccuracy:true,timeout:30000,maximumAge:0});fim('Não consegui o sinal da localização. Vá para perto de uma janela ou digite um endereço abaixo.')};
   navigator.geolocation.getCurrentPosition(ok,er=>err(er,0),{enableHighAccuracy:false,timeout:15000,maximumAge:120000})}});
@@ -818,4 +818,60 @@ const lk=document.getElementById('fblk');if(lk)lk.innerHTML=fbLink();
 </script>
 
 <script>window.IA_INTRO={"app": "respiro", "nome": "Respiro", "cor": "#2D6A4F", "fundo": "#EFF3EC", "tinta": "#18271E", "slides": [{"ic": "🌿", "t": "Bem-vindo ao Respiro", "x": "Encontre natureza e descanso perto de você: parques, cachoeiras, hotéis fazenda, clubes, day use, pesqueiros e camping.", "fala": "Oi, gente! Bem-vindo ao Respiro! Aqui você encontra natureza e descanso pertinho de você: parques, cachoeiras, hotéis fazenda, clubes e muito mais!"}, {"ic": "📍", "t": "Tudo num raio", "x": "Escolha onde você está e o raio de busca. O mapa mostra os lugares, e os filtros ajudam, por exemplo, a achar day use aberto hoje.", "fala": "Escolha onde você está e o raio de busca, e o mapa mostra os lugares. Com os filtros, você acha, por exemplo, um day use aberto hoje!"}, {"ic": "👥", "t": "Vá acompanhado", "x": "Na comunidade, com a sua conta, você tira dúvidas e cria ou entra em grupos de passeio. Quem organiza e quem participa tem histórico.", "fala": "Quer companhia? Na comunidade, com a sua conta, você tira dúvidas e cria ou entra em grupos de passeio!"}, {"ic": "🏡", "t": "Para donos de lugares", "x": "Tem um parque, sítio ou hotel fazenda? Em \"Cadastre\" você coloca o seu lugar no mapa.", "fala": "Tem um sítio, parque ou hotel fazenda? Em Cadastre, você coloca o seu lugar no mapa!"}, {"ic": "🧪", "t": "Versão de teste", "x": "Os lugares e preços deste protótipo são exemplos. Visitante explora tudo. Favoritos, comunidade e cadastro pedem login.", "fala": "Os lugares e preços aqui são exemplos, tá? Explore à vontade. Favoritos, comunidade e cadastro pedem login. Respira fundo e bora passear!"}]}</script><script>window.RSI18N&&RSI18N.intro()</script><script src="../intro.js?v=3"></script>
+<script>
+/* ---- Lugares reais do OpenStreetMap: parques, reservas, cachoeiras, mirantes e campings perto do ponto escolhido ---- */
+(function(){
+var EPS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+var MAXKM=50,MAXN=250;
+var OS={key:'',st:'',n:0,busy:0,tm:0};
+var SUB={park:['parque','Parque'],nature_reserve:['parque','Reserva natural'],national_park:['parque','Parque nacional'],waterfall:['cachoeira','Cachoeira'],viewpoint:['parque','Mirante'],camp_site:['camping','Camping']};
+var NAO=/^(pra[cç]a|largo|canteiro|rotat[oó]ria|jardim\s+(da|do)\s+pra[cç]a)\b/i;
+function e(s){try{return esc(s)}catch(_){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}}
+function url(u){u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;return /^https?:\/\/[^\s<>"']+$/i.test(u)?u:''}
+function sf(n,p){try{return typeof window[n]==='function'?window[n](p):''}catch(_){return ''}}
+function q(c,km){var a='(around:'+Math.round(km*1000)+','+c.lat.toFixed(5)+','+c.lon.toFixed(5)+')';
+ return '[out:json][timeout:25];(nwr["leisure"="park"]["name"]'+a+';nwr["leisure"="nature_reserve"]["name"]'+a+';nwr["boundary"="national_park"]["name"]'+a+';node["natural"="waterfall"]["name"]'+a+';node["tourism"="viewpoint"]["name"]'+a+';nwr["tourism"="camp_site"]["name"]'+a+';);out center tags 500;'}
+async function busca(c,km){var body='data='+encodeURIComponent(q(c,km));
+ for(var i=0;i<EPS.length;i++){try{var r=await fetch(EPS[i],{method:'POST',body:body,headers:{'Content-Type':'application/x-www-form-urlencoded'}});if(!r.ok)continue;var j=await r.json();return j.elements||[]}catch(_){}}
+ throw new Error('osm')}
+function tipo(t){if(t.natural==='waterfall')return 'waterfall';if(t.tourism==='viewpoint')return 'viewpoint';if(t.tourism==='camp_site')return 'camp_site';if(t.boundary==='national_park')return 'national_park';if(t.leisure==='nature_reserve')return 'nature_reserve';return 'park'}
+function aplica(L,c){for(var i=P0.length-1;i>=0;i--)if(P0[i]&&P0[i].osm)P0.splice(i,1);
+ var vis={},out=[];
+ L.forEach(function(x){var t=x.tags||{},n=String(t.name||'').trim(),la=x.lat!=null?x.lat:x.center&&x.center.lat,lo=x.lon!=null?x.lon:x.center&&x.center.lon;
+  if(!n||la==null||lo==null||NAO.test(n))return;var k=n.toLowerCase()+'|'+(+la).toFixed(2)+'|'+(+lo).toFixed(2);if(vis[k])return;vis[k]=1;
+  var ty=tipo(t),S2=SUB[ty],fee=String(t.fee||'').toLowerCase();
+  out.push({id:'o'+x.type.charAt(0)+x.id,osm:1,n:n.slice(0,80),t:S2[0],sub:S2[1],lat:+la,lon:+lo,x:0,y:0,du:0,dias:TODOS,hor:String(t.opening_hours||'').slice(0,80)||'Não informado',pr:[0,0],prx:fee==='no'?0:1,
+   k:1,pet:t.dog==='yes'||t.dog==='leashed'?1:0,pis:0,tri:0,est:0,ob:String(t.description||'').slice(0,240),tel:String(t.phone||t['contact:phone']||'').slice(0,40),site:url(t.website||t['contact:website']),ou:'https://www.openstreetmap.org/'+x.type+'/'+x.id})});
+ out.sort(function(a,b){return hav(c,a)-hav(c,b)});out=out.slice(0,MAXN);
+ out.forEach(function(p){P0.push(p)});OS.n=out.length}
+function quieto(){var a=document.activeElement;return !(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))}
+function rr(){try{if((S.v==='ex'||S.v==='fav')&&quieto())render()}catch(_){}}
+function check(){try{if(S.v!=='ex'||S.br)return;var c=cLL();if(!c||!isFinite(c.lat)||!isFinite(c.lon))return;var km=Math.min(S.rad,MAXKM),key=c.lat.toFixed(2)+','+c.lon.toFixed(2)+'|'+km;
+ if(key===OS.key||OS.busy)return;clearTimeout(OS.tm);OS.tm=setTimeout(function(){roda(key,c,km)},700)}catch(_){}}
+async function roda(key,c,km){OS.busy=1;OS.key=key;OS.st='load';rr();
+ try{var L=await busca(c,km);aplica(L,c);OS.st='ok'}catch(_){OS.st='err'}
+ OS.busy=0;rr();setTimeout(check,50)}
+function aviso(){if(S.br)return '<div class="card"><span class="m">🗺️ Os lugares reais do mapa aparecem quando você usa a sua localização ou escolhe uma cidade.</span></div>';
+ if(OS.st==='load')return '<div class="card"><b>🗺️ Buscando parques e lugares de natureza reais perto daqui…</b><span class="m">Dados do mapa aberto OpenStreetMap.</span></div>';
+ if(OS.st==='err')return '<div class="card"><b>Não consegui buscar os lugares reais agora</b><span class="m">Pode ser a internet ou o serviço do mapa ocupado.</span><button class="btn gh" type="button" data-osm="1" style="justify-self:start">Tentar de novo</button></div>';
+ if(OS.st==='ok')return '<div class="card"><span class="m">🗺️ '+(OS.n?OS.n+(OS.n>1?' lugares reais':' lugar real'):'Nenhum lugar real')+' do mapa aberto OpenStreetMap'+(S.rad>MAXKM?' (até '+MAXKM+' km)':'')+'. Os dados são de voluntários e podem estar incompletos. Fonte: © colaboradores do OpenStreetMap.</span></div>';
+ return ''}
+/* cartão resumido e tela do lugar real */
+var _t=tileP;tileP=function(p){if(!p||!p.osm)return _t.apply(this,arguments);var fav=S.fav.includes(p.id);
+ return '<button class="tile '+(S.id===p.id?'sel':'')+'" data-open="'+p.id+'" id="t_'+p.id+'"><span class="row sp"><span class="row" style="gap:6px"><span class="dot" style="background:'+col(p.t)+'"></span><span class="m">'+e(p.sub)+'</span></span><span class="b" style="font-variant-numeric:tabular-nums">'+kmTxt(dist(p))+' km</span></span><span class="b" style="font-size:16.5px">'+e(p.n)+'</span>'+sf('ratingLine',p.id)+'<span class="row"><span class="tag">🗺️ Lugar real</span>'+(fav?'<span class="tag sun">Favorito</span>':'')+'</span><span class="big" style="font-size:20px">'+(p.prx?'Preço não informado':'Entrada gratuita')+'</span><span class="m">'+(p.hor!=='Não informado'?'Horário: '+e(p.hor):'Horário não informado')+'</span></button>'};
+var _d=viewDet;viewDet=function(){var p=byId(S.id);if(!p||!p.osm)return _d.apply(this,arguments);var d=dist(p),fav=S.fav.includes(p.id),o=function(k,def){try{return op(k,def)}catch(_){return def?'open':''}};
+ return '<div class="card pop"><div class="row sp"><span class="row" style="gap:6px"><span class="dot" style="background:'+col(p.t)+'"></span><b>'+e(p.sub)+'</b></span><span class="b">'+kmTxt(d)+' km</span></div><h2>'+e(p.n)+'</h2>'+(p.ob?'<p>'+e(p.ob)+'</p>':'')+'<div class="row"><span class="tag">🗺️ Lugar real</span><span class="tag">'+(p.prx?'Preço não informado':'Entrada gratuita')+'</span>'+(p.pet?'<span class="tag">Pet</span>':'')+'</div><div class="row"><button class="btn '+(fav?'gh':'sun')+'" data-act="fav" data-id="'+p.id+'">'+(fav?'Tirar dos favoritos':'Salvar nos favoritos')+'</button></div></div>'
+ +sf('avCard',p)+sf('trOfiCard',p)
+ +'<div class="card"><details data-k="o1" '+o('o1',true)+'><summary>Funcionamento e preço</summary><div class="dbody"><div class="kv"><span>Horário</span><span>'+e(p.hor)+'</span></div><div class="kv"><span>Entrada</span><span>'+(p.prx?'Não informado':'Gratuita')+'</span></div><p class="m">Dados do mapa aberto OpenStreetMap, preenchidos por voluntários. Podem estar incompletos: confirme antes de ir.</p></div></details></div>'
+ +sf('trCard',p)+'<div class="card"><button class="btn sun" data-act="envp" data-id="'+p.id+'">📤 Enviar este lugar para alguém</button></div>'+sf('revCard',p)+sf('comPlace',p)
+ +'<div class="card"><details data-k="d3" '+o('d3',true)+'><summary>Como chegar</summary><div class="dbody"><div class="kv"><span>Distância em linha reta</span><span>'+kmTxt(d)+' km</span></div><a class="btn gh" target="_blank" rel="noopener noreferrer" data-ct="'+p.id+'" href="https://www.google.com/maps/search/?api=1&query='+p.lat.toFixed(5)+','+p.lon.toFixed(5)+'">Abrir no Google Maps</a></div></details></div>'
+ +'<div class="card"><details data-k="o2" '+o('o2',true)+'><summary>Contato</summary><div class="dbody">'+(p.tel?'<div class="kv"><span>Telefone</span><span style="user-select:all">'+e(p.tel)+'</span></div>':'<p class="m">Telefone não informado no mapa.</p>')+(p.site?'<a class="btn" target="_blank" rel="noopener noreferrer" data-ct="'+p.id+'" href="'+e(p.site)+'">Abrir o site do lugar</a>':'')+'<a class="btn gh" target="_blank" rel="noopener noreferrer" href="'+e(p.ou)+'">Ver no OpenStreetMap</a></div></details></div>'
+ +'<div class="card"><p class="m">Fonte: © colaboradores do OpenStreetMap (licença ODbL). Cuida deste lugar? Cadastre na aba Cadastre para mostrar dias, preço e contato.</p></div>'};
+/* aviso na tela Explorar */
+var _v=viewEx;viewEx=function(){var h=_v.apply(this,arguments),a=aviso();if(!a)return h;var i=h.indexOf('<div class="grid">');return i>=0?h.slice(0,i)+a+h.slice(i):h+a};
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-osm]');if(!b)return;ev.preventDefault();ev.stopPropagation();OS.key='';OS.st='';check()},true);
+var _r=window.render;window.render=function(){var x=_r.apply(this,arguments);check();return x};
+check();
+})();
+</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
