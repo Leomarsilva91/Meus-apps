@@ -227,14 +227,21 @@ ${fld('pw2','Confirmar senha','type="password" autocomplete="new-password"')}
 <button class="btn" id="go" type="submit" data-act="signup">Criar conta</button></form>
 <button class="link" data-go="login">Já tenho conta</button></main>`,
 reset:()=>{const R=S.rs||{};return `${head('Recuperar senha','login')}<main><form class="pf" id="rform" autocomplete="on" style="display:contents">
-<div class="card"><b>Código enviado para ${esc(R.email||'')}</b><p class="muted" style="margin:6px 0 0">Ele vale por 10 minutos. Digite o código e escolha uma nova senha.</p><div style="margin-top:10px;padding:10px;border-radius:12px;background:var(--line)" role="note"><b>Demonstração:</b> o app ainda não envia e-mails de verdade. O código que chegaria no seu e-mail é <b style="letter-spacing:.15em">${esc(R.code||'')}</b>.</div></div>
-<input type="email" name="username" autocomplete="username" value="${esc(R.email||'')}" hidden>
+<div class="card"><b>Código enviado para ${esc(R.mk?emMask(R.email):(R.email||''))}</b><p class="muted" style="margin:6px 0 0">Ele vale por 10 minutos. Digite o código e escolha uma nova senha.</p><div style="margin-top:10px;padding:10px;border-radius:12px;background:var(--line)" role="note"><b>Demonstração:</b> o app ainda não envia e-mails de verdade. O código que chegaria no seu e-mail é <b style="letter-spacing:.15em">${esc(R.code||'')}</b>.</div></div>
+<input type="email" name="username" autocomplete="username" value="${R.mk?'':esc(R.email||'')}" hidden>
 ${fld('rcode','Código de 6 dígitos','type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"')}
 ${fld('rpw','Nova senha','type="password" name="password" autocomplete="new-password"','<div class="muted" id="rpwm" aria-live="polite"></div>')}
 ${fld('rpw2','Confirmar nova senha','type="password" autocomplete="new-password"')}
 <label class="chk"><input type="checkbox" data-act="showpw"> Mostrar senhas</label>
 <div class="alert" id="rerr" role="alert"></div>
 <button class="btn" id="go" type="submit" data-act="doreset">Salvar nova senha</button></form></main>`},
+findacc:()=>{const F=S.fa||{};return `${head('Encontrar minha conta','login')}<main>
+<div class="card"><b>Esqueceu qual e-mail usou?</b><p class="muted" style="margin:6px 0 0">Digite o CPF ou o celular que você usou no cadastro. Mostramos o começo do e-mail de cada conta encontrada, e você recupera a senha dela.</p></div>
+${fld('facpf','CPF ou celular com DDD','type="text" inputmode="numeric" maxlength="16" autocomplete="off" value="'+esc(F.q||'')+'" placeholder="000.000.000-00 ou (61) 90000-0000"')}
+<div class="alert" id="faerr" role="alert">${esc(F.err||'')}</div>
+<button class="btn" data-act="findgo">Procurar minha conta</button>
+${F.list?(F.list.length?`<div class="card"><b>${F.list.length===1?'Encontramos 1 conta':'Encontramos '+F.list.length+' contas'}</b>${F.list.map((u,i)=>`<div class="row" style="justify-content:space-between;gap:8px;margin-top:10px;flex-wrap:wrap"><span><b>${esc(emMask(u.email))}</b><br><span class="muted" style="font-size:13px">${esc(u.desc)}</span></span><button class="chip" data-fga="${i}">Recuperar esta conta</button></div>`).join('')}</div>`:'<div class="card"><b>Nenhuma conta encontrada</b><p class="muted" style="margin:6px 0 0">Confira o número. Neste protótipo, a busca vale só para contas criadas neste aparelho.</p></div>'):''}
+<p class="muted" style="font-size:13px">Por segurança, o e-mail completo nunca aparece aqui. Para recuperar, mandamos um código para ele.</p></main>`},
 login:()=>`${head('Entrar','welcome')}<main><form class="pf" id="lform" autocomplete="on" style="display:contents">
 ${fld('lemail','E-mail','type="email" name="username" autocomplete="username" inputmode="email"')}
 ${fld('lpw','Senha','type="password" name="password" autocomplete="current-password"')}
@@ -242,6 +249,7 @@ ${fld('lpw','Senha','type="password" name="password" autocomplete="current-passw
 <div class="alert" id="lerr" role="alert"></div><div class="muted" id="lmsg" aria-live="polite"></div>
 <button class="btn" id="go" type="submit" data-act="login">Entrar</button></form>
 <button class="link" data-act="forgot">Esqueci minha senha</button>
+<button class="link" data-act="findacc">Esqueci qual e-mail usei</button>
 <button class="btn ghost" data-go="welcome">Criar uma conta</button></main>`,
 request:()=>{const r=S.req,pd=pendEm();if(!r.city)r.city=lastCity();if(pd)return `${head('Descrição do serviço','home')}<main><div class="card"><h2>Antes de um novo pedido</h2><p style="margin:8px 0 0">Falta pagar a taxa do seu pedido de emergência. Leva um minuto e depois você pode pedir normalmente.</p><button class="btn" style="margin-top:12px" data-unlock="${pd.id}">Pagar a taxa pendente</button></div></main>`;return `${head('Descrição do serviço','home')}<main>
 <div><label for="rdesc">O que você precisa?</label><textarea id="rdesc" aria-describedby="e-rdesc" maxlength="2000" placeholder="Pode ser um reparo ou uma obra. Ex.: o chuveiro não esquenta; ou: construir um muro de 20 m; ou: reformar a casa inteira, 120 m²">${esc(r.desc)}</textarea><div class="err" id="e-rdesc"></div><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button type="button" class="chip" id="dictbtn" data-act="dict">🎤 Falar a descrição</button><button type="button" class="chip" data-say="form">🔊 Ouvir</button></div><div class="muted" id="dictmsg" role="status" aria-live="polite" style="margin-top:4px"></div></div>
@@ -2232,7 +2240,7 @@ const cpfDup=(d,role)=>{const h=cpfH(d),me=S.user.email;return users().some(u=>u
 const cnpjDup=(cn,email)=>{const d=cnpjDig(cn);return users().some(u=>u&&u.email!==email&&Object.values(u.roles||{}).some(x=>x&&x.cnpj&&cnpjDig(x.cnpj)===d))};
 const cpfSave=d=>{const l=users(),u=l.find(x=>x.email===S.user.email);if(u){u.cpf=cpfDig(d);u.cpfh=cpfH(d);saveUsers(l)}};
 const cpfDupPro=(d,email)=>{const h=cpfH(d);return users().some(u=>u&&u.email!==email&&u.cpfh===h&&u.roles&&(u.roles.pro||u.roles.proE))};
-const cpfProFld=(isE)=>fld('pcpf',isE?'CPF do responsável pela empresa':'CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Usado na análise de idoneidade de quem presta serviços na plataforma. Fica só neste aparelho e não aparece para ninguém.</p>';
+const cpfProFld=(isE)=>fld('pcpf',isE?'CPF do responsável pela empresa':'CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Usado na análise de idoneidade de quem presta serviços na plataforma. Fica só neste aparelho e não aparece para ninguém.</p><button type="button" class="link" data-act="findacc" style="justify-self:start">CPF já usado em outra conta? Encontrar minha conta</button>';
 const emMask=e=>{const[a,b]=String(e||'').split('@');return b?(a.slice(0,2)+'***@'+b):'outra conta'};
 const cpfDonoMsg=(d,email,f)=>{const h=cpfH(d),u=users().find(u=>u&&u.email!==email&&u.cpfh===h&&f(u));return u?CPFDUP+' Ele está na conta '+emMask(u.email)+'. Entre nela para usar esse perfil, ou use outro CPF.':CPFDUP};
 const cpfProChk=(E,email)=>{const i=$('#pcpf');if(!i)return;if(!cpfOk(i.value))E.pcpf='Informe um CPF válido.';else if(cpfDupPro(i.value,email))E.pcpf=cpfDonoMsg(i.value,email,u=>u.roles&&(u.roles.pro||u.roles.proE))};
@@ -2525,7 +2533,7 @@ async function changePw(){
 }
 document.addEventListener('submit',e=>{if(e.target.classList&&e.target.classList.contains('pf'))e.preventDefault()});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-vis],[data-muse],[data-go],[data-rc],[data-role],[data-act],[data-pick],[data-open],[data-del],[data-switch],[data-addrole],[data-pay],[data-done],[data-unlock],[data-inb],[data-inbt],[data-worker],[data-proj],[data-sppick],[data-spdel],[data-say],[data-rate],[data-mrm],[data-mshare],[data-madd],[data-qmm],[data-msrc],[data-doc],[data-ovclose],[data-report],[data-refund],[data-plan],[data-rw],[data-pf],[data-hm],[data-th],[data-copy],[data-spd],[data-spp],[data-course],[data-claim],[data-cp],[data-xp],[data-give],[data-xg],[data-et],[data-rproj],[data-expto],[data-pmode],[data-chat],[data-quick]');if(!t)return;const D=t.dataset;
+  const t=e.target.closest('[data-fga],[data-vis],[data-muse],[data-go],[data-rc],[data-role],[data-act],[data-pick],[data-open],[data-del],[data-switch],[data-addrole],[data-pay],[data-done],[data-unlock],[data-inb],[data-inbt],[data-worker],[data-proj],[data-sppick],[data-spdel],[data-say],[data-rate],[data-mrm],[data-mshare],[data-madd],[data-qmm],[data-msrc],[data-doc],[data-ovclose],[data-report],[data-refund],[data-plan],[data-rw],[data-pf],[data-hm],[data-th],[data-copy],[data-spd],[data-spp],[data-course],[data-claim],[data-cp],[data-xp],[data-give],[data-xg],[data-et],[data-rproj],[data-expto],[data-pmode],[data-chat],[data-quick]');if(!t)return;const D=t.dataset;
   if(D.del){const id=+D.del;if(S.del!==id){S.del=id;t.textContent='Toque para confirmar a exclusão';return}S.del=null;return delPost(id)}
   if(D.worker){S.fw=D.worker;return go('feed')}
   if(D.unlock){S.payid=+D.unlock;S.reab=0;return go('unlock')}
@@ -2726,6 +2734,10 @@ document.addEventListener('click',e=>{
   if(D.act==='dict')return dictToggle();
   if(D.act==='notifon'){try{const r=Notification.requestPermission();(r&&r.then?r:Promise.resolve(r)).then(()=>render())}catch(e){}return}
   if(D.act==='forgot')return forgot();
+  if(D.act==='findacc'){S.fa={};return go('findacc')}
+  if(D.act==='findgo'){const v=($('#facpf')||{}).value||'',dg=v.replace(/\D/g,'');S.fa={q:v};if(dg.length===11&&cpfOk(v)){const h=cpfH(v);S.fa.list=users().filter(u=>u&&u.cpfh===h)}else if(dg.length>=10){S.fa.list=users().filter(u=>u&&String(u.phone||'').replace(/\D/g,'').slice(-dg.length)===dg)}else{S.fa.err='Digite um CPF válido ou um celular com DDD.'}
+   if(S.fa.list)S.fa.list=S.fa.list.map(u=>({email:u.email,desc:Object.keys(u.roles||{}).filter(k=>(u.roles||{})[k]).map(k=>ROLE[k]||k).join(', ')||'Conta'}));return go('findacc')}
+  if(D.fga!=null){const u=(S.fa&&S.fa.list||[])[+D.fga];if(!u)return;S.rs={email:u.email,code:String(Math.floor(100000+Math.random()*900000)),exp:Date.now()+600000,tries:0,mk:1};S.fa=null;return go('reset')}
   if(D.act==='doreset')return doReset();
   if(D.act==='chpw')return changePw();
   if(D.act==='unlockno'){S.unl=null;return render()}
