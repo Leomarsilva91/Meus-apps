@@ -2124,7 +2124,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   if(D.ctst&&PT.adm&&PT.db){const d=CTT.all.find(x=>x.uid===D.uid);if(!d)return;PT.db.doc('contato/'+d.uid).set({items:d.items.map(x=>x.id===D.id?{...x,st:D.ctst}:x)}).then(()=>toast('Situação atualizada.')).catch(()=>toast('Não foi possível salvar agora.'))}
 },true);
 document.addEventListener('change',e=>{const t=e.target;if(!t)return;if(t.id==='ct_r'){UI.ctr=t.checked;return}if(t.id==='ct_img'){const f=t.files&&t.files[0];t.value='';ctShrink(f).then(u=>{UI.ctimg=u;const p=document.getElementById('ct_prev');if(p)p.innerHTML=ctPrev()},()=>toast('Não consegui ler essa imagem. Tente outro print.'))}},true);
-const _viFb=VIEWS.inicio;VIEWS.inicio=function(){const h=_viFb(),l=`<button type="button" class="fblink" data-go="contato"><span class="fbi" aria-hidden="true">💬</span><span class="fbx2"><b>Teve dificuldade ou sentiu falta de algo?</b><br><span class="fbsm">Conte para a gente e ajude a melhorar o Prumo</span></span><span class="fbar" aria-hidden="true">›</span></button>`,k='<p class="muted small">O Prumo organiza e orienta.';return h.includes(k)?h.replace(k,l+k):h+l};
+const _viFb=VIEWS.inicio;VIEWS.inicio=function(){const h=_viFb(),l=`<button type="button" class="fblink" data-go="contato"><span class="fbi" aria-hidden="true">📱</span><span class="fbx2"><b>Sobre o app Prumo: teve dificuldade ou sentiu falta de algo?</b><br><span class="fbsm">Fale direto com a equipe do app. Não é a comunidade: só a equipe vê.</span></span><span class="fbar" aria-hidden="true">›</span></button>`,k='<p class="muted small">O Prumo organiza e orienta.';return h.includes(k)?h.replace(k,l+k):h+l};
 document.addEventListener('submit',e=>{const f=e.target;
   if(f.id==='ctf'){e.preventDefault();e.stopImmediatePropagation();const er=t=>{const x=document.getElementById('ct_e');if(x){x.style.color='';x.textContent=t}};
     if(!GUEST&&(!PT.db||!PT.uid))return er('Sem conexão agora. Tente de novo.');
@@ -2141,7 +2141,7 @@ document.addEventListener('submit',e=>{const f=e.target;
 },true);
 const _vm2=VIEWS.mais;VIEWS.mais=function(){let h=_vm2();const n=ctNew(),pa=PT.adm?CTT.all.reduce((a,d)=>a+d.items.filter(x=>!x.re).length,0):0;
   const pill=n?` <span class="pill warn">${n} resposta${n>1?'s':''} nova${n>1?'s':''}</span>`:(pa?` <span class="pill warn">${pa} para responder</span>`:'');
-  const c=`<div class="card"><h3>💬 Teve dificuldade ou sentiu falta de algo?${pill}</h3><p class="muted small">Algo ficou difícil, travou ou faltou? Tem uma dúvida? Mande uma mensagem e veja a resposta aqui no app.</p><button class="btn ghost sm" data-go="contato">Enviar mensagem</button></div>\n`;
+  const c=`<div class="card"><h3>📱 Sobre o app Prumo: teve dificuldade ou sentiu falta de algo?${pill}</h3><p class="muted small">Algo ficou difícil, travou ou faltou? Tem uma dúvida? Mande uma mensagem e veja a resposta aqui no app.</p><button class="btn ghost sm" data-go="contato">Enviar mensagem</button></div>\n`;
   const m='<div class="card"><h3>Programa de pontos</h3>';return h.includes(m)?h.replace(m,c+m):h+c};
 /* ===== Importar vendas da maquininha ===== */
 function impCard(){const I=UI.imp;
