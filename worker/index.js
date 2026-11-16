@@ -152,12 +152,41 @@ async function osm(req, o, ctx) {
   return resp({ erro: 'osm', motivo: ult }, 502, o);
 }
 
+
+// Reforço com o Google (Places API New). A chave fica só no servidor: variável GOOGLE_PLACES_KEY.
+// Pago depois da cota grátis: limite o uso por dia no painel do Google Cloud (Cotas).
+const GTIPOS = ['park', 'national_park', 'state_park', 'hiking_area', 'campground'];
+async function gplaces(req, o, env) {
+  if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
+  if (!env.GOOGLE_PLACES_KEY) return resp({ erro: 'sem_chave' }, 503, o);
+  const ip = req.headers.get('CF-Connecting-IP') || 'x';
+  if (!(await contar(env, 'gp:geral', 300))) return resp({ erro: 'limite_geral' }, 429, o);
+  if (!(await contar(env, 'gp:' + ip, 20))) return resp({ erro: 'limite' }, 429, o);
+  const u = new URL(req.url), lat = +u.searchParams.get('lat'), lon = +u.searchParams.get('lon'), km = Math.min(50, Math.max(1, +u.searchParams.get('km') || 20));
+  if (!(lat >= -34 && lat <= 6 && lon >= -74 && lon <= -34)) return resp({ erro: 'local' }, 400, o);
+  let r;
+  try {
+    r = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'places.id,places.displayName,places.location,places.primaryType,places.googleMapsUri' },
+      body: JSON.stringify({ includedTypes: GTIPOS, maxResultCount: 20, languageCode: 'pt-BR', regionCode: 'BR', locationRestriction: { circle: { center: { latitude: lat, longitude: lon }, radius: km * 1000 } } }),
+    });
+  } catch (_) { return resp({ erro: 'rede' }, 502, o); }
+  if (!r.ok) return resp({ erro: 'google', status: r.status }, 502, o);
+  const j = await r.json();
+  const L = (j.places || []).map((p) => ({ id: p.id, n: (p.displayName && p.displayName.text) || '', lat: p.location && p.location.latitude, lon: p.location && p.location.longitude, ty: p.primaryType || '', url: p.googleMapsUri || '' })).filter((p) => p.n && isFinite(p.lat) && isFinite(p.lon));
+  return resp({ L }, 200, o);
+}
+
 export default {
   async fetch(req, env, ctx) {
     const o = req.headers.get('Origin') || '';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(o) });
     if (req.method === 'GET' && new URL(req.url).pathname === '/taxas') {
       try { return await taxas(req, o, ctx); } catch (_) { return resp({ erro: 'bcb' }, 502, o); }
+    }
+    if (req.method === 'GET' && new URL(req.url).pathname === '/gplaces') {
+      try { return await gplaces(req, o, env); } catch (_) { return resp({ erro: 'google' }, 502, o); }
     }
     if (req.method === 'GET' && new URL(req.url).pathname === '/osm') {
       try { return await osm(req, o, ctx); } catch (_) { return resp({ erro: 'osm' }, 502, o); }

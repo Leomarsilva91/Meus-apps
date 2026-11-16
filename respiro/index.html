@@ -845,6 +845,18 @@ async function busca(c,km){var ck='rs_osm2_'+c.lat.toFixed(2)+','+c.lon.toFixed(
  OS.why=falhas.length?'parte dos lugares não carregou':'';
  try{var mini=L.map(function(x){return {type:x.type,id:x.id,lat:x.lat,lon:x.lon,center:x.center,tags:x.tags}});if(!falhas.length)localStorage.setItem(ck,JSON.stringify({t:Date.now(),L:mini}))}catch(_){}
  return L}
+var GT={park:['parque','Parque'],national_park:['parque','Parque nacional'],state_park:['parque','Parque estadual'],hiking_area:['parque','Trilha'],campground:['camping','Camping']};
+var GS={st:'',n:0,why:''};
+function gURL(){try{return window.IA_URL?String(window.IA_URL).replace(/\/$/,''):''}catch(_){return ''}}
+function perto(a,b){return hav(a,b)<0.35}
+async function buscaG(){if(GS.st==='load')return;var c=cLL(),km=Math.min(S.rad,MAXKM);GS.st='load';GS.why='';rr();
+ try{var r=await fetch(gURL()+'/gplaces?lat='+c.lat.toFixed(5)+'&lon='+c.lon.toFixed(5)+'&km='+km),j=await r.json().catch(function(){return {}});
+  if(!r.ok){GS.st='err';GS.why=j.erro==='sem_chave'?'o Google ainda não foi ligado no servidor':j.erro==='limite'||j.erro==='limite_geral'?'limite de buscas de hoje atingido':'o Google não respondeu';rr();return}
+  for(var i=P0.length-1;i>=0;i--)if(P0[i]&&P0[i].gp)P0.splice(i,1);
+  var ex=P0.filter(function(p){return p.lat!=null}),n=0;
+  (j.L||[]).forEach(function(x){var nm=String(x.n).trim();if(!nm||NAO.test(nm))return;if(ex.some(function(p){return p.n.toLowerCase()===nm.toLowerCase()&&perto(p,x)}))return;var T=GT[x.ty]||['parque','Parque'];
+   P0.push({id:'g'+String(x.id).replace(/[^\w-]/g,'').slice(0,60),osm:1,gp:1,n:nm.slice(0,80),t:T[0],sub:T[1],lat:+x.lat,lon:+x.lon,x:0,y:0,du:0,dias:TODOS,hor:'Não informado',pr:[0,0],prx:1,k:1,pet:0,pis:0,tri:0,est:0,ob:'',tel:'',site:'',ou:/^https:\/\//.test(x.url)?x.url:'https://www.google.com/maps/search/?api=1&query='+(+x.lat).toFixed(5)+','+(+x.lon).toFixed(5)});n++});
+  GS.st='ok';GS.n=n}catch(_){GS.st='err';GS.why='sem internet ou servidor fora do ar'}rr()}
 function tipo(t){if(t.natural==='waterfall')return 'waterfall';if(t.tourism==='viewpoint')return 'viewpoint';if(t.tourism==='camp_site')return 'camp_site';if(t.boundary==='national_park')return 'national_park';if(t.leisure==='nature_reserve')return 'nature_reserve';return 'park'}
 function aplica(L,c){for(var i=P0.length-1;i>=0;i--)if(P0[i]&&P0[i].osm)P0.splice(i,1);
  var vis={},out=[];
@@ -859,9 +871,10 @@ function quieto(){var a=document.activeElement;return !(a&&/^(INPUT|TEXTAREA|SEL
 function rr(){try{if((S.v==='ex'||S.v==='fav')&&quieto())render()}catch(_){}}
 function check(){try{if(S.v!=='ex'||S.br)return;var c=cLL();if(!c||!isFinite(c.lat)||!isFinite(c.lon))return;var km=Math.min(S.rad,MAXKM),key=c.lat.toFixed(2)+','+c.lon.toFixed(2)+'|'+km;
  if(key===OS.key||OS.busy)return;clearTimeout(OS.tm);OS.tm=setTimeout(function(){roda(key,c,km)},700)}catch(_){}}
-async function roda(key,c,km){OS.busy=1;OS.key=key;OS.st='load';rr();
+async function roda(key,c,km){OS.busy=1;GS.st='';for(var gi=P0.length-1;gi>=0;gi--)if(P0[gi]&&P0[gi].gp)P0.splice(gi,1);OS.key=key;OS.st='load';rr();
  try{var L=await busca(c,km);aplica(L,c);OS.st='ok'}catch(_){OS.st='err'}
- OS.busy=0;rr();setTimeout(check,50)}
+ OS.busy=0;rr();if(gURL()&&OS.key===key)buscaG();setTimeout(check,50)}
+function gBloco(){if(!gURL()||S.br)return '';if(GS.st==='load')return '<div class="card"><b>🔎 Buscando também no Google…</b></div>';if(GS.st==='ok')return '<div class="card"><span class="m">🔎 Google: '+(GS.n?GS.n+(GS.n>1?' lugares a mais na lista e no mapa':' lugar a mais na lista e no mapa'):'nenhum lugar novo')+'. Dados do Google.</span></div>';if(GS.st==='err')return '<div class="card"><span class="m">Não consegui completar com o Google ('+e(GS.why)+').</span>'+(/ligado/.test(GS.why)?'':'<button class="btn gh" type="button" data-gsrch="1" style="justify-self:start">Tentar de novo no Google</button>')+'</div>';return ''}
 function aviso(){if(S.br)return '<div class="card"><span class="m">🗺️ Os lugares reais do mapa aparecem quando você usa a sua localização ou escolhe uma cidade.</span></div>';
  if(OS.st==='load')return '<div class="card"><b>🗺️ Buscando parques e lugares de natureza reais perto daqui…</b><span class="m">Dados do mapa aberto OpenStreetMap.</span></div>';
  if(OS.st==='err')return '<div class="card"><b>Não consegui buscar os lugares reais agora</b><span class="m">Pode ser a internet ou o serviço do mapa ocupado'+(OS.why?' ('+e(OS.why)+')':'')+'.</span><button class="btn gh" type="button" data-osm="1" style="justify-self:start">Tentar de novo</button></div>';
@@ -869,17 +882,18 @@ function aviso(){if(S.br)return '<div class="card"><span class="m">🗺️ Os lu
  return ''}
 /* cartão resumido e tela do lugar real */
 var _t=tileP;tileP=function(p){if(!p||!p.osm)return _t.apply(this,arguments);var fav=S.fav.includes(p.id);
- return '<button class="tile '+(S.id===p.id?'sel':'')+'" data-open="'+p.id+'" id="t_'+p.id+'"><span class="row sp"><span class="row" style="gap:6px"><span class="dot" style="background:'+col(p.t)+'"></span><span class="m">'+e(p.sub)+'</span></span><span class="b" style="font-variant-numeric:tabular-nums">'+kmTxt(dist(p))+' km</span></span><span class="b" style="font-size:16.5px">'+e(p.n)+'</span>'+sf('ratingLine',p.id)+'<span class="row"><span class="tag">🗺️ Lugar real</span>'+(fav?'<span class="tag sun">Favorito</span>':'')+'</span><span class="big" style="font-size:20px">'+(p.prx?'Preço não informado':'Entrada gratuita')+'</span><span class="m">'+(p.hor!=='Não informado'?'Horário: '+e(p.hor):'Horário não informado')+'</span></button>'};
+ return '<button class="tile '+(S.id===p.id?'sel':'')+'" data-open="'+p.id+'" id="t_'+p.id+'"><span class="row sp"><span class="row" style="gap:6px"><span class="dot" style="background:'+col(p.t)+'"></span><span class="m">'+e(p.sub)+'</span></span><span class="b" style="font-variant-numeric:tabular-nums">'+kmTxt(dist(p))+' km</span></span><span class="b" style="font-size:16.5px">'+e(p.n)+'</span>'+sf('ratingLine',p.id)+'<span class="row"><span class="tag">'+(p.gp?'📍 Google':'🗺️ Lugar real')+'</span>'+(fav?'<span class="tag sun">Favorito</span>':'')+'</span><span class="big" style="font-size:20px">'+(p.prx?'Preço não informado':'Entrada gratuita')+'</span><span class="m">'+(p.hor!=='Não informado'?'Horário: '+e(p.hor):'Horário não informado')+'</span></button>'};
 var _d=viewDet;viewDet=function(){var p=byId(S.id);if(!p||!p.osm)return _d.apply(this,arguments);var d=dist(p),fav=S.fav.includes(p.id),o=function(k,def){try{return op(k,def)}catch(_){return def?'open':''}};
  return '<div class="card pop"><div class="row sp"><span class="row" style="gap:6px"><span class="dot" style="background:'+col(p.t)+'"></span><b>'+e(p.sub)+'</b></span><span class="b">'+kmTxt(d)+' km</span></div><h2>'+e(p.n)+'</h2>'+(p.ob?'<p>'+e(p.ob)+'</p>':'')+'<div class="row"><span class="tag">🗺️ Lugar real</span><span class="tag">'+(p.prx?'Preço não informado':'Entrada gratuita')+'</span>'+(p.pet?'<span class="tag">Pet</span>':'')+'</div><div class="row"><button class="btn '+(fav?'gh':'sun')+'" data-act="fav" data-id="'+p.id+'">'+(fav?'Tirar dos favoritos':'Salvar nos favoritos')+'</button></div></div>'
  +sf('avCard',p)+sf('trOfiCard',p)
  +'<div class="card"><details data-k="o1" '+o('o1',true)+'><summary>Funcionamento e preço</summary><div class="dbody"><div class="kv"><span>Horário</span><span>'+e(p.hor)+'</span></div><div class="kv"><span>Entrada</span><span>'+(p.prx?'Não informado':'Gratuita')+'</span></div><p class="m">Dados do mapa aberto OpenStreetMap, preenchidos por voluntários. Podem estar incompletos: confirme antes de ir.</p></div></details></div>'
  +sf('trCard',p)+'<div class="card"><button class="btn sun" data-act="envp" data-id="'+p.id+'">📤 Enviar este lugar para alguém</button></div>'+sf('revCard',p)+sf('comPlace',p)
  +'<div class="card"><details data-k="d3" '+o('d3',true)+'><summary>Como chegar</summary><div class="dbody"><div class="kv"><span>Distância em linha reta</span><span>'+kmTxt(d)+' km</span></div><a class="btn gh" target="_blank" rel="noopener noreferrer" data-ct="'+p.id+'" href="https://www.google.com/maps/search/?api=1&query='+p.lat.toFixed(5)+','+p.lon.toFixed(5)+'">Abrir no Google Maps</a></div></details></div>'
- +'<div class="card"><details data-k="o2" '+o('o2',true)+'><summary>Contato</summary><div class="dbody">'+(p.tel?'<div class="kv"><span>Telefone</span><span style="user-select:all">'+e(p.tel)+'</span></div>':'<p class="m">Telefone não informado no mapa.</p>')+(p.site?'<a class="btn" target="_blank" rel="noopener noreferrer" data-ct="'+p.id+'" href="'+e(p.site)+'">Abrir o site do lugar</a>':'')+'<a class="btn gh" target="_blank" rel="noopener noreferrer" href="'+e(p.ou)+'">Ver no OpenStreetMap</a></div></details></div>'
- +'<div class="card"><p class="m">Fonte: © colaboradores do OpenStreetMap (licença ODbL). Cuida deste lugar? Cadastre na aba Cadastre para mostrar dias, preço e contato.</p></div>'};
+ +'<div class="card"><details data-k="o2" '+o('o2',true)+'><summary>Contato</summary><div class="dbody">'+(p.tel?'<div class="kv"><span>Telefone</span><span style="user-select:all">'+e(p.tel)+'</span></div>':'<p class="m">Telefone não informado no mapa.</p>')+(p.site?'<a class="btn" target="_blank" rel="noopener noreferrer" data-ct="'+p.id+'" href="'+e(p.site)+'">Abrir o site do lugar</a>':'')+'<a class="btn gh" target="_blank" rel="noopener noreferrer" href="'+e(p.ou)+'">'+(p.gp?'Ver no Google Maps':'Ver no OpenStreetMap')+'</a></div></details></div>'
+ +'<div class="card"><p class="m">'+(p.gp?'Fonte: Google. Horário, preço e contato: veja no Google Maps.':'Fonte: © colaboradores do OpenStreetMap (licença ODbL).')+' Cuida deste lugar? Cadastre na aba Cadastre para mostrar dias, preço e contato.</p></div>'};
 /* aviso na tela Explorar */
-var _v=viewEx;viewEx=function(){var h=_v.apply(this,arguments),a=aviso();if(!a)return h;var i=h.indexOf('<div class="grid">');return i>=0?h.slice(0,i)+a+h.slice(i):h+a};
+var _v=viewEx;viewEx=function(){var h=_v.apply(this,arguments),a=aviso()+(OS.st==='ok'||OS.st==='err'?gBloco():'');if(!a)return h;var i=h.indexOf('<div class="grid">');return i>=0?h.slice(0,i)+a+h.slice(i):h+a};
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-gsrch]');if(!b)return;ev.preventDefault();ev.stopPropagation();buscaG()},true);
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-osm]');if(!b)return;ev.preventDefault();ev.stopPropagation();OS.key='';OS.st='';check()},true);
 var _r=window.render;window.render=function(){var x=_r.apply(this,arguments);check();return x};
 check();
