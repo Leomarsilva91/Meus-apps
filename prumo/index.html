@@ -737,11 +737,11 @@ function lineChart(series){
 function vMetas(){UI.met='lista';if(UI.plan&&S.goals.some(x=>x.id===UI.plan))return `${demoBar()}${vPlan()}`;UI.plan=null;return `${demoBar()}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Metas</h2></div>${miniMetas()}${vMetasLista()}<button class="btn ghost sm" data-go="casa" data-sub="orc" style="justify-self:start">O orçamento do mês agora fica na Economia doméstica →</button>`}
 function orcForm(embed){
   const o=S.orc,n=x=>x?String(x).replace('.',','):'';
-  return `<form class="${embed?'':'card'}" id="f-orc" style="display:grid;gap:10px"><h3>Seu mês</h3><p class="muted small">Diga em que dia o seu mês começa (por exemplo, o dia em que o salário cai) e quanto você tem para o mês. O Prumo divide o resto. O mês termina na véspera do mesmo dia do mês seguinte.</p>
-   <label>Dia em que meu mês começa (1 a 31)<input id="cy-d" inputmode="numeric" maxlength="2" value="${cDia()}" required></label>
-   <div class="grid2"><label>Dinheiro disponível no mês (R$)<input id="o-r" inputmode="decimal" value="${o?n(o.renda):''}" placeholder="Ex.: 6.500" required></label><label>Pessoas na casa<input id="o-p" inputmode="numeric" value="${o?o.pessoas||1:''}" placeholder="1"></label></div>
+  return `<form class="${embed?'':'card'}" id="f-orc"${embed?' data-noscan="1"':''} style="display:grid;gap:10px"><h3>Seu mês</h3><p class="muted small">Diga em que dia o seu mês começa (por exemplo, o dia em que o salário cai) e quanto você tem para o mês. O Prumo divide o resto. O mês termina na véspera do mesmo dia do mês seguinte.</p>
+   <label>Meu mês começa em (dia/mês)<input id="cy-d" inputmode="numeric" data-mask="dm" maxlength="5" value="${cShort(cStart(MKEY))}" placeholder="Ex.: 19/10" required><span class="muted small" style="font-weight:400">Ano: ${cStart(MKEY).slice(0,4)} (o ano entra sozinho). Pode ser hoje, um dia que já passou ou um dia futuro.</span><span class="muted small" style="font-weight:400">Escolheu um dia futuro? O novo mês só começa nesse dia. Até lá, os gastos que você lançar ficam no mês anterior.</span></label>
+   ${embed?`<label>Crédito do mês: dinheiro disponível (R$)<input id="o-r" inputmode="decimal" value="${o?n(o.renda):''}" placeholder="Ex.: 6.500" required></label><input type="hidden" id="o-p" value="${o?o.pessoas||1:''}">${OR_F.map(([k])=>`<input type="hidden" id="o-${k}" value="${o?n(o.fix[k]):''}">`).join('')}<p class="muted small">Gastos fixos, pessoas da casa e lançamentos continuam nas abas Orçamento, Importar e Lançamentos.</p>`:`<div class="grid2"><label>Dinheiro disponível no mês (R$)<input id="o-r" inputmode="decimal" value="${o?n(o.renda):''}" placeholder="Ex.: 6.500" required></label><label>Pessoas na casa<input id="o-p" inputmode="numeric" value="${o?o.pessoas||1:''}" placeholder="1"></label></div>
    ${OR_F.map(([k,l])=>`<label>${l}<input id="o-${k}" inputmode="decimal" value="${o?n(o.fix[k]):''}" placeholder="0"></label>`).join('')}
-   <p class="muted small">As parcelas das suas dívidas entram automaticamente. Nada de gastos variáveis aqui: o que sobra é o que dá para organizar.</p>
+   <p class="muted small">As parcelas das suas dívidas entram automaticamente. Nada de gastos variáveis aqui: o que sobra é o que dá para organizar.</p>`}
    <div class="note" id="o-e" hidden></div><button class="btn meta" type="submit">${o?'Atualizar meu mês':'Organizar meu mês'}</button></form>`}
 function vOrc(){
   const o=S.orc,pl=orcPlan(),n=x=>x?String(x).replace('.',','):'';
@@ -1369,7 +1369,7 @@ async function scanRun(input){
 }
 const SC_FORMS={'f-rev':'rev','f-exp':'exp','f-debt':'debt','f-goal':'goal','f-orc':'orc','f-acordo':'acordo','f-rec':'rec'};
 function tripToggle(){const t=$('#g-t'),b=document.querySelector('.g-trip'),w=$('#g-aw'),pw=$('#g-pw'),sb=$('#g-sb');if(!t||!b)return;const on=t.value==='viagem',ed=UI.ed&&UI.ed.w==='goal';b.hidden=!on;b.style.display=on?'grid':'none';if(w)w.style.display=on?'none':'';if(pw)pw.style.display=on?'none':'';if(sb&&!ed)sb.textContent=on?'Analisar com IA e criar':'Criar meta'}
-function injectScan(){Object.keys(SC_FORMS).forEach(id=>{const f=$('#'+id);if(!f||f.querySelector('.scanbox'))return;const k=SC_FORMS[id],h=f.querySelector('h3');if(!h)return;h.insertAdjacentHTML('afterend',scanBox(k,SC[k].l))})}
+function injectScan(){Object.keys(SC_FORMS).forEach(id=>{const f=$('#'+id);if(!f||f.dataset.noscan||f.querySelector('.scanbox'))return;const k=SC_FORMS[id],h=f.querySelector('h3');if(!h)return;h.insertAdjacentHTML('afterend',scanBox(k,SC[k].l))})}
 
 /* ---------- PDF: gerar e enviar documentos ---------- */
 const PDFW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
@@ -1618,7 +1618,8 @@ const MASK={
  money(s){let t=s.replace(/[^\d,]/g,'');const i=t.indexOf(',');let a=i<0?t:t.slice(0,i),b=i<0?null:t.slice(i+1).replace(/,/g,'').slice(0,3);a=a.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');return b===null?a:a+','+b},
  doc(s){const d=s.replace(/\D/g,'').slice(0,14);if(d.length<=11)return d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');return d.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2')},
  tel(s){const d=s.replace(/\D/g,'').slice(0,11);if(!d)return '';if(d.length<3)return '('+d;const r=d.slice(2);return '('+d.slice(0,2)+') '+(r.length>8?r.slice(0,5)+'-'+r.slice(5):r.length>4?r.slice(0,4)+'-'+r.slice(4):r)},
- cep(s){const d=s.replace(/\D/g,'').slice(0,8);return d.length>5?d.slice(0,5)+'-'+d.slice(5):d}};
+ cep(s){const d=s.replace(/\D/g,'').slice(0,8);return d.length>5?d.slice(0,5)+'-'+d.slice(5):d},
+ dm(s){const d=s.replace(/\D/g,'').slice(0,4);return d.length>2?d.slice(0,2)+'/'+d.slice(2):d}};
 function maskType(el){if(!el||el.tagName!=='INPUT'||el.type==='checkbox'||el.type==='file'||el.type==='date'||el.type==='range')return '';
   if(el.dataset&&el.dataset.mask)return el.dataset.mask;
   const tx=((el.closest('label')||{}).textContent||'')+' '+(el.getAttribute('aria-label')||'');
@@ -1789,8 +1790,8 @@ document.addEventListener('submit',e=>{
     const i=t/100,fv=i>0?v*((Math.pow(1+i,m)-1)/i):v*m;UI.sim={m,fv,in:v*m};UI.simOpen=true;render(true);return}
   if(f==='f-orc'){const r=num(g('o-r'));if(!(r>0))return err('o-e','Informe quanto dinheiro você tem disponível no mês.');
     const fix={};for(const x of OR_F){const v=g('o-'+x[0])?num(g('o-'+x[0])):0;if(isNaN(v)||v<0)return err('o-e','Confira o valor de: '+x[1]);fix[x[0]]=v}
-    const dy=parseInt(g('cy-d'),10);if(!(dy>=1&&dy<=31))return err('o-e','Informe um dia entre 1 e 31 para o início do mês.');
-    const pp=parseInt(g('o-p'),10);S.orc={renda:r,pessoas:pp>0?pp:1,fix,gastos:(S.orc&&S.orc.gastos)||[]};cD().dia=dy;cycSync();UI.cm=null;save();render(true);burst(innerWidth/2,innerHeight/2,40);toast(UI.tab==='casa'&&UI.cs==='resumo'?'Mês atualizado. Veja a estimativa logo abaixo.':'Mês organizado! Veja a divisão sugerida.');return}
+    const cym=String(g('cy-d')||'').match(/^\s*(\d{1,2})(?:\s*\/\s*(\d{1,2}))?\s*$/),dy=cym?+cym[1]:NaN,mo=cym&&cym[2]?+cym[2]:0;if(!(dy>=1&&dy<=31)||(mo&&(mo<1||mo>12||dy>cDimM(Y,mo-1))))return err('o-e','Informe o dia e o mês em que o seu mês começa, por exemplo 19/10.');
+    const pp=parseInt(g('o-p'),10);S.orc={renda:r,pessoas:pp>0?pp:1,fix,gastos:(S.orc&&S.orc.gastos)||[]};cD().dia=dy;{const yy=mo&&mo<M+1-6?Y+1:Y,iv=mo?iso(new Date(yy,mo-1,dy)):'';if(iv&&iv>TODAYISO)cD().ini=iv;else delete cD().ini}cycSync();cMs()[MKEY]=Object.assign(cMs()[MKEY]||{},{renda:r});UI.cm=null;save();render(true);burst(innerWidth/2,innerHeight/2,40);toast(DAYN<1?'Pronto! Seu mês começa em '+cShort(cStart(MKEY))+'.':UI.tab==='casa'&&UI.cs==='resumo'?'Mês atualizado. Veja a estimativa logo abaixo.':'Mês organizado! Veja a divisão sugerida.');return}
   if(f==='f-gasto'){const v=num(g('g-v'));if(!(v>0))return err('g-e','Informe o valor do gasto.');const d=g('g-d')||TODAYISO;
     const gi=UI.gf&&UI.gf.id,old=gi&&S.orc.gastos.find(x=>x.id===gi);if(old){old.d=d;old.v=v;old.t=g('g-t').slice(0,60);old.c=g('g-c')||'outros'}else S.orc.gastos.push({id:uid(),d,v,t:g('g-t').slice(0,60),c:g('g-c')||'outros'});UI.gf=null;save();render(true);toast(cIn(d,MKEY)?'Gasto salvo. Orçamento recalculado.':'Gasto salvo em outro mês: não entra no cálculo deste mês.');return}
   if(f==='f-dream')return dreamSubmit();
@@ -2201,16 +2202,16 @@ function cEnd(key){const nk=cAdd(key,1),y=+nk.slice(0,4),m=+nk.slice(5,7)-1,d=ne
 function cKeyOf(t){const y=+t.slice(0,4),m=+t.slice(5,7)-1,d=+t.slice(8,10),k=y+'-'+pad(m+1);return d>=Math.min(cDia(),cDimM(y,m))?k:cAdd(k,-1)}
 function cIn(t,key){return t>=cStart(key)&&t<=cEnd(key)}
 function cDays(a,b){return Math.round((Date.UTC(+b.slice(0,4),+b.slice(5,7)-1,+b.slice(8,10))-Date.UTC(+a.slice(0,4),+a.slice(5,7)-1,+a.slice(8,10)))/864e5)}
-function cycSync(){MKEY=cKeyOf(TODAYISO);const a=cStart(MKEY),b=cEnd(MKEY);DIM=cDays(a,b)+1;DAYN=cDays(a,TODAYISO)+1}
+function cycSync(){const cc=S&&S.casa,ini=cc&&cc.ini;if(ini&&ini>TODAYISO){MKEY=ini.slice(0,7)}else{if(cc&&cc.ini)delete cc.ini;MKEY=cKeyOf(TODAYISO)}const a=cStart(MKEY),b=cEnd(MKEY);DIM=cDays(a,b)+1;DAYN=cDays(a,TODAYISO)+1}
 function cShort(t){return t.slice(8,10)+'/'+t.slice(5,7)}
 function cicloCard(){const k=MKEY;
-  return `<details class="card fold"${S.orc?'':' open'}><summary>Editar meu mês: ${cShort(cStart(k))} a ${cShort(cEnd(k))} · dia ${DAYN} de ${DIM}</summary><div style="margin-top:8px">${orcForm(true)}</div></details>`}
+  return `<details class="card fold"${S.orc?'':' open'}><summary>Editar meu mês: ${cShort(cStart(k))} a ${cShort(cEnd(k))} · ${DAYN<1?'começa em '+(1-DAYN)+(1-DAYN===1?' dia':' dias'):'dia '+DAYN+' de '+DIM}</summary><div style="margin-top:8px">${orcForm(true)}</div></details>`}
 
 function cAdd(m,k){const d=new Date(+m.slice(0,4),+m.slice(5,7)-1+k,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)}
 
 /* ===== Estimativa do mês (ritmo de gastos) ===== */
 function cEst(){
-  if(cMes()!==MKEY)return null;
+  if(cMes()!==MKEY||DAYN<1)return null;
   const GM=gMes();if(!GM.length)return null;
   const gs={};GR.forEach(x=>gs[x[0]]=0);GM.forEach(g=>{gs[g.c]=(gs[g.c]||0)+(+g.v||0)});
   const tot=GM.reduce((a,g)=>a+(+g.v||0),0),o=S.orc,dias=Math.max(1,DAYN),restam=DIM-DAYN,cw=UI.cw===undefined?3:UI.cw,W=cw>0?Math.min(cw,dias):dias;
@@ -2219,7 +2220,7 @@ function cEst(){
   let proj=0;const por=[];
   GR.forEach(([c,l])=>{const g=gs[c]||0,b=o?(+(o.fix||{})[c]||0):0,rt=GRITMO.includes(c)?g+(ws[c]||0)/W*restam:g,p=Math.max(b,rt);proj+=p;por.push({c,l,g,b,p})});
   const mins=o?S.debts.map(eff).filter(d=>d.saldo>0.005).reduce((a,d)=>a+(d.min||0),0):0;
-  const renda=o&&o.renda>0?o.renda:null,saldo=renda==null?null:renda-(proj+mins);
+  const renda=o&&o.renda>0?cRendaM(MKEY)+cExtra(MKEY):null,saldo=renda==null?null:renda-(proj+mins);
   const top=por.filter(x=>x.p>x.b*1.05&&x.p-x.b>=20).sort((a,b)=>(b.p-b.b)-(a.p-a.b)).slice(0,2);
   return{tot,proj,mins,renda,saldo,dias,restam,top,cedo:dias<4,W,cw,media:wt/W,big:big&&wt>0&&big.v/wt>.6&&big.v>=150&&W<dias?{t:big.t||big.desc||'Compra',v:big.v}:null};
 }
@@ -2242,6 +2243,68 @@ function estShort(){const e=cEst();return e&&e.saldo!=null?'<br><span class="sma
 function estPdf(){const e=cEst();if(!e)return [];const t=e.saldo==null?'Se continuar gastando assim, os gastos do mês chegam a cerca de '+brl0(e.proj)+'.':'Se continuar gastando assim (média dos últimos '+e.W+' dias), o mês fecha com '+(e.saldo<-0.5?'déficit':'crédito')+' de '+brl0(Math.abs(e.saldo))+' (gastos de '+brl0(e.proj+e.mins)+' para '+brl0(e.renda)+' disponíveis).';return[{t:'h',s:'Estimativa para o fim do mês'},{t:'p',s:t}]}
 function casaEntry(){const G=cD().gastos.filter(g=>cIn(g.d,MKEY)),t=G.reduce((a,g)=>a+g.v,0);
   return `<button class="entry casa" data-go="casa"><span class="blob b1"></span><span class="blob b2"></span><div><h2>Economia doméstica</h2><span class="sub">Orçamento do mês, fatura do cartão e compras de mercado.</span></div><div class="in"><span class="num"><b>${brl0(t)}</b> gastos ${cDia()===1?'em '+MES[M]:'no mês'}</span><span class="small">${G.length?G.length+(G.length>1?' lançamentos':' lançamento')+' no mês':'Importe um comprovante, uma fatura ou um cupom e comece.'}</span>${estShort()}</div></button>`}
+const AS_C={alim:'var(--orange)',transp:'var(--sky)',roupa:'var(--plum)',lazer:'var(--meta)',moradia:'var(--debt)',contas:'var(--mei)',saude:'var(--ok)',outros:'var(--muted)'};
+const AS_I={alim:'🛒',transp:'⛽',roupa:'👕',lazer:'🎉',moradia:'🏠',contas:'💡',saude:'💊',outros:'📦'};
+const AS_D={
+ alim:['Faça a lista antes de ir ao mercado e siga a lista.','Compare o preço por quilo ou por litro, não só o da embalagem.','Marcas próprias do mercado costumam ser mais baratas.','Planeje as refeições da semana para não jogar comida fora.'],
+ transp:['Calibre os pneus: pneu murcho gasta mais combustível.','Compare o preço do litro nos postos do seu caminho.','Junte tarefas na mesma saída para rodar menos.','Álcool compensa quando custa até cerca de 70% do preço da gasolina.'],
+ roupa:['Espere 24 horas antes de comprar o que não estava planejado.','Aproveite as liquidações de fim de estação para o que precisa.','Brechós e trocas entre família ajudam, principalmente com crianças.'],
+ lazer:['Separe um valor de lazer no começo do mês e respeite o limite.','Procure eventos gratuitos da sua cidade: parques, feiras, museus.','Lanche feito em casa no passeio sai bem mais barato.'],
+ moradia:['Negocie o reajuste do aluguel antes de renovar o contrato.','Pagar condomínio e aluguel em dia evita multa e juros.','Se a prestação pesa, pergunte ao banco sobre portabilidade do financiamento.'],
+ contas:['Desligue aparelhos da tomada e troque lâmpadas por LED.','Banho mais curto economiza água e luz.','Revise planos de internet e celular: muitas vezes dá para pagar menos.','Veja se sua família tem direito à Tarifa Social de energia.'],
+ saude:['Peça o genérico na farmácia e compare preços entre farmácias.','Confira se o remédio sai grátis ou mais barato no Farmácia Popular.','Use o SUS e as unidades básicas de saúde para consultas e vacinas.'],
+ outros:['Olhe esta lista todo mês: gastos pequenos repetidos somam muito.','Cancele assinaturas que você não usa mais.','Se um gasto aparece sempre aqui, coloque na categoria certa.']};
+function assuntosCard(ym){
+  const L=cD().gastos.filter(g=>cIn(g.d||'',ym)).map(g=>({d:g.d,v:+g.v||0,t:g.desc,c:g.cat||'outros'})).concat(((S.orc&&S.orc.gastos)||[]).filter(g=>cIn(g.d||'',ym)).map(g=>({d:g.d,v:+g.v||0,t:g.t,c:g.c||'outros'})));
+  const fix=(S.orc&&S.orc.fix)||{};let lz=0;try{const pl=S.orc?orcPlan(true):null;lz=pl?orcV(pl,'lazer'):0}catch(_){}
+  let E=null;try{E=ym===MKEY?cEst():null}catch(_){}
+  const box=GR.map(([k,l])=>{const it=L.filter(x=>x.c===k),gt=it.reduce((a,x)=>a+x.v,0),pn=k==='lazer'?lz:(+fix[k]||0),pct=pn>0?Math.min(100,gt/pn*100):0,over=pn>0&&gt>pn+0.5,cor=AS_C[k];
+    const st=pn>0?(over?`<span style="color:var(--bad);font-weight:700">Passou ${brl0(gt-pn)} do planejado.</span>`:`Ainda cabem <b>${brl0(pn-gt)}</b> neste mês.`):(gt>0?'Sem valor planejado para este assunto.':'Nada lançado neste mês.');
+    const top=it.slice().sort((a,b)=>b.v-a.v).slice(0,3),pr=E&&E.restam>0&&gt>0?{p:E.tot>0?gt/E.tot*E.proj:gt}:null,prv=pr?Math.max(gt,GRITMO.includes(k)?pr.p:gt):0;
+    const prl=pr&&GRITMO.includes(k)&&prv>gt+0.5?`<div class="tip" style="border-left:4px solid ${cor}"><span class="small">📈 <b>Se continuar gastando assim</b>, você fecha o mês com <b class="num">${brl0(prv)}</b> em ${esc(l.toLowerCase())}${pn>0?(prv>pn+0.5?`, <b style="color:var(--bad)">${brl0(prv-pn)} acima</b> do planejado (${brl0(pn)}). Para caber, gaste até <b>${brl0(Math.max(0,pn-gt)/E.restam)}</b> por dia daqui pra frente.`:`, dentro do planejado (${brl0(pn)}).`):'.'}</span></div>`:'';
+    return `<details class="card gbx" style="--bc:${cor}"><summary><span class="gbt"><b>${AS_I[k]} ${l}</b><span class="muted small">${brl0(gt)}${pn>0?' de '+brl0(pn):''} · ${it.length} ${it.length===1?'lançamento':'lançamentos'}</span></span></summary><div class="gbi">
+     ${pn>0?`<div class="bar2"><i style="width:${pct.toFixed(1)}%;background:${over?'var(--bad)':cor}"></i></div>`:''}<span class="small">${st}</span>${prl}
+     ${top.length?`<div class="list">${top.map(x=>`<div class="item"><div class="l"><b>${esc(x.t||'Gasto')}</b><span class="muted small">${x.d?fd(x.d):''}</span></div><b class="num r">${brl(x.v)}</b></div>`).join('')}</div>`:''}
+     <div class="tip"><b class="small">Dicas para gastar menos</b><ul class="steps small" style="margin:4px 0 0">${AS_D[k].map(t=>'<li>'+t+'</li>').join('')}</ul></div>
+     <div class="row"><button class="btn ghost sm" data-cs="tab:lanc">Lançar gasto</button>${k==='lazer'||k==='roupa'?'':'<button class="btn ghost sm" data-cs="tab:orc">Mudar o planejado</button>'}</div></div></details>`}).join('');
+  return `${comportCard(ym,L)}<div class="card" style="border:0;background:transparent;padding:4px 0"><h3>Por assunto</h3><p class="muted small">Toque em um assunto para ver quanto gastou, quanto ainda cabe, como fecha o mês se continuar assim e dicas para economizar.</p></div>${box}`}
+function comportCard(ym,L){
+  if(ym!==MKEY||!L||L.length<3||DAYN<1)return '';
+  const DS=['domingo','segunda','terça','quarta','quinta','sexta','sábado'],tot=L.reduce((a,x)=>a+x.v,0),n=L.length,ins=[];
+  const dias=new Set(L.map(x=>x.d)).size;ins.push(`Você gastou em <b>${dias} de ${DAYN}</b> dias do mês. ${DAYN-dias>0?(DAYN-dias)+(DAYN-dias===1?' dia ficou':' dias ficaram')+' sem gasto: cada dia assim ajuda a fechar no azul.':'Todo dia teve gasto: tente ter alguns dias sem comprar nada.'}`);
+  ins.push(`Cada compra sai, em média, por <b>${brl0(tot/n)}</b> (${n} compras).`);
+  const wd=[0,0,0,0,0,0,0];L.forEach(x=>{const d=new Date((x.d||TODAYISO)+'T12:00:00').getDay();wd[d]+=x.v});const td=wd.indexOf(Math.max(...wd));
+  ins.push(`O dia da semana em que você mais gasta é <b>${DS[td]}</b> (${brl0(wd[td])} no mês).`);
+  const fds=wd[0]+wd[6];if(tot>0&&fds/tot>=.4)ins.push(`<b>${Math.round(fds/tot*100)}%</b> dos gastos ficam no fim de semana. Planejar o sábado e o domingo antes ajuda bastante.`);
+  const pq=L.filter(x=>x.v<30),pqs=pq.reduce((a,x)=>a+x.v,0);if(pq.length>=4)ins.push(`<b>${pq.length} compras pequenas</b> (abaixo de R$ 30) somam <b>${brl0(pqs)}</b>. São as que passam despercebidas.`);
+  try{const pk=cAdd(ym,-1),ps=cStart(pk),pe0=new Date(+ps.slice(0,4),+ps.slice(5,7)-1,+ps.slice(8,10)+DAYN-1),pe=iso(pe0),P=cD().gastos.map(g=>({d:g.d,v:+g.v||0,c:g.cat||'outros'})).concat(((S.orc&&S.orc.gastos)||[]).map(g=>({d:g.d,v:+g.v||0,c:g.c||'outros'}))).filter(x=>x.d&&x.d>=ps&&x.d<=pe);
+    if(P.length){const pt=P.reduce((a,x)=>a+x.v,0),df=tot-pt;ins.push(`Comparando com os mesmos ${DAYN} dias do mês passado: ${Math.abs(df)<1?'você está gastando igual.':df>0?'<b style="color:var(--bad)">'+brl0(df)+' a mais</b> ('+brl0(pt)+' antes).':'<b style="color:var(--ok)">'+brl0(-df)+' a menos</b>. Muito bem!'}`);
+      let up=null;GR.forEach(([k,l])=>{const a=L.filter(x=>x.c===k).reduce((s,x)=>s+x.v,0),b=P.filter(x=>x.c===k).reduce((s,x)=>s+x.v,0);if(a-b>=30&&(!up||a-b>up.d))up={l,d:a-b}});if(up)ins.push(`O que mais cresceu foi <b>${esc(up.l.toLowerCase())}</b>: ${brl0(up.d)} a mais que no mesmo ponto do mês passado.`)}}catch(_){}
+  return `<details class="card fold" style="border-left:4px solid var(--sky)"><summary>🧠 Seu jeito de gastar</summary><p class="muted small" style="margin:4px 0 8px">Análise do seu comportamento neste mês, refeita a cada lançamento.</p><ul class="steps small" style="margin:0">${ins.map(t=>'<li>'+t+'</li>').join('')}</ul></details>`}
+/* ===== Meses salvos e sobra que passa para o mês seguinte ===== */
+function cMs(){const c=cD();if(!c.meses||typeof c.meses!=='object')c.meses={};return c.meses}
+function cRendaM(k){const m=cMs()[k];return m&&+m.renda>0?+m.renda:(S.orc&&+S.orc.renda)||0}
+function cExtra(k){const m=cMs()[k];return m&&+m.extra>0?+m.extra:0}
+function cGastosK(k){return cD().gastos.filter(g=>g.d&&cIn(g.d,k)).map(g=>({v:+g.v||0,c:g.cat||'outros'})).concat(((S.orc&&S.orc.gastos)||[]).filter(g=>g.d&&cIn(g.d,k)).map(g=>({v:+g.v||0,c:g.c||'outros'})))}
+function cHist(){if(!S.orc)return;const M0=cMs(),ks=new Set();cD().gastos.concat(S.orc.gastos||[]).forEach(g=>{if(g.d)ks.add(cKeyOf(g.d))});let ch=false;ks.forEach(k=>{if(k<MKEY&&k>=cAdd(MKEY,-12)&&!(M0[k]&&+M0[k].renda>0)){M0[k]=Object.assign(M0[k]||{},{renda:+S.orc.renda||0});ch=true}});if(ch)save()}
+function cRes(k){const o=S.orc,L=cGastosK(k),gs={};L.forEach(x=>gs[x.c]=(gs[x.c]||0)+x.v);let g=0;GR.forEach(([c])=>{g+=Math.max(o?(+(o.fix||{})[c]||0):0,gs[c]||0)});
+  const mins=o?S.debts.map(eff).filter(d=>d.saldo>0.005).reduce((a,d)=>a+(d.min||0),0):0,r=cRendaM(k),ex=cExtra(k);return{k,r,ex,n:L.length,g:g+mins,sobra:r+ex-(g+mins)}}
+function cClosed(){const M0=cMs();return Object.keys(M0).filter(k=>k<MKEY&&+M0[k].renda>0).sort()}
+function cPool(){let p=0;cClosed().forEach(k=>{p+=Math.max(0,cRes(k).sobra)});Object.keys(cMs()).forEach(k=>{p-=cExtra(k)});return Math.max(0,Math.round(p*100)/100)}
+function mesesCard(){cHist();const ks=cClosed().reverse(),pool=cPool(),ex=cExtra(MKEY);let e=null;try{e=cEst()}catch(_){}
+  if(!ks.length&&!ex)return `<details class="card fold"><summary>📅 Meses anteriores</summary><p class="muted small" style="margin-top:6px">Quando o mês virar, o Prumo guarda aqui o resultado de cada mês: crédito, gastos e quanto sobrou ou faltou. A sobra de um mês pode ser usada nos meses seguintes.</p></details>`;
+  const def=e&&e.saldo!=null&&e.saldo<-0.5?-e.saldo:0;
+  const rows=ks.slice(0,12).map(k=>{const R=cRes(k),pos=R.sobra>=0;return `<div class="item"><div class="l"><b>${cMesN(k)}</b><span class="muted small">Crédito ${brl0(R.r)}${R.ex?' + '+brl0(R.ex)+' guardado':''} · gastos ${brl0(R.g)} · ${R.n} ${R.n===1?'lançamento':'lançamentos'}</span></div><div class="r"><b class="num" style="color:${pos?'var(--ok)':'var(--bad)'}">${pos?'+':'−'}${brl0(Math.abs(R.sobra))}</b><br><span class="muted small">${pos?'sobrou':'faltou'}</span></div></div>`}).join('');
+  return `<div class="card" style="border-left:4px solid var(--ok);gap:8px"><h3>💰 Guardado dos meses anteriores</h3><b class="big num">${brl0(pool)}</b><span class="muted small">Sobras dos meses que fecharam no azul. Dá para usar num mês mais apertado.</span>
+   ${ex>0?`<div class="note info">Este mês já está usando <b>${brl0(ex)}</b> do guardado: o crédito do mês ficou ${brl0(cRendaM(MKEY))} + ${brl0(ex)}. <button type="button" class="btn ghost sm" data-cx="undo" style="margin-top:6px">Devolver para o guardado</button></div>`:''}
+   ${pool>0&&def>0?`<div class="note">No ritmo de hoje, este mês fecha com déficit de <b>${brl0(def)}</b>. Você pode cobrir ${def<=pool?'tudo':brl0(pool)} com o guardado. <button type="button" class="btn sm" data-cx="use:${Math.ceil(Math.min(def,pool))}" style="margin-top:6px">Usar ${brl0(Math.ceil(Math.min(def,pool)))} agora</button></div>`:''}
+   ${pool>0?`<form id="f-cx" class="row" style="flex-wrap:nowrap"><input id="cx-v" inputmode="decimal" placeholder="Quanto usar neste mês?" aria-label="Quanto usar do guardado neste mês"><button class="btn" type="submit" style="flex:none">Usar</button></form>`:''}
+   ${ks.length?`<details class="fold"><summary>📅 Meses anteriores (${ks.length})</summary><div class="list">${rows}</div><p class="muted small">O resultado considera os gastos lançados, os gastos fixos planejados (o que for maior) e as parcelas das dívidas. Lançou algo atrasado? O mês se atualiza sozinho.</p></details>`:''}</div>`}
+function cUse(v){const pool=cPool();v=Math.min(Math.round(v*100)/100,pool);if(!(v>0)){toast('Não há valor guardado para usar.');return}const m=cMs()[MKEY]=Object.assign(cMs()[MKEY]||{},{});if(!(+m.renda>0))m.renda=(S.orc&&+S.orc.renda)||0;m.extra=Math.round(((+m.extra||0)+v)*100)/100;save();render(true);toast(brl0(v)+' do guardado entrou no crédito deste mês.'+estToast())}
+document.addEventListener('submit',e=>{if(!e.target||e.target.id!=='f-cx')return;e.preventDefault();e.stopImmediatePropagation();const v=num(($('#cx-v')||{}).value||'');if(!(v>0)){toast('Digite quanto quer usar.');return}cUse(v)},true);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cx]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const a=b.dataset.cx;
+  if(a==='undo'){const m=cMs()[MKEY];if(m){m.extra=0;save();render(true);toast('Valor devolvido para o guardado.')}return}
+  if(a.startsWith('use:'))cUse(+a.slice(4))},true);
 function casaTabs(){const s=UI.cs||'resumo';return `<div class="seg fit casa" role="group" aria-label="Economia doméstica">${[['resumo','Resumo'],['orc','Orçamento'],['importar','Importar'],['lanc','Lançamentos']].map(([k,l])=>`<button data-cs="tab:${k}" aria-pressed="${s===k}">${l}</button>`).join('')}</div>`}
 function casaView(){const sub=UI.cs||'resumo',ym=cMes(),G=cD().gastos,GM=G.filter(g=>cIn(g.d,ym)),tot=GM.reduce((a,g)=>a+g.v,0);
   const back='<button class="btn ghost sm" data-go="inicio" style="justify-self:start">← Voltar</button>';
@@ -2270,7 +2333,7 @@ function casaView(){const sub=UI.cs||'resumo',ym=cMes(),G=cD().gastos,GM=G.filte
   if(sub==='lanc'){const L=[...GM].sort((a,b)=>b.d.localeCompare(a.d));
     b=`${estCard()}<form class="card" id="f-cm"><h3>Lançar gasto à mão</h3><div class="grid2"><label>Data<input id="cm-d" type="date" value="${TODAYISO}" required></label><label>Valor (R$)<input id="cm-v" inputmode="decimal" placeholder="0,00" required></label></div><label>O que foi<input id="cm-s" maxlength="60" required></label><label>Categoria<select id="cm-c">${GR.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></label><div class="note" id="cm-e" hidden></div><button class="btn" type="submit">Salvar gasto</button></form>
     <div class="card"><h3>Lançamentos ${cDia()===1?'de '+MES[+ym.slice(5,7)-1]:'do mês'}</h3><div class="list">${L.map(g=>`<div class="item"><div class="l"><b>${esc(g.desc)}</b><span class="muted small">${fd(g.d)}${g.card?' · '+esc(g.card):''}</span><select data-ccg="${g.id}" aria-label="Categoria de ${esc(g.desc)}" style="font-size:13px;margin-top:4px">${GR.map(x=>`<option value="${x[0]}"${(g.cat||'outros')===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div><div class="r"><b class="num">${brl(g.v)}</b><br><button class="btn danger sm" data-cs="del:${g.id}" aria-label="Apagar ${esc(g.desc)}">Apagar</button></div></div>`).join('')||'<p class="muted">Nada lançado neste mês.</p>'}</div></div>`}
-  return `${demoBar()}<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Economia doméstica</h2></div>${casaTabs()}${sub==='resumo'?cicloCard():''}${sub==='importar'||sub==='orc'?'':nav}${b}</div>`}
+  return `${demoBar()}<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Economia doméstica</h2></div>${casaTabs()}${sub==='resumo'?cicloCard()+mesesCard():''}${sub==='importar'||sub==='orc'?'':nav}${b}${sub==='resumo'?assuntosCard(ym):''}</div>`}
 VIEWS.casa=()=>casaView();
 async function cRun(file){
   const tv=($('#ci-t')||{}).value,tipo=tv==='cupom'?'cupom':tv==='comp'?'comp':'fatura',modo=tipo==='cupom'&&($('#ci-m')||{}).value==='total'?'total':'itens',cardIn=(($('#ci-c')||{}).value||'').trim().slice(0,30);
