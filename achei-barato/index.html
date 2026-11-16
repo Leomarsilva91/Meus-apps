@@ -2359,8 +2359,8 @@ window.DM={
 (function(){
 const FBX={app:'Achei Barato',mail:'prumo91@yahoo.com',toast:t=>toast(t),after:()=>fbDraw()};
 /* ---------- problema ou sugestão (comum aos apps) ---------- */
-const FB_T=[['bug','🐞 Algo travou'],['ideia','💡 Sugestão de melhoria'],['novo','🛠️ Serviço ou produto novo'],['elogio','👏 Elogio']],FB_S={nova:'Nova',vista:'Vista',ok:'Resolvida'};
-const FB_PH={bug:'Ex.: a tela travou quando toquei em Enviar',ideia:'Ex.: seria bom poder filtrar por cidade',novo:'Ex.: queria encontrar também serviço de jardinagem',elogio:'Ex.: achei muito fácil de usar'};
+const FB_T=[['bug','🐞 Algo travou'],['dif','🤔 Achei difícil de usar'],['ideia','💡 Sugestão de melhoria'],['novo','🛠️ Serviço ou produto novo'],['elogio','👏 Elogio']],FB_S={nova:'Nova',vista:'Vista',ok:'Resolvida'};
+const FB_PH={bug:'Ex.: a tela travou quando toquei em Enviar',dif:'Ex.: não entendi onde mudar a cidade',ideia:'Ex.: seria bom poder filtrar por cidade',novo:'Ex.: queria encontrar também serviço de jardinagem',elogio:'Ex.: achei muito fácil de usar'};
 const FBU={t:'bug',img:'',resp:true,msg:'',ft:'',fs:'',mo:false};
 const fbE=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fbTL=t=>(FB_T.find(x=>x[0]===t)||[0,'💬 Mensagem'])[1];
