@@ -929,7 +929,8 @@ function monta(){var el=document.getElementById('lmap');if(!el||LF!==2||!window.
  if(S.lmv&&S.lmv.k===k)MAP.setView([S.lmv.lat,S.lmv.lon],S.lmv.z);else MAP.fitBounds(L.latLng(c.lat,c.lon).toBounds(rad*2000));
  MAP.on('moveend',function(){var m=MAP.getCenter();S.lmv={k:k,lat:m.lat,lon:m.lng,z:MAP.getZoom()}});
  if(!S.br)L.circle([c.lat,c.lon],{radius:rad*1000,color:'#2D6A4F',weight:1.5,fill:false,dashArray:'4 6'}).addTo(MAP);
- L.circleMarker([c.lat,c.lon],{radius:8,color:'#fff',weight:3,fillColor:'#18271E',fillOpacity:1}).addTo(MAP).bindTooltip('Você');
+ var souEu=S.cll&&S.cll.k==='eu';L.circleMarker([c.lat,c.lon],{radius:souEu?6:8,color:'#fff',weight:3,fillColor:'#18271E',fillOpacity:1}).addTo(MAP).bindTooltip(souEu?'Onde você buscou':'Centro da busca: '+cNome().replace(/^Perto de /,''));
+ eu();onde();
  Lst.forEach(function(p){var q=pLL(p);if(!q||!isFinite(q.lat))return;
   var m=L.circleMarker([q.lat,q.lon],{radius:9,color:'#fff',weight:2.5,fillColor:cor(p.t),fillOpacity:1}).addTo(MAP);
   var box=document.createElement('div');box.style.cssText='display:grid;gap:6px;min-width:190px;font:14px system-ui,sans-serif';
@@ -939,9 +940,17 @@ function monta(){var el=document.getElementById('lmap');if(!el||LF!==2||!window.
   var a=document.createElement('a');a.textContent='Como chegar (Google Maps)';a.target='_blank';a.rel='noopener noreferrer';a.href='https://www.google.com/maps/dir/?api=1&destination='+q.lat.toFixed(5)+','+q.lon.toFixed(5);a.style.cssText='display:block;text-align:center;min-height:40px;line-height:40px;border:1.5px solid #ccc;border-radius:10px;color:inherit;font-weight:700;text-decoration:none';box.appendChild(a);
   m.bindPopup(box)});
  setTimeout(function(){try{MAP.invalidateSize()}catch(_){}},60)}
+/* você no mapa: bolinha azul que acompanha onde você está */
+var ME=null,WID=null,MEL=null,MEC=null;
+function eu(){if(!MAP||!ME||!window.L)return;try{if(MEL){MEL.remove();MEC.remove()}}catch(_){}
+ MEC=L.circle([ME.lat,ME.lon],{radius:Math.min(ME.acc||30,500),color:'#1A73E8',weight:1,fillColor:'#1A73E8',fillOpacity:.12}).addTo(MAP);
+ MEL=L.circleMarker([ME.lat,ME.lon],{radius:8,color:'#fff',weight:3,fillColor:'#1A73E8',fillOpacity:1}).addTo(MAP).bindTooltip('Você está aqui')}
+function segue(pedir){if(WID!=null||!navigator.geolocation)return;WID=navigator.geolocation.watchPosition(function(p){ME={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};eu();if(pedir){pedir=0;try{MAP&&MAP.setView([ME.lat,ME.lon],Math.max(MAP.getZoom(),15))}catch(_){}}},function(er){WID=null;if(pedir){try{toast(er&&er.code===1?'A localização está bloqueada para o Respiro. Libere nas configurações do celular.':'Não consegui achar onde você está agora.')}catch(_){}}},{enableHighAccuracy:true,maximumAge:15000,timeout:20000})}
+function onde(){if(!MAP||!window.L)return;var C=L.Control.extend({options:{position:'topright'},onAdd:function(){var b=L.DomUtil.create('button');b.type='button';b.textContent='📍 Onde estou';b.setAttribute('aria-label','Mostrar onde estou no mapa');b.style.cssText='min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid #ccc;background:#fff;color:#18271E;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)';L.DomEvent.disableClickPropagation(b);L.DomEvent.on(b,'click',function(ev){L.DomEvent.preventDefault(ev);if(ME){MAP.setView([ME.lat,ME.lon],Math.max(MAP.getZoom(),15))}if(WID==null)segue(true)});return b}});new C().addTo(MAP)}
+try{navigator.permissions&&navigator.permissions.query({name:'geolocation'}).then(function(r){if(r.state==='granted')segue(false)}).catch(function(){})}catch(_){}
 var _v=viewEx;viewEx=function(){var h=_v.apply(this,arguments),i=h.indexOf('<svg class="map"'),j=h.indexOf('</svg>',i);if(i<0||j<0)return h;
  var rad=S.mv==='radar',tg='<div class="row" role="group" aria-label="Tipo de mapa" style="gap:6px"><button class="chip" type="button" data-mv="ruas" aria-pressed="'+!rad+'">🗺️ Mapa de ruas</button><button class="chip" type="button" data-mv="radar" aria-pressed="'+rad+'">◎ Radar</button></div>';
- var mp=rad?h.slice(i,j+6):(LF===3?'<p class="m">Não consegui abrir o mapa de ruas agora. Use o Radar.</p>'+h.slice(i,j+6):'<div id="lmap" style="height:360px;border-radius:16px;border:1px solid var(--line);overflow:hidden;z-index:0;position:relative" aria-label="Mapa de ruas com os lugares"></div><p class="m">Toque numa bolinha para ver o lugar e o caminho até ele. Dá para aproximar e arrastar o mapa.</p>');
+ var mp=rad?h.slice(i,j+6):(LF===3?'<p class="m">Não consegui abrir o mapa de ruas agora. Use o Radar.</p>'+h.slice(i,j+6):'<div id="lmap" style="height:360px;border-radius:16px;border:1px solid var(--line);overflow:hidden;z-index:0;position:relative" aria-label="Mapa de ruas com os lugares"></div><p class="m">Toque numa bolinha para ver o lugar e o caminho até ele. A bolinha azul é você: toque em 📍 Onde estou para achar você no mapa.</p>');
  return h.slice(0,i)+tg+mp+h.slice(j+6)};
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-mv]');if(!b)return;e.preventDefault();e.stopPropagation();S.mv=b.dataset.mv;try{save()}catch(_){}render()},true);
 var r0=window.render;window.render=function(){var x=r0.apply(this,arguments);if(document.getElementById('lmap')){carrega();monta()}else{try{if(MAP){MAP.remove();MAP=null}}catch(_){}}return x};
