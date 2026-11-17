@@ -43,7 +43,7 @@ service cloud.firestore {
     // Áreas que só o administrador lê por inteiro (cada pessoa vê só o seu).
     match /apps/{app}/{col}/{uid} {
       allow read: if entrou() && (
-        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr', 'cce', 'cpr', 'mscp']) || request.auth.uid == uid || adm());
+        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr', 'cce', 'cpr', 'mscp', 'pofr']) || request.auth.uid == uid || adm());
       allow write: if entrou() && (
         (!(col in ['config', 'comx', 'pts', 'offers', 'pub', 'news', 'stores', 'ph', 'tips', 'ads']) && request.auth.uid == uid) || adm());
     }
