@@ -73,6 +73,28 @@
     document.body.appendChild(b);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chip); else chip();
+  /* ---- código deste aparelho no Firebase, para cadastrar na coleção "admins" (só aparece no modo administrador) ---- */
+  function chipUid() {
+    if (!isAdm() || document.getElementById('ia-uidchip')) return;
+    fbUid().then(function (u) {
+      if (!u || document.getElementById('ia-uidchip')) return;
+      var b = document.createElement('button'); b.id = 'ia-uidchip'; b.type = 'button';
+      b.style.cssText = 'position:fixed;z-index:39;right:max(10px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 102px);min-height:34px;padding:0 12px;border-radius:999px;border:1.5px solid rgba(127,127,127,.55);background:rgba(255,248,230,.96);color:#111;font:700 12.5px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer';
+      b.textContent = '🔑 Código do admin';
+      b.onclick = function () {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;font:16px system-ui,sans-serif';
+        d.innerHTML = '<div style="background:#fff;color:#111;border-radius:16px;padding:18px;max-width:380px;width:100%;display:grid;gap:10px"><b style="font-size:18px">Código deste aparelho</b><span style="font-size:14px;color:#444">Cadastre este código no Firebase, na coleção <b>admins</b>, para este aparelho poder salvar como administrador em todos os apps.</span><input readonly style="font:600 15px ui-monospace,monospace;padding:10px;border:1.5px solid #bbb;border-radius:10px;width:100%"><div style="display:flex;gap:8px"><button type="button" style="flex:1;min-height:46px;border:0;border-radius:12px;background:#222;color:#fff;font:inherit;font-weight:700">Copiar código</button><button type="button" style="flex:1;min-height:46px;border:1.5px solid #bbb;border-radius:12px;background:#fff;color:#111;font:inherit;font-weight:700">Fechar</button></div></div>';
+        var i = d.querySelector('input'), bs = d.querySelectorAll('button'); i.value = u;
+        bs[0].onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { bs[0].textContent = 'Copiado ✓'; }).catch(function () { i.select(); bs[0].textContent = 'Selecione e copie'; }); };
+        bs[1].onclick = function () { d.remove(); };
+        document.body.appendChild(d);
+      };
+      document.body.appendChild(b);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chipUid); else chipUid();
+  setInterval(chipUid, 3000);
   function stl() {
     if (document.getElementById('ia-authcss')) return;
     var st = document.createElement('style'); st.id = 'ia-authcss';
