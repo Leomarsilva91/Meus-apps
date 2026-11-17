@@ -10,8 +10,9 @@ const LIMITE_GERAL_DIA = 3000;                                // pedidos de todo
 
 const cors = (o) => ({
   'Access-Control-Allow-Origin': ORIGENS.includes(o) ? o : ORIGENS[0],
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Range',
+  'Access-Control-Expose-Headers': 'Content-Range, Content-Length, Accept-Ranges',
   'Vary': 'Origin',
 });
 const resp = (obj, status, o) =>
@@ -215,10 +216,68 @@ async function mpStatus(req, o, env) {
   return resp({ id: j.id, status: j.status, det: j.status_detail, pago }, 200, o);
 }
 
+// Vídeos dos apps (Cloudflare R2, binding VIDEOS). Envio até 20 MB; quem envia recebe uma senha para apagar.
+const MAX_VID = 20 * 1024 * 1024;
+const LIMITE_VID_DIA = 20;                                    // envios por IP por dia
+async function vidUp(req, o, env) {
+  if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
+  if (!env.VIDEOS) return resp({ erro: 'sem_r2' }, 503, o);
+  const tipo = (req.headers.get('Content-Type') || '').toLowerCase();
+  if (!/^video\/(mp4|webm|quicktime|3gpp|x-matroska|ogg)$/.test(tipo)) return resp({ erro: 'tipo' }, 400, o);
+  const tam = parseInt(req.headers.get('Content-Length') || '0', 10);
+  if (!(tam > 0) || tam > MAX_VID) return resp({ erro: 'tamanho' }, 413, o);
+  const ip = req.headers.get('CF-Connecting-IP') || 'x';
+  if (!(await contar(env, 'vid:' + ip, LIMITE_VID_DIA))) return resp({ erro: 'limite' }, 429, o);
+  const app = (new URL(req.url).searchParams.get('app') || 'app').replace(/[^a-z0-9-]/gi, '').slice(0, 20) || 'app';
+  const rnd = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, '0')).join('');
+  const ext = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov', 'video/3gpp': '3gp', 'video/x-matroska': 'mkv', 'video/ogg': 'ogv' }[tipo];
+  const key = app + '/' + new Date().toISOString().slice(0, 7) + '/' + rnd() + '.' + ext, tk = rnd();
+  const body = await req.arrayBuffer();
+  if (body.byteLength > MAX_VID) return resp({ erro: 'tamanho' }, 413, o);
+  await env.VIDEOS.put(key, body, { httpMetadata: { contentType: tipo }, customMetadata: { tk } });
+  const base = new URL(req.url).origin;
+  return resp({ id: key + '~' + tk, url: base + '/vid/' + key }, 200, o);
+}
+async function vidGet(req, o, env, key) {
+  if (!env.VIDEOS) return new Response('sem_r2', { status: 503 });
+  const obj = await env.VIDEOS.get(key, { range: req.headers });
+  if (!obj) return new Response('não encontrado', { status: 404, headers: cors(o) });
+  const h = new Headers(cors(o));
+  obj.writeHttpMetadata(h);
+  h.set('Accept-Ranges', 'bytes'); h.set('Cache-Control', 'private, max-age=86400');
+  if (obj.range && req.headers.get('Range')) {
+    const off = obj.range.offset || 0, len = obj.range.length != null ? obj.range.length : obj.size - off;
+    h.set('Content-Range', 'bytes ' + off + '-' + (off + len - 1) + '/' + obj.size); h.set('Content-Length', String(len));
+    return new Response(obj.body, { status: 206, headers: h });
+  }
+  h.set('Content-Length', String(obj.size));
+  return new Response(obj.body, { status: 200, headers: h });
+}
+async function vidDel(req, o, env, key) {
+  if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
+  if (!env.VIDEOS) return resp({ erro: 'sem_r2' }, 503, o);
+  const tk = new URL(req.url).searchParams.get('tk') || '';
+  const obj = await env.VIDEOS.head(key);
+  if (!obj) return resp({ erro: 'not_found' }, 404, o);
+  if (!tk || (obj.customMetadata || {}).tk !== tk) return resp({ erro: 'senha' }, 403, o);
+  await env.VIDEOS.delete(key);
+  return resp({ ok: true }, 200, o);
+}
+
 export default {
   async fetch(req, env, ctx) {
     const o = req.headers.get('Origin') || '';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(o) });
+    const pth = new URL(req.url).pathname;
+    if (req.method === 'GET' && pth === '/vid/ok') return resp({ ok: !!env.VIDEOS }, 200, o);
+    if (req.method === 'PUT' && pth === '/vid/up') { try { return await vidUp(req, o, env); } catch (_) { return resp({ erro: 'r2' }, 502, o); } }
+    if (pth.startsWith('/vid/') && /^[a-z0-9-]+\/\d{4}-\d{2}\/[0-9a-f]{24}\.[a-z0-9]{2,4}$/.test(pth.slice(5))) {
+      const key = pth.slice(5);
+      try {
+        if (req.method === 'GET' || req.method === 'HEAD') return await vidGet(req, o, env, key);
+        if (req.method === 'DELETE') return await vidDel(req, o, env, key);
+      } catch (_) { return resp({ erro: 'r2' }, 502, o); }
+    }
     if (req.method === 'GET' && new URL(req.url).pathname === '/taxas') {
       try { return await taxas(req, o, ctx); } catch (_) { return resp({ erro: 'bcb' }, 502, o); }
     }

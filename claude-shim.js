@@ -196,5 +196,28 @@
   async function fbDb() { if (!logado()) return null; return fbIni(); }
   if (window.FIREBASE_CONFIG) fbIni(); else window.IA_SEM_NUVEM = true;
 
-  window.claude = { use: async function (n) { return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : n === 'dbany' ? fbIni() : null; } };
+  /* ---- vídeos (Cloudflare R2 pelo worker). Só aparece se o R2 estiver ligado. ---- */
+  var VB = String(URL_IA).replace(/\/$/, ''), vidOk = null;
+  function assetsOn() {
+    if (vidOk) return vidOk;
+    vidOk = fetch(VB + '/vid/ok').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { return !!(j && j.ok); }).catch(function () { vidOk = null; return false; });
+    return vidOk;
+  }
+  var assets = {
+    upload: async function (f) {
+      var tp = String(f.type || 'video/mp4').toLowerCase(); if (tp === 'video/x-m4v') tp = 'video/mp4';
+      var r = await fetch(VB + '/vid/up?app=' + encodeURIComponent(appNome()), { method: 'PUT', headers: { 'Content-Type': tp }, body: f });
+      var j = null; try { j = await r.json(); } catch (_) {}
+      if (!r.ok || !j || !j.id) { var e = new Error((j && j.erro) || ('http ' + r.status)); e.code = j && j.erro; throw e; }
+      return { id: j.id, url: j.url };
+    },
+    delete: async function (id) {
+      var p = String(id || '').split('~'); if (p.length !== 2) { var e0 = new Error('not_found'); e0.code = 'not_found'; throw e0; }
+      var r = await fetch(VB + '/vid/' + p[0] + '?tk=' + encodeURIComponent(p[1]), { method: 'DELETE' });
+      if (r.status === 404) { var e1 = new Error('not_found'); e1.code = 'not_found'; throw e1; }
+      if (!r.ok) throw new Error('http ' + r.status);
+      return true;
+    }
+  };
+  window.claude = { use: async function (n) { if (n === 'assets') return (await assetsOn()) ? assets : null; return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : n === 'dbany' ? fbIni() : null; } };
 })();

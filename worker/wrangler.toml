@@ -7,3 +7,8 @@ compatibility_date = "2025-01-01"
 # [[kv_namespaces]]
 # binding = "LIMITES"
 # id = "COLE_O_ID_AQUI"
+
+# Vídeos dos apps (Tasko): crie um bucket R2 chamado "meus-apps-videos" e ligue com o nome VIDEOS.
+# [[r2_buckets]]
+# binding = "VIDEOS"
+# bucket_name = "meus-apps-videos"
