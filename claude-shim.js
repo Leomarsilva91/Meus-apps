@@ -88,6 +88,17 @@
         var i = d.querySelector('input'), bs = d.querySelectorAll('button'); i.value = u;
         bs[0].onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { bs[0].textContent = 'Copiado ✓'; }).catch(function () { i.select(); bs[0].textContent = 'Selecione e copie'; }); };
         bs[1].onclick = function () { d.remove(); };
+        var st = document.createElement('div'); st.style.cssText = 'font-size:14.5px;font-weight:700;padding:8px 10px;border-radius:10px;background:#f1f1f1'; st.textContent = 'Conferindo no Firebase…';
+        i.parentNode.insertBefore(st, i.nextSibling);
+        try {
+          firebase.firestore().collection('apps/' + appNome() + '/fb').limit(1).get().then(function () {
+            st.style.background = '#e3f4e6'; st.textContent = '✔ Este aparelho já está cadastrado como administrador.';
+          }).catch(function (er) {
+            var c = String(er && er.code || '');
+            st.style.background = '#fde8e6';
+            st.textContent = /permission/.test(c) ? '✖ Ainda não reconhecido. No Firebase, a coleção tem que ser "admins" (tudo minúsculo) e o ID do documento tem que ser este código colado com "Copiar código", sem digitar.' : '⚠ Não consegui conferir agora (' + c + '). Veja a internet e tente de novo.';
+          });
+        } catch (_) { st.textContent = '⚠ Não consegui conferir agora.'; }
         document.body.appendChild(d);
       };
       document.body.appendChild(b);
