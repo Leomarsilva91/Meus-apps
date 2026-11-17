@@ -40,10 +40,21 @@ service cloud.firestore {
         && request.resource.data.img is string && request.resource.data.img.size() <= 200000;
       allow delete: if entrou() && resource.data.ow == request.auth.uid;
     }
+    // Contratos e reservas da meta de viagem (Prumo): o dono e quem entrou no grupo da meta leem.
+    match /apps/{app}/msct/{id} {
+      allow read: if entrou() && (resource.data.ow == request.auth.uid || adm()
+        || (resource.data.code is string && resource.data.code != ''
+            && exists(/databases/$(database)/documents/apps/$(app)/mshj/$(request.auth.uid))
+            && resource.data.code in get(/databases/$(database)/documents/apps/$(app)/mshj/$(request.auth.uid)).data.codes));
+      allow create, update: if entrou() && request.resource.data.ow == request.auth.uid
+        && id == request.auth.uid + '_' + request.resource.data.cid
+        && request.resource.data.file is string && request.resource.data.file.size() <= 900000;
+      allow delete: if entrou() && resource.data.ow == request.auth.uid;
+    }
     // Áreas que só o administrador lê por inteiro (cada pessoa vê só o seu).
     match /apps/{app}/{col}/{uid} {
       allow read: if entrou() && (
-        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr', 'cce', 'cpr', 'mscp', 'pofr']) || request.auth.uid == uid || adm());
+        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr', 'cce', 'cpr', 'mscp', 'pofr', 'msct']) || request.auth.uid == uid || adm());
       allow write: if entrou() && (
         (!(col in ['config', 'comx', 'pts', 'offers', 'pub', 'news', 'stores', 'ph', 'tips', 'ads']) && request.auth.uid == uid) || adm());
     }
