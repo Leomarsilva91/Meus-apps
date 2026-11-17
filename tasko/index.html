@@ -124,7 +124,7 @@ details *,details *::before,details *::after{box-sizing:border-box}
 .fbadm .fbrow button[aria-pressed=true]{background:var(--fb-acc,#333);border-color:var(--fb-acc,#333);color:var(--fb-on,#fff)}
 .fblink{display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:56px;padding:12px 14px;border-radius:16px;border:1.5px dashed var(--fb-acc,#333);background:transparent;color:inherit;font-family:inherit;font-size:15px;cursor:pointer;box-sizing:border-box}
 .fblink .fbi{font-size:24px;flex:none}.fblink .fbx2{flex:1;min-width:0}.fblink .fbar{flex:none;font-size:24px;color:var(--fb-acc,#333)}
-</style>
+#mpov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:grid;place-items:center;padding:16px}#mpov[hidden]{display:none}#mpov .mpbox{background:var(--card,#fff);color:var(--ink);border-radius:20px;padding:18px;display:grid;gap:10px;width:min(420px,100%);max-height:92dvh;overflow:auto}#mpov .mpt{margin:0;padding:8px 10px;border-radius:12px;background:#FFF3CD;font-size:14px}</style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2457d6"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
@@ -637,7 +637,7 @@ return `${head(D?'Pedidos atendidos':'Meus pedidos',D?'mine':'home')}<main>${D?'
 ${L.length?pgL(L,D?'minedone':'mine').map(q=>{const ps=P.filter(p=>p.reqId===q.id&&!p.interest),ints=P.filter(p=>p.reqId===q.id&&p.interest);return `<div class="card"><span class="tag"${D?'':' style="background:var(--acc);color:#14213D;font-weight:700"'}>${D?'Atendido':'Não atendido'}</span><br><b>${esc(q.desc).replace(/\n/g,'<br>')}</b><br><button type="button" class="chip" style="min-height:36px;padding:0 12px;font-size:13px;margin:6px 0 0" data-say="q:${q.id}">🔊 Ouvir</button>
 <p class="muted" style="margin:6px 0">${esc(q.cats.join(', '))}${locShow(q)?' · '+esc(locShow(q)):''} · ${esc(urgLabel(q.urg))}</p>
 <p style="margin:0 0 4px">Estimativa: <b>${estTxt(q)}</b></p>${visNote(q)}${!q.noai&&!q.em&&q.min>0&&!(D||stC(q)==='att')?(qVis(q)?`<button class="chip" data-act="qvisoff" data-qid="${q.id}">Ocultar o valor dos profissionais</button>`:`<button class="chip" data-act="qvison" data-qid="${q.id}">Enviar a estimativa da IA aos profissionais</button>`):''}${vidHtml(q)}
-<p class="muted" style="margin:4px 0 0">Publicado em ${dd(new Date(q.id))}${q.fee?(q.fee.cov?' · taxa coberta pelo plano':' · taxa de '+brl2(q.fee.cents/100)+' paga (simulado)'):''}</p>
+<p class="muted" style="margin:4px 0 0">Publicado em ${dd(new Date(q.id))}${q.fee?(q.fee.cov?' · taxa coberta pelo plano':' · taxa de '+brl2(q.fee.cents/100)+(q.fee.mp?' paga por Pix no Mercado Pago'+(q.fee.teste?' (teste)':''):' paga (simulado)')):''}</p>
 ${finReqHtml(q)}
 ${pgBox(q)}
 ${locBox(q)}
@@ -1002,7 +1002,7 @@ function publishReq(){
 async function savePaid(method){
   const r=S.req,city=r.city;let vA='',vU='',vErr='';
   if(r.vf){try{const as=window.claude&&await window.claude.use('assets');if(!as)throw 0;const up=await as.upload(r.vf);vA=up.id;vU=up.url}catch(e){vErr=1}}
-  const q={id:Date.now(),email:S.user.email,cn:S.user.emp?S.user.emp.razao:S.user.name,pk:S.user.pk,uid:uidOf(S.user.email),contact:(S.user.emp&&S.user.emp.phone)?{name:S.user.emp.razao,phone:S.user.emp.phone}:undefined,desc:r.desc.trim(),urg:r.urg,city,video:vU,vidAsset:vA||undefined,vidErr:vErr||undefined,fee:!method?null:{cents:feeNet(),off:feeCovK()?0:feeOff(),cov:feeCovK()||undefined,method,at:new Date().toISOString(),ref:'SIM-'+Math.random().toString(36).slice(2,8).toUpperCase(),simulated:true},cats:r.sel.slice(),noai:r.ai.src==='none'?true:undefined,min:r.ai.min,max:r.ai.max,lab:r.ai.lab,mats:r.ai.matInc===false?[]:(r.ai.mats||[]).filter(m=>m&&String(m.n).trim()),matTotal:r.ai.matInc===false?0:r.ai.matTotal,matInc:r.ai.matInc===false?false:undefined,vis:(r.vis==='ia'&&r.ai.min>0)?{min:r.ai.min,max:r.ai.max,src:'ia'}:(r.vis==='own'&&pn(r.own)>0)?{min:pn(r.own),max:pn(r.own),src:'own'}:undefined,days:r.ai.days,proj:r.proj||0,ced:(cedOK()&&r.ced&&r.ced.on&&cedClean(r.ced.rows).length)?{rows:cedClean(r.ced.rows),epi:r.ced.epi||'cli'}:undefined,hot:(r.hot&&perksOn())?1:undefined,pref:r.pref||undefined,at:new Date().toISOString()};
+  const q={id:Date.now(),email:S.user.email,cn:S.user.emp?S.user.emp.razao:S.user.name,pk:S.user.pk,uid:uidOf(S.user.email),contact:(S.user.emp&&S.user.emp.phone)?{name:S.user.emp.razao,phone:S.user.emp.phone}:undefined,desc:r.desc.trim(),urg:r.urg,city,video:vU,vidAsset:vA||undefined,vidErr:vErr||undefined,fee:!method?null:{cents:feeNet(),off:feeCovK()?0:feeOff(),cov:feeCovK()||undefined,method,at:new Date().toISOString(),...payRef()},cats:r.sel.slice(),noai:r.ai.src==='none'?true:undefined,min:r.ai.min,max:r.ai.max,lab:r.ai.lab,mats:r.ai.matInc===false?[]:(r.ai.mats||[]).filter(m=>m&&String(m.n).trim()),matTotal:r.ai.matInc===false?0:r.ai.matTotal,matInc:r.ai.matInc===false?false:undefined,vis:(r.vis==='ia'&&r.ai.min>0)?{min:r.ai.min,max:r.ai.max,src:'ia'}:(r.vis==='own'&&pn(r.own)>0)?{min:pn(r.own),max:pn(r.own),src:'own'}:undefined,days:r.ai.days,proj:r.proj||0,ced:(cedOK()&&r.ced&&r.ced.on&&cedClean(r.ced.rows).length)?{rows:cedClean(r.ced.rows),epi:r.ced.epi||'cli'}:undefined,hot:(r.hot&&perksOn())?1:undefined,pref:r.pref||undefined,at:new Date().toISOString()};
   if(method)addFeeExp(q);
   try{store.setItem('ms_requests',JSON.stringify([...JSON.parse(store.getItem('ms_requests')||'[]'),q]))}catch(e){}
   if(r.vurl)try{URL.revokeObjectURL(r.vurl)}catch(e){}r.vf=null;r.vurl='';
@@ -1199,15 +1199,30 @@ function contactHtml0(q,p){
   const mp=q.em&&q.loc&&typeof q.loc.lat==='number'&&typeof q.loc.lng==='number'?`<a class="vlink" href="https://www.google.com/maps?q=${q.loc.lat},${q.loc.lng}" target="_blank" rel="noopener noreferrer">Ver localização no mapa</a>`:'';
   return`<div style="margin-top:8px">${mp}<span class="muted">${q.em&&!q.fee?'Contato liberado (emergência)':'Contato liberado'}</span><div><b>${esc(c.name||'')}</b> · ${esc(fmtPhone(d))}</div>${(q.em&&!bothOK)||((p.callch||{}).cli||{wa:1}).wa?`<a class="vlink" href="https://wa.me/55${d}" target="_blank" rel="noopener noreferrer">Conversar no WhatsApp</a> `:''}${(q.em&&!bothOK)||((p.callch||{}).cli||{tel:1}).tel?`<a class="vlink" href="tel:+55${d}">Ligar</a> `:''}<button class="chip" data-copy="${d}">Copiar o número</button></div>`;
 }
+
+/* ---- Pagamento: Pix pelo Mercado Pago (modo de teste) quando o servidor tiver a chave; se não tiver, continua simulado ---- */
+let MPREF=null;
+const payRef=()=>{const r=MPREF;MPREF=null;return r?{ref:r,simulated:false,mp:1,teste:MPTESTE}:{ref:'SIM-'+Math.random().toString(36).slice(2,8).toUpperCase(),simulated:true}};
+let MPTESTE=true;
+function mpOv(h){let o=document.getElementById('mpov');if(!o){o=document.createElement('div');o.id='mpov';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Pagar com Pix');document.body.appendChild(o)}o.innerHTML=h?'<div class="mpbox">'+h+'</div>':'';o.hidden=!h;document.body.style.overflow=h?'hidden':''}
+async function mpGate(cents,desc,ref){MPREF=null;
+ const sim=async()=>{await new Promise(r=>setTimeout(r,1200));return true};
+ if(!(cents>0)||payLabel()!=='PIX'||!window.IA_URL)return sim();
+ let j;try{const r=await fetch(window.IA_URL+'/mp/pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cents,desc,ref,email:S.user&&S.user.email})});j=await r.json().catch(()=>({}));if(r.status===503||j.erro==='sem_chave'){toast('Mercado Pago ainda não ligado no servidor: pagamento simulado.');return sim()}if(!r.ok){toast('Não consegui gerar o Pix agora'+(j.msg?': '+j.msg:'.')+' Tente de novo.');return false}}catch(_){toast('Sem conexão para gerar o Pix. Tente de novo.');return false}
+ MPTESTE=j.teste!==false;
+ return await new Promise(res=>{let fim=false,n=0;const acabou=v=>{if(fim)return;fim=true;clearInterval(iv);mpOv('');if(v)MPREF='MP-'+j.id;res(v)};
+  mpOv(`<b style="font-size:18px">Pagar ${brl2(cents/100)} com Pix</b>${MPTESTE?'<p class="mpt">🧪 Modo de teste do Mercado Pago: nenhum dinheiro de verdade. O pagamento é aprovado sozinho em alguns segundos.</p>':''}${j.qr64?`<img src="data:image/png;base64,${j.qr64}" alt="QR Code do Pix" style="width:220px;height:220px;justify-self:center;background:#fff;border-radius:12px">`:''}<p class="muted" style="margin:0">Abra o app do seu banco, escolha Pix e leia o QR Code, ou copie o código abaixo.</p>${j.qr?`<textarea readonly rows="3" style="font-size:12px;width:100%" aria-label="Código Pix copia e cola">${esc(j.qr)}</textarea><button class="btn" type="button" data-mp="copy">Copiar código Pix</button>`:''}<p id="mpst" role="status" aria-live="polite" style="margin:0;font-weight:700">⏳ Aguardando o pagamento…</p><button class="btn ghost" type="button" data-mp="x">Fechar</button>`);
+  const o=document.getElementById('mpov');o.onclick=async e=>{const t=e.target.closest('[data-mp]');if(!t)return;if(t.dataset.mp==='x')return acabou(false);if(t.dataset.mp==='copy'){try{await navigator.clipboard.writeText(j.qr);toast('Código Pix copiado.')}catch(_){const ta=o.querySelector('textarea');ta.select();toast('Selecione e copie o código.')}}};
+  const iv=setInterval(async()=>{if(fim)return;if(++n>200)return acabou(false);try{const r=await fetch(window.IA_URL+'/mp/status?id='+encodeURIComponent(j.id)),k=await r.json();if(k.pago){const st=document.getElementById('mpst');if(st)st.textContent='✅ Pagamento aprovado!';setTimeout(()=>acabou(true),900)}}catch(_){}},3000)})}
 async function payUnlock(){
   if(!cpfTake())return;
   logC('contato',S.user.email);
   const b=$('#paybtn');if(b){b.disabled=true;b.textContent='Processando pagamento…'}
-  await new Promise(r=>setTimeout(r,1200));
+  if(!(await mpGate(feeNet(),'Taxa Tasko: liberar contato','tk-'+S.payid))){if(b){b.disabled=false;b.textContent='Pagar '+brl2(feeNet()/100)}return}
   if(S.v!=='unlock')return;
   const l=jget('ms_requests'),q=l.find(x=>x.id===S.payid&&x.email===S.user.email);
-  if(q&&S.reab){const cv=feeCovK(),rec={cents:feeNet(),off:cv?0:feeOff(),cov:cv||undefined,method:payLabel(),at:new Date().toISOString(),ref:'SIM-'+Math.random().toString(36).slice(2,8).toUpperCase(),simulated:true,reab:1},tmp={id:q.id,desc:q.desc,proj:q.proj,fee:rec};credTake(tmp);rememberPay();if(!cv)feeUse();addFeeExp(tmp);q.fee2=[...(q.fee2||[]),rec];delete q.fin;delete q.finBy;try{store.setItem('ms_requests',JSON.stringify(l))}catch(e){}S.reab=0;return go('mine')}
-  if(q&&!q.fee){const cv=feeCovK();q.fee={cents:feeNet(),off:cv?0:feeOff(),cov:cv||undefined,method:payLabel(),at:new Date().toISOString(),ref:'SIM-'+Math.random().toString(36).slice(2,8).toUpperCase(),simulated:true};credTake(q);rememberPay();if(!cv)feeUse();addFeeExp(q);try{store.setItem('ms_requests',JSON.stringify(l))}catch(e){}S.expq=q.id}
+  if(q&&S.reab){const cv=feeCovK(),rec={cents:feeNet(),off:cv?0:feeOff(),cov:cv||undefined,method:payLabel(),at:new Date().toISOString(),...payRef(),reab:1},tmp={id:q.id,desc:q.desc,proj:q.proj,fee:rec};credTake(tmp);rememberPay();if(!cv)feeUse();addFeeExp(tmp);q.fee2=[...(q.fee2||[]),rec];delete q.fin;delete q.finBy;try{store.setItem('ms_requests',JSON.stringify(l))}catch(e){}S.reab=0;return go('mine')}
+  if(q&&!q.fee){const cv=feeCovK();q.fee={cents:feeNet(),off:cv?0:feeOff(),cov:cv||undefined,method:payLabel(),at:new Date().toISOString(),...payRef()};credTake(q);rememberPay();if(!cv)feeUse();addFeeExp(q);try{store.setItem('ms_requests',JSON.stringify(l))}catch(e){}S.expq=q.id}
   go(S.expq?'expq':'mine');
 }
 const MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -1459,7 +1474,7 @@ async function pay(){
   if(!cpfTake())return;
   logC('contato',S.user.email);
   const b=$('#paybtn');if(b){b.disabled=true;b.textContent='Processando pagamento…'}
-  await new Promise(r=>setTimeout(r,1200));
+  if(!(await mpGate(feeNet(),'Taxa Tasko','tk-'+Date.now()))){if(b){b.disabled=false;b.textContent='Pagar '+brl2(feeNet()/100)}return}
   if(S.v!=='checkout')return;
   rememberPay();savePaid(payLabel());
 }
@@ -2753,7 +2768,7 @@ document.addEventListener('click',e=>{
   if(D.act==='boostno'){if(!S.q)return;S.q.boost=false;S.q.boostAsk=false;return qsend()}
   if(D.act==='pgask'){S.pgq=+D.qid;return render()}
   if(D.act==='pgcancel'){S.pgq=0;return render()}
-  if(D.act==='pgpay'){const q=reqOf(+D.qid);if(!q||q.email!==S.user.email||!q.fee||q.pg||q.acc||q.fin)return;const c=pgDiff();q.pg={at:new Date().toISOString(),cents:c,total:PGFEE,ref:'SIM-'+Math.random().toString(36).slice(2,8).toUpperCase(),simulated:true};pgSaveReq(q);if(c>0)spSaveAll('ms_expenses',[...jget('ms_expenses'),{id:Date.now()+2,email:S.user.email,projId:q.proj||0,reqId:q.id,desc:'Pregão Tasko (diferença): '+String(q.desc).slice(0,30),cat:'Taxa do app',amount:c/100,date:ymd(new Date()),at:new Date().toISOString(),auto:1}]);S.pgq=0;toast('Pregão aberto. Diferença paga: '+brl2(c/100)+' (simulado).');return render()}
+  if(D.act==='pgpay'){const q=reqOf(+D.qid);if(!q||q.email!==S.user.email||!q.fee||q.pg||q.acc||q.fin)return;const c=pgDiff();q.pg={at:new Date().toISOString(),cents:c,total:PGFEE,...payRef()};pgSaveReq(q);if(c>0)spSaveAll('ms_expenses',[...jget('ms_expenses'),{id:Date.now()+2,email:S.user.email,projId:q.proj||0,reqId:q.id,desc:'Pregão Tasko (diferença): '+String(q.desc).slice(0,30),cat:'Taxa do app',amount:c/100,date:ymd(new Date()),at:new Date().toISOString(),auto:1}]);S.pgq=0;toast('Pregão aberto. Diferença paga: '+brl2(c/100)+' (simulado).');return render()}
   if(D.act==='pgby'){const q=reqOf(+D.qid);if(!q||q.email!==S.user.email||!q.pg)return;if(D.by)q.matBy=D.by;else delete q.matBy;pgSaveReq(q);return render()}
   if(D.act==='pgsave'||D.act==='pgrm'||D.act==='pgadd'){const q=reqOf(+D.qid);if(!q||q.email!==S.user.email||!q.pg||q.acc||q.fin)return;let ch=pgRead(q);q.mats=Array.isArray(q.mats)?q.mats:[];
     if(D.act==='pgrm'){q.mats.splice(+D.i,1);ch=true}

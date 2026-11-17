@@ -178,6 +178,43 @@ async function gplaces(req, o, env) {
   return resp({ L }, 200, o);
 }
 
+
+// Pagamento Pix pelo Mercado Pago. O token fica só aqui: variável secreta MP_TOKEN.
+// Em teste, use o "Access Token" de TESTE (Suas integrações > sua aplicação > Credenciais de teste).
+// Com o comprador de teste "APRO", o Mercado Pago aprova o Pix sozinho, sem dinheiro de verdade.
+async function mpPix(req, o, env) {
+  if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
+  if (!env.MP_TOKEN) return resp({ erro: 'sem_chave' }, 503, o);
+  const ip = req.headers.get('CF-Connecting-IP') || 'x';
+  if (!(await contar(env, 'mp:geral', 500))) return resp({ erro: 'limite_geral' }, 429, o);
+  if (!(await contar(env, 'mp:' + ip, 30))) return resp({ erro: 'limite' }, 429, o);
+  let b; try { b = await req.json(); } catch (_) { return resp({ erro: 'json' }, 400, o); }
+  const cents = parseInt(b.cents, 10), ref = String(b.ref || '').replace(/[^\w-]/g, '').slice(0, 60), desc = String(b.desc || 'Taxa Tasko').slice(0, 80);
+  if (!(cents >= 100 && cents <= 50000)) return resp({ erro: 'valor' }, 400, o);
+  const valor = (cents / 100).toFixed(2), teste = env.MP_MODO !== 'producao';
+  const corpo = { type: 'online', processing_mode: 'automatic', external_reference: ref || ('tk-' + Date.now()), total_amount: valor, description: desc,
+    payer: teste ? { email: 'test_user_br@testuser.com', first_name: 'APRO' } : { email: String(b.email || '').slice(0, 120) },
+    transactions: { payments: [{ amount: valor, payment_method: { id: 'pix', type: 'bank_transfer' } }] } };
+  let r; try {
+    r = await fetch('https://api.mercadopago.com/v1/orders', { method: 'POST', headers: { 'Authorization': 'Bearer ' + env.MP_TOKEN, 'Content-Type': 'application/json', 'X-Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify(corpo) });
+  } catch (_) { return resp({ erro: 'rede' }, 502, o); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) return resp({ erro: 'mp', status: r.status, msg: (j.errors && j.errors[0] && j.errors[0].message) || j.message || '' }, 502, o);
+  const pg = (j.transactions && j.transactions.payments && j.transactions.payments[0]) || {}, pm = pg.payment_method || {};
+  return resp({ id: j.id, status: j.status, det: j.status_detail, qr: pm.qr_code || '', qr64: pm.qr_code_base64 || '', url: pm.ticket_url || '', teste }, 200, o);
+}
+async function mpStatus(req, o, env) {
+  if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
+  if (!env.MP_TOKEN) return resp({ erro: 'sem_chave' }, 503, o);
+  const id = new URL(req.url).searchParams.get('id') || '';
+  if (!/^[\w-]{4,60}$/.test(id)) return resp({ erro: 'id' }, 400, o);
+  let r; try { r = await fetch('https://api.mercadopago.com/v1/orders/' + id, { headers: { 'Authorization': 'Bearer ' + env.MP_TOKEN } }); } catch (_) { return resp({ erro: 'rede' }, 502, o); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) return resp({ erro: 'mp', status: r.status }, 502, o);
+  const pago = j.status === 'processed' || j.status_detail === 'accredited';
+  return resp({ id: j.id, status: j.status, det: j.status_detail, pago }, 200, o);
+}
+
 export default {
   async fetch(req, env, ctx) {
     const o = req.headers.get('Origin') || '';
@@ -190,6 +227,12 @@ export default {
     }
     if (req.method === 'GET' && new URL(req.url).pathname === '/osm') {
       try { return await osm(req, o, ctx); } catch (_) { return resp({ erro: 'osm' }, 502, o); }
+    }
+    if (req.method === 'POST' && new URL(req.url).pathname === '/mp/pix') {
+      try { return await mpPix(req, o, env); } catch (_) { return resp({ erro: 'mp' }, 502, o); }
+    }
+    if (req.method === 'GET' && new URL(req.url).pathname === '/mp/status') {
+      try { return await mpStatus(req, o, env); } catch (_) { return resp({ erro: 'mp' }, 502, o); }
     }
     if (req.method === 'GET' && new URL(req.url).pathname === '/pagina') {
       try { return await pagina(req, o, env); } catch (_) { return resp({ erro: 'pagina' }, 502, o); }
