@@ -194,7 +194,7 @@ const byLogin=e=>users().find(x=>x&&loginOf(x)===e);
 const emailUsado=e=>users().some(x=>x&&(loginOf(x)===e||x.email===e));
 const byDoc=v=>{const d=String(v||'').replace(/\D/g,'');if(d.length===11&&cpfOk(v)){const h=cpfH(v);return users().find(u=>u&&u.cpfh===h)}if(d.length===14&&cnpjOk(v))return users().find(u=>u&&Object.values(u.roles||{}).some(r=>r&&typeof r==='object'&&cnpjDig(r.cnpj||'')===d));return null};
 function sxCard(){const F=S.sxf||{};if(S.sx){const u=users().find(x=>x.email===S.sx);return `<div class="card" style="background:var(--bg)"><b>✅ Usando o cadastro de ${esc(fnm(u?u.name:''))}</b><p class="muted" style="margin:6px 0 0">Seus dados já estão preenchidos abaixo. O CPF e o CNPJ não mudam.</p><button class="link" data-act="sxsair">Não sou eu, começar do zero</button></div>`}
- return `<div class="card"><b>Já tem cadastro no Tasko?</b><p class="muted" style="margin:6px 0 8px">Digite seu CPF ou CNPJ. Se achar, pedimos a senha e seus dados aparecem preenchidos.</p><div class="row" style="gap:8px;flex-wrap:nowrap"><input id="sxid" inputmode="numeric" maxlength="18" autocomplete="off" placeholder="CPF ou CNPJ" value="${esc(F.q||'')}" style="flex:1;min-width:0"><button class="btn" type="button" data-act="sxfind" style="flex:none;width:auto;padding:0 16px">Buscar</button></div>
+ return `<div class="card"><b>Já tem cadastro no Tasko?</b><p class="muted" style="margin:6px 0 8px">${S.role&&S.role.endsWith('E')?'Digite o CNPJ da empresa (ou o seu CPF, se já tem conta como pessoa).':'Digite seu CPF.'} Se achar, pedimos a senha e seus dados aparecem preenchidos.</p><div class="row" style="gap:8px;flex-wrap:nowrap"><input id="sxid" inputmode="numeric" maxlength="18" autocomplete="off" placeholder="${S.role&&S.role.endsWith('E')?'CNPJ ou CPF':'CPF'}" value="${esc(F.q||'')}" style="flex:1;min-width:0"><button class="btn" type="button" data-act="sxfind" style="flex:none;width:auto;padding:0 16px">Buscar</button></div>
 ${F.err?`<p class="err" role="alert">${esc(F.err)}</p>`:''}${F.no?'<p class="muted" style="margin:8px 0 0">Não achamos cadastro com esse documento. Preencha os dados abaixo.</p>':''}
 ${F.em?`<div style="margin-top:10px"><p style="margin:0">Encontramos uma conta: <b>${esc(emMask(F.mask))}</b></p><label for="sxpw" style="margin-top:8px">Senha dessa conta</label><input id="sxpw" type="password" autocomplete="current-password"><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn" type="button" data-act="sxok" style="width:auto;padding:0 16px">Usar meus dados</button><button class="link" type="button" data-act="findacc">Esqueci a senha</button></div></div>`:''}</div>`}
 function sxFill(){const u=users().find(x=>x.email===S.sx);if(!u)return;const set=(id,v)=>{const i=$('#'+id);if(i&&v!=null&&v!=='')i.value=v},lock=id=>{const i=$('#'+id);if(i&&i.value){i.readOnly=true;i.style.background='var(--line)'}};
@@ -227,7 +227,7 @@ ${fld('name','Nome completo','type="text" autocomplete="name"')}
 ${fld('email','E-mail','type="email" name="username" autocomplete="username" inputmode="email"')}
 ${fld('phone','WhatsApp com DDD','type="tel" autocomplete="tel" inputmode="numeric" placeholder="(11) 91234-5678"')}
 ${S.role.endsWith('E')?`${fld('razao','Razão social','type="text" autocomplete="organization"')}${fld('cnpj','CNPJ','type="text" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00"')}`:''}
-${S.role.startsWith('pro')?cpfProFld(S.role==='proE'):''}${S.role==='pro'?kindSel('kind',''):''}
+${S.role.startsWith('pro')?cpfProFld(S.role==='proE'):S.role==='cli'?cpfCliFld():''}${S.role==='pro'?kindSel('kind',''):''}
 ${S.role.startsWith('pro')?`<div><label for="cat">Sua categoria</label><select id="cat" aria-describedby="e-cat"><option value="">Selecione</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select><div class="err" id="e-cat"></div></div>${areaFld('cat','','')}
 ${fld('city','Cidade de atuação','type="text" autocomplete="address-level2"')}`:''}
 ${S.sx?'<div class="card" style="background:var(--bg)"><b>✅ Senha já conferida</b><p class="muted" style="margin:6px 0 0">O novo perfil fica na mesma conta e usa a senha de sempre.</p></div>':`${fld('pw','Senha','type="password" name="password" autocomplete="new-password"','<div class="muted" id="pwm" aria-live="polite"></div>')}
@@ -250,21 +250,20 @@ ${fld('rpw2','Confirmar nova senha','type="password" autocomplete="new-password"
 <label class="chk"><input type="checkbox" data-act="showpw"> Mostrar senhas</label>
 <div class="alert" id="rerr" role="alert"></div>
 <button class="btn" id="go" type="submit" data-act="doreset">Salvar nova senha</button></form></main>`},
-findacc:()=>{const F=S.fa||{};return `${head('Encontrar minha conta','login')}<main>
-<div class="card"><b>Esqueceu qual e-mail usou?</b><p class="muted" style="margin:6px 0 0">Digite o CPF ou o celular que você usou no cadastro. Mostramos o começo do e-mail de cada conta encontrada, e você recupera a senha dela.</p></div>
-${fld('facpf','CPF ou celular com DDD','type="text" inputmode="numeric" maxlength="16" autocomplete="off" value="'+esc(F.q||'')+'" placeholder="000.000.000-00 ou (61) 90000-0000"')}
+findacc:()=>{const F=S.fa||{};return `${head('Recuperar senha','login')}<main>
+<div class="card"><b>Comece pelo seu documento</b><p class="muted" style="margin:6px 0 0">Pessoa: digite o <b>CPF</b>. Empresa: digite o <b>CNPJ</b>. Achando a conta, mandamos um código para o e-mail ou o celular cadastrado. Não lembra do documento? Use o celular ou o e-mail.</p></div>
+${F.alt?fld('facpf','Celular com DDD ou e-mail','type="text" maxlength="60" autocomplete="off" value="'+esc(F.q||'')+'" placeholder="(61) 90000-0000 ou nome@email.com"'):fld('facpf','CPF ou CNPJ','type="text" inputmode="numeric" maxlength="18" autocomplete="off" value="'+esc(F.q||'')+'" placeholder="CPF (pessoa) ou CNPJ (empresa)"')}<button type="button" class="link" data-act="faalt" style="justify-self:start">${F.alt?'Usar CPF ou CNPJ':'Não lembro do documento: usar celular ou e-mail'}</button>
 <div class="alert" id="faerr" role="alert">${esc(F.err||'')}</div>
-<button class="btn" data-act="findgo">Procurar minha conta</button>
+<button class="btn" data-act="findgo">Continuar</button>
 ${F.list?(F.list.length?`<div class="card"><b>${F.list.length===1?'Encontramos 1 conta':'Encontramos '+F.list.length+' contas'}</b>${F.list.map((u,i)=>`<div class="row" style="justify-content:space-between;gap:8px;margin-top:10px;flex-wrap:wrap"><span><b>${esc(emMask(u.em2||u.email))}</b><br><span class="muted" style="font-size:13px">${esc(u.desc)}</span></span><button class="chip" data-fga="${i}">Recuperar esta conta</button></div>`).join('')}</div>`:'<div class="card"><b>Nenhuma conta encontrada</b><p class="muted" style="margin:6px 0 0">Confira o número. Neste protótipo, a busca vale só para contas criadas neste aparelho.</p></div>'):''}
 <p class="muted" style="font-size:13px">Por segurança, o e-mail completo nunca aparece aqui. Para recuperar, mandamos um código para ele.</p></main>`},
 login:()=>`${head('Entrar','welcome')}<main><form class="pf" id="lform" autocomplete="on" style="display:contents">
-${fld('lemail','E-mail','type="email" name="username" autocomplete="username" inputmode="email"')}
+${fld('lemail','CPF, CNPJ ou e-mail','type="text" name="username" autocomplete="username" placeholder="CPF (pessoa) ou CNPJ (empresa)"')}<p class="muted" style="margin:-6px 0 0;font-size:13px">Pessoa entra com o CPF. Empresa entra com o CNPJ. O e-mail também funciona.</p>
 ${fld('lpw','Senha','type="password" name="password" autocomplete="current-password"')}
 <label class="chk"><input type="checkbox" data-act="showpw"> Mostrar senha</label>
 <div class="alert" id="lerr" role="alert"></div><div class="muted" id="lmsg" aria-live="polite"></div>
 <button class="btn" id="go" type="submit" data-act="login">Entrar</button></form>
 <button class="link" data-act="forgot">Esqueci minha senha</button>
-<button class="link" data-act="findacc">Esqueci qual e-mail usei</button>
 <button class="btn ghost" data-go="welcome">Criar uma conta</button></main>`,
 request:()=>{const r=S.req,pd=pendEm();if(!r.city)r.city=lastCity();if(pd)return `${head('Descrição do serviço','home')}<main><div class="card"><h2>Antes de um novo pedido</h2><p style="margin:8px 0 0">Falta pagar a taxa do seu pedido de emergência. Leva um minuto e depois você pode pedir normalmente.</p><button class="btn" style="margin-top:12px" data-unlock="${pd.id}">Pagar a taxa pendente</button></div></main>`;return `${head('Descrição do serviço','home')}<main>
 <div><label for="rdesc">O que você precisa?</label><textarea id="rdesc" aria-describedby="e-rdesc" maxlength="2000" placeholder="Pode ser um reparo ou uma obra. Ex.: o chuveiro não esquenta; ou: construir um muro de 20 m; ou: reformar a casa inteira, 120 m²">${esc(r.desc)}</textarea><div class="err" id="e-rdesc"></div><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button type="button" class="chip" id="dictbtn" data-act="dict">🎤 Falar a descrição</button><button type="button" class="chip" data-say="form">🔊 Ouvir</button></div><div class="muted" id="dictmsg" role="status" aria-live="polite" style="margin-top:4px"></div></div>
@@ -429,7 +428,7 @@ chats:()=>{const T=myThreads();return `${head('Conversas','home')}<main><p class
 ${T.length?T.map(t=>{const on=esc(oName(t.p,t.q,t.isCli)),acc=t.q.acc===t.p.id,cl=t.q.acc&&!acc,sc=t.p.sched;return `<button class="card" style="width:100%;text-align:left;cursor:pointer" data-chat="${t.p.id}"><div class="sum" style="margin:0"><b>${on}</b>${t.un?`<span class="tag" style="background:var(--acc);color:#14213D;font-weight:700">${t.un} ${t.un>1?'novas':'nova'}</span>`:''}</div><p class="muted" style="margin:4px 0">${esc(String(t.q.desc).slice(0,60))} · ${t.p.interest?'quer negociar':brl(t.p.price)}</p><p style="margin:0">${t.last?esc(t.last.text.slice(0,70)):'Sem mensagens ainda. Toque para começar.'}</p>${acc?`<p style="margin:8px 0 0"><span class="tag">Proposta aceita</span>${sc&&sc.st==='ok'?' <span class="tag">'+dd(new Date(sc.date+'T00:00:00'))+' às '+sc.time+'</span>':''}</p>`:cl?'<p style="margin:8px 0 0"><span class="tag">Encerrada</span></p>':''}</button>`}).join(''):'<div class="card"><b>Nenhuma conversa ainda</b><p class="muted" style="margin:6px 0 0">As conversas aparecem aqui quando há uma proposta e o contato do pedido já foi liberado (taxa paga ou emergência).</p></div>'}</main>`},
 chat:()=>{const t=th();if(!t)return V.chats();const{p,q,isCli}=t,me=S.user.email,ms=msgs().filter(m=>m.pid===p.id).slice(-100),acc=q.acc===p.id,ex=acc&&finExp(q),cl=(!!q.acc&&!acc)||ex||(!!q.fin&&!q.acc),on=esc(oName(p,q,isCli));
  return `${head(on,'chats')}<main>
-<div class="card"><b>${esc(dTit(q.desc,90))}</b>${dFull(q.desc,90)}<br><button type="button" class="chip" style="min-height:36px;padding:0 12px;font-size:13px;margin:6px 0 0" data-say="q:${q.id}">🔊 Ouvir</button>${rateBox(isCli?p.email:q.email,isCli?'pro':'cli')}<p class="muted" style="margin:6px 0 0">${esc((q.cats||[]).join(', '))}${locShow(q)?' · '+esc(locShow(q)):''}</p>${p.interest?`<p style="margin:8px 0 0">${esc(fnm(p.name))} quer negociar. ${isCli?'Converse para combinar; o profissional poderá enviar a proposta com o valor.':'Converse com o cliente e envie sua proposta com o valor.'}</p>`:`<p style="margin:8px 0 0">Proposta de ${esc(fnm(p.name))}: <b>${pv(p)}</b>${Number(p.price)>0?` · ${esc(p.days)} · ${Number(p.hrs)||0}h`:''}</p>`}${acc?'<p style="margin:8px 0 0"><span class="tag">Proposta aceita</span></p>':cl?'<p style="margin:8px 0 0"><span class="tag">Encerrada: outra proposta foi aceita</span></p>':''}</div>
+<div class="card"><b>${esc(dTit(q.desc,90))}</b>${dFull(q.desc,90)}<br><button type="button" class="chip" style="min-height:36px;padding:0 12px;font-size:13px;margin:6px 0 0" data-say="q:${q.id}">🔊 Ouvir</button>${rateBox(isCli?p.email:q.email,isCli?'pro':'cli')}<p class="muted" style="margin:6px 0 0">${esc((q.cats||[]).join(', '))}${locShow(q)?' · '+esc(locShow(q)):''}</p>${p.interest?`<p style="margin:8px 0 0">${esc(fnm(p.name))} quer negociar. ${isCli?'Converse para combinar; o profissional poderá enviar a proposta com o valor.':'Converse com o cliente e envie sua proposta com o valor.'}</p>`:`<p style="margin:8px 0 0">Proposta de ${esc(fnm(p.name))}: <b>${pv(p)}</b>${Number(p.price)>0&&p.days&&p.days!=='A combinar'?` · ${esc(p.days)}`:''}${Number(p.price)>0&&Number(p.hrs)>0?` · ${Number(p.hrs)}h`:''}</p>`}${acc?'<p style="margin:8px 0 0"><span class="tag">Proposta aceita</span></p>':cl?'<p style="margin:8px 0 0"><span class="tag">Encerrada: outra proposta foi aceita</span></p>':''}</div>
 ${acc&&isCli?expqHtml(q,'svcExp','Valor combinado com o profissional.'):''}
 ${schHtml(t)}
 ${!isCli?locProHtml(q,p):(cl?'':locBox(q))}
@@ -626,7 +625,7 @@ campB=campOn().length?' · '+campOn().length+' campanha'+(campOn().length>1?'s a
 <p style="margin:8px 0 0">Perfil ativo: <b>${ROLE[S.user.role]}${S.user.emp?' (empresa)':(S.user.role==='cli'?' (pessoa física)':'')}${S.user.kind?' · '+KL[S.user.kind]:''}</b></p>${S.user.emp?`<p style="margin:4px 0 0"><b>${esc(S.user.emp.razao)}</b></p><p class="muted" style="margin:2px 0 0">CNPJ ${esc(cnpjFmt(S.user.emp.cnpj))}</p>`:''}
 <p class="muted" style="margin:4px 0 0">${esc(S.user.email)}</p>
 ${pro?`<p class="muted" style="margin:4px 0 0">${esc(S.user.title||S.user.area||S.user.cat)}, ${esc(S.user.city)}</p>`:''}</div>
-${ratePendCard()}${hmOrdered(pro,nums)}
+${cpfBanner()}${ratePendCard()}${hmOrdered(pro,nums)}
 <details class="mm"><summary class="chip fill" style="display:inline-flex;width:auto">${pro?'Ganhos, vantagens e conta':'Gastos, vantagens e conta'}</summary><div class="menu" style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${hmMenu()}</div></details>
 ${hmTail}${fbLink()}</main>`}
 };
@@ -634,7 +633,7 @@ ${hmTail}${fbLink()}</main>`}
 function mineV(D){const h=mineV0(D);return D?hideAct(h):h}
 function mineV0(D){const L=jget('ms_requests').filter(q=>q&&q.email===S.user.email&&Array.isArray(q.cats)).filter(q=>stC(q)===(D?'att':'act')).sort((a,b)=>b.id-a.id),P=jget('ms_proposals');
 return `${head(D?'Pedidos atendidos':'Meus pedidos',D?'mine':'home')}<main>${D?'':cpfCard()}
-<p class="muted" style="margin:0">${D?'Pedidos que você concluiu ou em que já aceitou uma proposta. Aqui você pode reabrir ou voltar a conversar com o profissional do serviço. Os dados de contato ficam ocultos.':'Aqui aparecem os seus pedidos ainda não atendidos. Os que já tiveram uma proposta aceita ficam em Pedidos atendidos.'}</p>
+<p class="muted" style="margin:0">${D?'Pedidos que você concluiu. Aqui você pode reabrir ou voltar a conversar com o profissional do serviço. Os dados de contato ficam ocultos.':'Aqui aparecem os seus pedidos abertos e, mais abaixo, os que já têm proposta aceita. Os que você concluir vão para Pedidos atendidos.'}</p>
 ${L.length?pgL(L,D?'minedone':'mine').map(q=>{const ps=P.filter(p=>p.reqId===q.id&&!p.interest),ints=P.filter(p=>p.reqId===q.id&&p.interest);return `<div class="card"><span class="tag"${D?'':' style="background:var(--acc);color:#14213D;font-weight:700"'}>${D?'Atendido':'Não atendido'}</span><br><b>${esc(q.desc).replace(/\n/g,'<br>')}</b><br><button type="button" class="chip" style="min-height:36px;padding:0 12px;font-size:13px;margin:6px 0 0" data-say="q:${q.id}">🔊 Ouvir</button>
 <p class="muted" style="margin:6px 0">${esc(q.cats.join(', '))}${locShow(q)?' · '+esc(locShow(q)):''} · ${esc(urgLabel(q.urg))}</p>
 <p style="margin:0 0 4px">Estimativa: <b>${estTxt(q)}</b></p>${visNote(q)}${!q.noai&&!q.em&&q.min>0&&!(D||stC(q)==='att')?(qVis(q)?`<button class="chip" data-act="qvisoff" data-qid="${q.id}">Ocultar o valor dos profissionais</button>`:`<button class="chip" data-act="qvison" data-qid="${q.id}">Enviar a estimativa da IA aos profissionais</button>`):''}${vidHtml(q)}
@@ -715,7 +714,7 @@ function rateRecvHtml(){const me=S.user.email,side=S.user.role==='pro'?'pro':'cl
   return `<div class="card"><b>Avaliações que você recebeu</b><div class="sum"><span>${side==='pro'?'Como profissional':'Como contratante'}</span><b>★ ${f(a)} (${a.n})</b></div>${sv?`<div class="sum"><span>Nota dos serviços</span><b>★ ${f(sv)} (${sv.n})</b></div>`:''}${L.filter(x=>x.txt).slice(0,5).map(x=>`<p class="muted" style="margin:8px 0 0">“${esc(x.txt)}” · ${dd(new Date(x.at))}</p>`).join('')}</div>`}
 function ratePendCard(){const n=ratePend().length;return n?`<div class="card" style="border-color:var(--acc)"><b>Você tem ${n} serviço${n>1?'s':''} para avaliar</b><p class="muted" style="margin:6px 0 10px">Conte como foi. Leva menos de um minuto.</p><button class="btn" data-go="hist">Avaliar agora</button></div>`:''}
 function rateBox(email,toSide){const L=rates().filter(x=>x.to===email&&x.toSide===toSide).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
-  const who=toSide==='pro'?'do profissional':'do contratante';if(!L.length)return`<p class="muted" style="margin:6px 0 0;font-size:13px">Sem avaliações ainda ${who}.</p>`;
+  const who=toSide==='pro'?'do profissional':'do contratante';if(!L.length)return`<p class="muted" style="margin:6px 0 0;font-size:13px">🆕 ${toSide==='pro'?'Profissional':'Contratante'} em primeira vez no Tasko.</p>`;
   const a=rateAvg(email,toSide),sv=toSide==='pro'?rateAvg(email,'pro','svc'):null,f=x=>x.avg.toFixed(1).replace('.',',');
   return `<details style="margin:6px 0 0"><summary class="vlink" style="cursor:pointer;min-height:36px">Ver avaliações ${who} (${L.length})</summary><div style="margin-top:6px"><div class="sum"><span>${toSide==='pro'?'Como profissional':'Como contratante'}</span><b>★ ${f(a)}</b></div>${sv?`<div class="sum"><span>Nota dos serviços</span><b>★ ${f(sv)}</b></div>`:''}${L.slice(0,8).map(x=>`<p class="muted" style="margin:8px 0 0">★ ${x.per}${x.svc?' · serviço ★ '+x.svc:''}${x.txt?' · “'+esc(x.txt)+'”':''} <span style="opacity:.8">(${dd(new Date(x.at))})</span></p>`).join('')}<p class="muted" style="margin:8px 0 0;font-size:13px">As avaliações são anônimas.</p></div></details>`}
 function rateSend(pid){const it=ratePend().find(x=>x.pid===pid);if(!it)return render();const R=(S.rt&&S.rt[pid])||{svc:0,per:0,txt:''},e=$('#rte-'+pid);
@@ -1872,7 +1871,7 @@ const finEnd=q=>q&&q.fin?new Date(new Date(q.fin).getTime()+7*864e5):null,finExp
 const ASKTXT='Vi que este pedido foi concluído. Ainda precisa de ajuda? Posso atender.';
 const ASKR={ok:'Já resolvido',gave:'Desisti',reopen:'Vou reabrir'};
 const finReqHtml=q=>{const A=q.asks||[];const pd=pendAt(q),pbox=pd&&q.acc?`<div class="card" style="margin:8px 0 0"><b>O profissional avisou que terminou o serviço</b><p class="muted" style="margin:4px 0 8px">Em ${dt(pd)}. Confirme a conclusão do pedido ou responda que ainda não foi feito. Sem resposta até ${dt(new Date(new Date(pd).getTime()+5*864e5))}, o pedido é concluído automaticamente.</p><button class="chip" data-act="notdone" data-qid="${q.id}">Ainda não foi feito</button></div>`:'';const asks=A.map(a=>a.reply?`<p class="muted" style="margin:8px 0 0">${esc(fnm(a.name||'Profissional'))} perguntou. Você respondeu: <b>${esc(ASKR[a.reply]||'')}</b>.</p>`:`<div style="margin:8px 0 0;padding:10px;border:1px solid var(--line);border-radius:12px"><b>${esc(fnm(a.name||'Profissional'))}</b> <span class="muted">(${esc(a.cat||'profissional')})</span><p style="margin:4px 0 8px">“${esc(ASKTXT)}”</p><div class="row">${Object.keys(ASKR).map(k=>`<button class="chip" data-act="askreply" data-qid="${q.id}" data-em="${esc(a.em)}" data-v="${k}">${ASKR[k]}</button>`).join('')}</div></div>`).join('');
- const top=q.fin?`<p style="margin:8px 0 0"><span class="tag">Concluído</span> <span class="muted">em ${dd(new Date(q.fin))}</span></p>${q.acc&&!finExp(q)?`<button class="chip" style="margin-top:8px" data-act="pairchat" data-pid="${q.acc}">Voltar a conversar com o profissional do serviço</button>`:''}<button class="chip" style="margin:8px 0 0 ${q.acc?'8px':'0'}" data-act="reabq" data-qid="${q.id}">Reabrir para todos os profissionais</button><p class="muted" style="margin:6px 0 0">${q.acc?(finExp(q)?'O prazo de 1 semana para conversar com o profissional sem custo terminou em '+dd(finEnd(q))+'. Para voltar a conversar, reabra o pedido. ':'A conversa com o profissional que fechou o serviço continua sem custo até '+dd(finEnd(q))+' (1 semana após a conclusão). '):''}Reabrir ${q.fee?'exige pagar uma nova taxa ('+fee()+').':'não tem custo, pois a taxa deste pedido ainda não foi paga.'}</p>`:`<button class="btn ghost" style="margin-top:10px" data-act="finq" data-qid="${q.id}">${S.finq===q.id?(openConvs(q)?'Encerrar mesmo assim':'Toque de novo para concluir'):'Concluir o pedido'}</button>${S.finq===q.id?convWarn(q):''}<p class="muted" style="margin:6px 0 0">Se não concluir, o pedido continua aberto para novas propostas.</p>`;
+ const top=q.fin?`<p style="margin:8px 0 0"><span class="tag">Concluído</span> <span class="muted">em ${dd(new Date(q.fin))}</span></p>${q.acc&&!finExp(q)?`<button class="chip" style="margin-top:8px" data-act="pairchat" data-pid="${q.acc}">Voltar a conversar com o profissional do serviço</button>`:''}<button class="chip" style="margin:8px 0 0 ${q.acc?'8px':'0'}" data-act="reabq" data-qid="${q.id}">Reabrir para todos os profissionais</button><p class="muted" style="margin:6px 0 0">${q.acc?(finExp(q)?'O prazo de 1 semana para conversar com o profissional sem custo terminou em '+dd(finEnd(q))+'. Para voltar a conversar, reabra o pedido. ':'A conversa com o profissional que fechou o serviço continua sem custo até '+dd(finEnd(q))+' (1 semana após a conclusão). '):''}Reabrir ${q.fee?'exige pagar uma nova taxa ('+fee()+').':'não tem custo, pois a taxa deste pedido ainda não foi paga.'}</p>`:`<button class="btn ghost" style="margin-top:10px" data-act="finq" data-qid="${q.id}">${S.finq===q.id?(openConvs(q)?'Encerrar mesmo assim':'Toque de novo para concluir'):'Concluir o pedido'}</button>${S.finq===q.id?convWarn(q):''}<p class="muted" style="margin:6px 0 0">${q.acc?'Conclua quando o serviço estiver feito. Até lá, a conversa continua aberta para combinar a execução.':'Se não concluir, o pedido continua aberto para novas propostas.'}</p>`;
  return pbox+top+asks};
 const askPro=(q,p)=>{if(!q.fin||q.email===S.user.email)return'';if(p&&q.acc===p.id)return finExp(q)?`<p class="muted" style="margin:8px 0 0">O prazo de 1 semana para conversar após a conclusão terminou. A conversa volta se o contratante reabrir o pedido.</p>`:`<button class="btn" style="margin-top:8px" data-act="pairchat" data-pid="${p.id}">Conversar com o contratante</button>`;const a=(q.asks||[]).find(x=>x.em===S.user.email);
  if(!a)return`<p class="muted" style="margin:8px 0 0">Pedido concluído pelo contratante. Você pode perguntar se ele ainda precisa de ajuda. A mensagem é pronta: “${esc(ASKTXT)}”</p><button class="btn" style="margin-top:8px" data-act="askq" data-qid="${q.id}">Conversar com o contratante</button>`;
@@ -1888,7 +1887,7 @@ function sendChat(txt){const t=th();if(!t||(t.q.fin&&!t.q.acc)||(t.q.acc&&t.q.ac
   if(!v){if(e)e.textContent='Escreva uma mensagem.';return}
   if(!addMsg(t.p.id,t.q.id,v,false)){if(e)e.textContent='Limite de mensagens desta conversa atingido.';return}
   S.chat.draft='';S.chat.keep=true;render()}
-const pv=p=>Number(p.price)>0?brl(Number(p.price)):'valor a combinar';
+const pv=p=>Number(p.agreed)>0?brl(Number(p.agreed)):Number(p.price)>0?brl(Number(p.price)):'valor a combinar';
 function toast(m){let b=document.getElementById('tsk');if(!b){b=document.createElement('div');b.id='tsk';b.setAttribute('role','alert');b.style.cssText='position:fixed;left:12px;right:12px;bottom:16px;z-index:70;background:#14213D;color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 6px 20px rgba(0,0,0,.3)';document.body.appendChild(b)}b.textContent=m;b.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>{b.style.display='none'},5000)}
 function acceptProp(){const t=th();if(!t){S.acc=0;toast('Não foi possível aceitar: este pedido já foi encerrado ou o contato ainda não foi liberado.');return render()}if(t.q.acc)return;
   const side=t.isCli?'cli':'pro',oth=t.isCli?'pro':'cli',now=new Date().toISOString();
@@ -1901,7 +1900,7 @@ function acceptProp(){const t=th();if(!t){S.acc=0;toast('Não foi possível acei
   if(counter){addMsg(p.id,t.q.id,fnm(S.user.name)+' propôs fechar por '+brl2(ag)+'. Aguardando '+(t.isCli?'o profissional':'o contratante')+' aceitar este valor.',true);S.acc=0;return render()}
   if(!(p.ok.cli&&p.ok.pro)){addMsg(p.id,t.q.id,fnm(S.user.name)+' aceitou '+(p.interest?'a negociação':'a proposta')+(ag?' por '+brl2(ag):'')+'. Aguardando '+(t.isCli?'o profissional':'o contratante')+' aceitar também.',true);S.acc=0;return render()}
   const P=jget('ms_proposals'),R=jget('ms_requests'),q=R.find(x=>x.id===t.q.id);if(!q)return;q.acc=p.id;q.res=now;
-  P.forEach(x=>{if(x.id===p.id&&x.interest){delete x.interest;x.price=Number(x.price)||0;x.days=x.days||'A combinar';x.hrs=x.hrs||0}if(x.reqId===q.id){x.status=x.id===p.id?'accepted':'declined';if(x.id!==p.id)addMsg(x.id,q.id,'O contratante fechou o pedido com outra proposta. Esta conversa foi encerrada.',true)}});
+  P.forEach(x=>{if(x.id===p.id){x.agreed=p.agreed;x.ok=p.ok}if(x.id===p.id&&x.interest){delete x.interest;x.price=Number(x.price)||Number(p.agreed)||0;x.days=x.days||'A combinar';x.hrs=x.hrs||0}if(x.reqId===q.id){x.status=x.id===p.id?'accepted':'declined';if(x.id!==p.id)addMsg(x.id,q.id,'O contratante fechou o pedido com outra proposta. Esta conversa foi encerrada.',true)}});
   try{store.setItem('ms_requests',JSON.stringify(R));store.setItem('ms_proposals',JSON.stringify(P))}catch(e){}
   jobEnsure(q,p);addMsg(p.id,q.id,'Proposta fechada por '+brl2(Number(p.agreed||p.price)||0)+', aceita pelas duas partes. Combinem o horário aqui.',true);S.acc=0;render()}
 /* Pedido fechado pelo aceite das duas partes vira serviço concluído: cria o registro (id fixo, sem duplicar entre aparelhos) para entrar no histórico dos dois lados. */
@@ -2272,13 +2271,15 @@ const cnpjDup=(cn,email)=>{const d=cnpjDig(cn);return users().some(u=>u&&u.email
 const cpfSave=d=>{const l=users(),u=l.find(x=>x.email===S.user.email);if(u&&!(u.cpf&&cpfOk(u.cpf))){u.cpf=cpfDig(d);u.cpfh=cpfH(d);saveUsers(l)}};
 const CPFFIX='O CPF não pode ser trocado depois do cadastro. Ele é a identidade da conta.';
 const cpfDupPro=(d,email)=>{const h=cpfH(d);return users().some(u=>u&&u.email!==email&&u.cpfh===h&&u.roles&&(u.roles.pro||u.roles.proE))};
+const cpfCliFld=()=>fld('pcpf','CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Seu CPF é a base da sua conta: com ele você encontra seu cadastro e recupera a senha. Fica protegido e não aparece para ninguém.</p><button type="button" class="link" data-act="findacc" style="justify-self:start">CPF já usado em outra conta? Encontrar minha conta</button>';
 const cpfProFld=(isE)=>fld('pcpf',isE?'CPF do responsável pela empresa':'CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Usado na análise de idoneidade de quem presta serviços na plataforma. Fica só neste aparelho e não aparece para ninguém.</p><button type="button" class="link" data-act="findacc" style="justify-self:start">CPF já usado em outra conta? Encontrar minha conta</button>';
 const telMask=t=>{const d=String(t||'').replace(/\D/g,'');return d.length>=4?'('+d.slice(0,2)+') *****-'+d.slice(-4):'seu celular'};
 const emMask=e=>{const[a,b]=String(e||'').split('@');return b?(a.slice(0,2)+'***@'+b):'outra conta'};
 const cpfDonoMsg=(d,email,f)=>{const h=cpfH(d),u=users().find(u=>u&&u.email!==email&&u.cpfh===h&&f(u));return u?CPFDUP+' Ele está na conta '+emMask(u.em2||u.email)+'. Entre nela para usar esse perfil, ou use outro CPF.':CPFDUP};
-const cpfProChk=(E,email)=>{const i=$('#pcpf');if(!i)return;if(!cpfOk(i.value))E.pcpf='Informe um CPF válido.';else if(cpfDupPro(i.value,email))E.pcpf=cpfDonoMsg(i.value,email,u=>u.roles&&(u.roles.pro||u.roles.proE))};
+const cpfProChk=(E,email)=>{const i=$('#pcpf');if(!i)return;if(!cpfOk(i.value))E.pcpf='Informe um CPF válido.';else if(users().some(u=>u&&u.email!==email&&u.cpfh===cpfH(i.value)))E.pcpf=cpfDonoMsg(i.value,email,()=>true)};
 const cpfProSet=(u)=>{const i=$('#pcpf');if(i&&cpfOk(i.value)&&!(u.cpf&&cpfOk(u.cpf))){u.cpf=cpfDig(i.value);u.cpfh=cpfH(i.value)}};
 const CPFDUP='Este CPF já está cadastrado em outro perfil. Cada pessoa usa um único cadastro.';
+const cpfBanner=()=>cpfNeed()&&!cpfCard()?`<div class="card" style="border-color:var(--acc)"><b>🪪 Cadastre seu CPF</b><p class="muted" style="margin:6px 0 0">O CPF é a base da sua conta: com ele você entra, encontra seu cadastro e recupera a senha.</p>${cpfFld('')}<button class="btn" data-act="cpfsave">Salvar CPF</button></div>`:'';
 const cpfNeed=()=>!!S.user&&!S.user.emp&&!cpfOk(meU().cpf);
 const cpfFld=why=>`<div class="card" style="background:var(--bg)"><label for="paycpf"><b>Seu CPF</b></label><p class="muted" style="margin:4px 0 8px;font-size:13px">${why} Fica guardado só neste aparelho e não aparece para ninguém.</p><input id="paycpf" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"><p class="err" id="paycpferr" role="alert"></p></div>`;
 function cpfTake(){if(!cpfNeed())return true;const i=$('#paycpf'),e=$('#paycpferr');if(!i||!cpfOk(i.value)){if(e)e.textContent='Informe um CPF válido.';if(i)i.focus();return false}
@@ -2292,7 +2293,7 @@ function payBody(r,act,extra){
   const pm=r.pay==='credit'&&!crOK()?'pix':r.pay,cov=feeCovK();
   return `<div class="card"><div class="sum" style="margin:0;font-size:18px"><b>${cov?'Coberto pelo seu plano':'Total a pagar'}</b><b>${brl2(feeNet()/100)}</b></div>${feeRow()}<p class="muted" style="margin:6px 0 0">Taxa da plataforma, com tributos inclusos. Não inclui o valor do serviço.</p></div>
 ${cov?'':`<div class="row" role="group" aria-label="Forma de pagamento"><button class="chip" data-pay="pix" aria-pressed="${pm==='pix'}">PIX</button><button class="chip" data-pay="card" aria-pressed="${pm==='card'}">Cartão</button>${crChip(r)}</div>`}
-<p class="muted" style="margin:0;font-size:13px">Ao pagar, seu nome e seu WhatsApp ficam visíveis para os profissionais e a negociação é liberada. Veja a ${dlk('payments','política de pagamentos e reembolso')}.</p>
+<p class="muted" style="margin:0;font-size:13px">Ao pagar, a negociação é liberada: você conversa pelo app com os profissionais interessados. Telefone e WhatsApp só aparecem se vocês dois aceitarem trocar o contato. Veja a ${dlk('payments','política de pagamentos e reembolso')}.</p>
 ${cpfNeed()?cpfFld('Necessário para emitir o recibo da taxa da plataforma.'):''}<button class="btn" id="paybtn" data-act="${act}">${feeNet()?'Pagar '+brl2(feeNet()/100):'Usar meu plano'}</button>
 <details class="card"><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center"><b>Outras opções</b></summary>${cov?'':'<button class="chip" data-go="cplans" style="margin-top:6px">Vários pedidos? Ver planos e crédito</button>'}<div id="pts">${ptsHtml()}</div>${extra}</details>`}
 function rememberPay(){const m=S.req.pay;if(m==='pix'||m==='card'){const rr=plRec();if(rr.lp!==m){rr.lp=m;plSave(rr)}}}
@@ -2505,7 +2506,7 @@ async function signup(){
   if(v('phone').replace(/\D/g,'').length<10)E.phone='Informe o telefone com DDD.';
   const isE=S.role.endsWith('E'),isP=S.role.startsWith('pro');if(isE){if(v('razao').length<3)E.razao='Informe a razão social.';if(!cnpjOk(v('cnpj')))E.cnpj='Informe um CNPJ válido.';else if(cnpjDup(v('cnpj'),key))E.cnpj='Este CNPJ já está cadastrado em outra conta.'}
   if(S.role==='pro'&&!v('kind'))E.kind='Escolha como você atua.';
-  if(isP&&!(sx&&cpfOk(sx.cpf||'')))cpfProChk(E,key);
+  if((isP||S.role==='cli')&&!(sx&&cpfOk(sx.cpf||'')))cpfProChk(E,key);
   if(isP){if(!v('cat'))E.cat='Escolha sua categoria.';if(v('city').length<2)E.city='Informe sua cidade.';if(v('cat')===OUT&&v('catar').length<3)E.catar='Informe sua área de atuação.'}
   if(!sx){if(pw.length<8||!/[A-Za-z]/.test(pw)||!/\d/.test(pw))E.pw='Use ao menos 8 caracteres, com letras e números.';
   if($('#pw2').value!==pw)E.pw2='As senhas não coincidem.';}
@@ -2521,14 +2522,15 @@ async function signup(){
     old.roles[S.role]=prof;old.last=S.role;u=old;
     if(sx){old.name=v('name');old.phone=v('phone').replace(/\D/g,'');if(email!==loginOf(old)){old.emHist=[...(old.emHist||[]),{de:loginOf(old),at:new Date().toISOString()}].slice(-10);old.em2=email===old.email?'':email}S.sx=null}
   }else{u={name:v('name'),email,phone:v('phone').replace(/\D/g,''),h,roles:{[S.role]:prof},last:S.role};list.push(u)}
-  if(isP)cpfProSet(u);
+  if(isP||S.role==='cli')cpfProSet(u);
   u.consent={v:LEGAL_V,at:new Date().toISOString(),age18:true,mkt:$('#mkt').checked};
   saveUsers(list);logC('termos',u.email);if(u.consent.mkt)logC('marketing',u.email);enter(u,S.role);
 }
 async function login(){
-  const email=$('#lemail').value.trim().toLowerCase(),pw=$('#lpw').value,E={};
+  const raw=$('#lemail').value.trim(),dg=raw.replace(/\D/g,''),isDoc=!/@/.test(raw)&&(dg.length===11||dg.length===14),du=isDoc?byDoc(raw):null,email=isDoc?(du?loginOf(du):''):raw.toLowerCase(),pw=$('#lpw').value,E={};
   $('#lerr').textContent='';$('#lmsg').textContent='';
-  if(!EMAIL.test(email))E.lemail='Informe um e-mail válido.';
+  if(isDoc){if(!(dg.length===11?cpfOk(raw):cnpjOk(raw)))E.lemail=dg.length===11?'Confira o CPF: os números não batem.':'Confira o CNPJ: os números não batem.'}
+  else if(!EMAIL.test(email))E.lemail='Informe seu CPF, CNPJ ou e-mail.';
   if(!pw)E.lpw='Informe a senha.';
   if(showErrors(E))return;
   $('#go').disabled=true;
@@ -2536,7 +2538,7 @@ async function login(){
   if(u&&lr.n>=5&&Date.now()-lr.t<9e5){$('#go').disabled=false;$('#lerr').textContent='Muitas tentativas erradas. Por segurança, espere 15 minutos ou use "Esqueci minha senha".';return}
   if(u&&u.h!==await hash(u.email+':'+pw)){const m=lkGet(),r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m))}
   if(u&&u.h===await hash(u.email+':'+pw)){const m=lkGet();if(m[u.email]){delete m[u.email];store.setItem('ms_lk',JSON.stringify(m))}}
-  if(!u||u.h!==await hash(u.email+':'+pw)){$('#go').disabled=false;$('#lerr').textContent='E-mail ou senha incorretos.';return}
+  if(!u||u.h!==await hash(u.email+':'+pw)){$('#go').disabled=false;$('#lerr').textContent=isDoc?'Documento ou senha incorretos.':'E-mail ou senha incorretos.';return}
   if(u.susp){$('#go').disabled=false;$('#lerr').textContent='Esta conta está suspensa. Fale com o administrador.';return}
   poutSet(u.email,[]);enter(u);
 }
@@ -2548,11 +2550,15 @@ const rsLim=k=>{let m={};try{m=JSON.parse(store.getItem('ms_rsl')||'{}')}catch(e
 function rsStart(email,mk){const fu=byLogin(email)||users().find(x=>x&&x.email===email),key=fu?fu.email:email,lim=rsLim(key);if(lim)return lim;
   S.rs={email:key,em2:fu&&fu.em2?fu.em2:'',login:email,ok:!!fu,tel:fu&&fu.phone?String(fu.phone):'',ch:'em',code:rsCode(),exp:Date.now()+600000,tries:0,at:Date.now(),mk:mk?1:0};return ''}
 const lkGet=()=>{try{return JSON.parse(store.getItem('ms_lk')||'{}')}catch(e){return{}}};
-function forgot(){
-  const email=$('#lemail').value.trim().toLowerCase();
-  if(showErrors(EMAIL.test(email)?{}:{lemail:'Informe seu e-mail para recuperar a senha.'}))return;
-  const lim=rsStart(email,0);if(lim){$('#lerr').textContent=lim;return}go('reset');
-}
+function forgot(){const i=$('#lemail'),q=i?i.value.trim():'';S.fa={q};if(q)return fagoQ(q);go('findacc')}
+function fagoQ(v){const dg=v.replace(/\D/g,''),al=!!(S.fa&&S.fa.alt);S.fa={q:v,alt:al};let L=null;
+ if(/@/.test(v)){const u=byLogin(v.toLowerCase())||users().find(x=>x&&x.email===v.toLowerCase());L=u?[u]:[]}
+ else if(dg.length===11&&cpfOk(v)){const h=cpfH(v);L=users().filter(u=>u&&u.cpfh===h)}
+ else if(dg.length===14&&cnpjOk(v)){const u=byDoc(v);L=u?[u]:[]}
+ else if(dg.length>=10&&dg.length<=11&&!cpfOk(v)){L=users().filter(u=>u&&String(u.phone||'').replace(/\D/g,'').slice(-dg.length)===dg)}
+ else S.fa.err=al?'Digite o celular com DDD ou o e-mail do cadastro.':dg.length===11?'Confira o CPF: os números não batem.':dg.length===14?'Confira o CNPJ: os números não batem.':'Digite seu CPF (pessoa) ou o CNPJ (empresa).';
+ if(L){S.fa.list=L.map(u=>({email:u.email,em2:u.em2||'',desc:Object.keys(u.roles||{}).filter(k=>(u.roles||{})[k]).map(k=>ROLE[k]||k).join(', ')||'Conta'}));if(L.length===1){const lim=rsStart(L[0].em2||L[0].email,1);if(lim){S.fa.err=lim;return go('findacc')}return go('reset')}}
+ return go('findacc')}
 async function doReset(){
   const R=S.rs;if(!R)return go('login');const code=$('#rcode').value.trim(),pw=$('#rpw').value,E={};$('#rerr').textContent='';
   if(!/^\d{6}$/.test(code))E.rcode='Digite o código de 6 dígitos.';
@@ -2564,7 +2570,7 @@ async function doReset(){
   const l=users(),u=l.find(x=>x.email===R.email);
   if(code!==R.code||!u){$('#rerr').textContent='Código incorreto.';return}
   u.h=await hash(R.email+':'+pw);u.pwAt=Date.now();u.sv=(u.sv||0)+1;saveUsers(l);logC('senha_alterada',u.email,{por:'recuperacao',aviso:'enviado para o e-mail da conta'});S.rs=null;{const m=lkGet();delete m[u.email];store.setItem('ms_lk',JSON.stringify(m))}
-  go('login');setTimeout(()=>{const m=$('#lmsg');if(m)m.textContent='Senha alterada. Entre com a nova senha.';const e=$('#lemail');if(e)e.value=loginOf(u)},30);
+  go('login');setTimeout(()=>{const m=$('#lmsg');if(m)m.textContent='Senha alterada. Entre com a nova senha.';const e=$('#lemail');if(e)e.value=u.cpf&&cpfOk(u.cpf)?cpfFmt(u.cpf):loginOf(u)},30);
 }
 async function changePw(){
   const cur=$('#cpw').value,pw=$('#npw').value,E={};$('#cpmsg').textContent='';
@@ -2788,8 +2794,8 @@ document.addEventListener('click',e=>{
    hash(u.email+':'+pw).then(h=>{const m=lkGet();if(h!==u.h){const r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m));F.err='Senha incorreta.';return render()}delete m[u.email];store.setItem('ms_lk',JSON.stringify(m));S.sx=u.email;S.sxf=null;render();setTimeout(sxFill,30)});return}
   if(D.act==='sxsair'){S.sx=null;S.sxf=null;return render()}
   if(D.act==='findacc'){S.fa={};return go('findacc')}
-  if(D.act==='findgo'){const v=($('#facpf')||{}).value||'',dg=v.replace(/\D/g,'');S.fa={q:v};if(dg.length===11&&cpfOk(v)){const h=cpfH(v);S.fa.list=users().filter(u=>u&&u.cpfh===h)}else if(dg.length>=10){S.fa.list=users().filter(u=>u&&String(u.phone||'').replace(/\D/g,'').slice(-dg.length)===dg)}else{S.fa.err='Digite um CPF válido ou um celular com DDD.'}
-   if(S.fa.list)S.fa.list=S.fa.list.map(u=>({email:u.email,em2:u.em2||'',desc:Object.keys(u.roles||{}).filter(k=>(u.roles||{})[k]).map(k=>ROLE[k]||k).join(', ')||'Conta'}));return go('findacc')}
+  if(D.act==='faalt'){S.fa={alt:!(S.fa&&S.fa.alt)};return go('findacc')}
+  if(D.act==='findgo'){return fagoQ(($('#facpf')||{}).value||'')}
   if(D.fga!=null){const u=(S.fa&&S.fa.list||[])[+D.fga];if(!u)return;const lim=rsStart(u.em2||u.email,1);if(lim){S.fa.err=lim;return go('findacc')}S.fa=null;return go('reset')}
   if(D.act==='doreset')return doReset();
   if(D.act==='chpw')return changePw();
