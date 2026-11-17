@@ -2955,9 +2955,42 @@ window.MSX={extra:(owner,code)=>{const e=((MS.own[owner]||{}).L||[]).find(x=>x.c
 function snap(g,prev){let total=+g.alvo||0,mem=[];
   try{const pt=planTotals(g).total;if(g.tipo==='viagem'||!(total>0))total=pt>0?pt:total}catch(_){}
   try{if(g.tipo==='viagem'&&(g.membros||[]).length){const {f}=memShare(g);mem=g.membros.map(m=>({id:String(m.id||''),n:String(m.nome||'').slice(0,30),p:r2(f(m)),gu:r2(m.guardado)}))}}catch(_){}
-  return {...(prev||{}),gid:g.id,nome:String(g.nome||'Meta').slice(0,60),tipo:g.tipo||'outro',prazo:g.prazo||'',total:r2(total),gu:r2(g.guardado),mem:mem.slice(0,40)}}
+  const o={...(prev||{}),gid:g.id,nome:String(g.nome||'Meta').slice(0,60),tipo:g.tipo||'outro',prazo:g.prazo||'',total:r2(total),gu:r2(g.guardado),mem:mem.slice(0,40)};
+  delete o.full;if(Object.values(o.perm||{}).some(v=>v>0)){try{const F=JSON.stringify(fullOf(g));if(F.length<150000)o.full=F}catch(_){}}return o}
+const PRIV=['id','guardado','aportes','dep','pago','dpag','start','t','ts'];
+function fullOf(g){const o={};Object.keys(g).forEach(k=>{if(!PRIV.includes(k)&&k[0]!=='_')o[k]=g[k]});return o}
+const NIV={1:'Valores e gastos',2:'Valores, gastos e pessoas',3:'Tudo, menos apagar e parar de compartilhar'};
+const NIVK={1:['rota','custos','alvo','imprev','extra','dias'],2:['rota','custos','alvo','imprev','extra','dias','membros','npes']};
+const podeK=(lv,k)=>lv>=3?!PRIV.includes(k)&&k[0]!=='_':(NIVK[lv]||[]).includes(k);
+const LAB={rota:'gastos da viagem',custos:'gastos',alvo:'valor da meta',imprev:'reserva para imprevistos',extra:'gastos extras',dias:'dias',membros:'pessoas',npes:'número de pessoas',nome:'nome da meta',prazo:'prazo',tipo:'tipo da meta',desc:'descrição',cat:'categoria'};
+const SUBL={dest:'destino',orig:'origem',noites:'noites',adultos:'adultos',idades:'idades das crianças',km:'distância',preco:'preço do combustível',cons:'consumo do carro',dia:'diária',quartos:'quartos',ref:'refeição',mlE:'refeições na estrada',mlD:'refeições no destino',mpE:'preços na estrada',mpD:'preços no destino',ped:'pedágios',hotE:'hotel no caminho',dIda:'dias de ida',dVolta:'dias de volta',modo:'meio de transporte',pass:'passagens',pas:'passeios'};
+function difTxt(a,b,k){const A=a&&a[k],B=b&&b[k];if(JSON.stringify(A)===JSON.stringify(B))return '';const nm=LAB[k]||k;
+  if(k==='membros'){const na=(A||[]).map(m=>String(m.nome||'')),nb=(B||[]).map(m=>String(m.nome||''));const ad=nb.filter(x=>!na.includes(x)),rm=na.filter(x=>!nb.includes(x));return nm+(ad.length?' (entrou: '+ad.join(', ')+')':'')+(rm.length?' (saiu: '+rm.join(', ')+')':'')+(!ad.length&&!rm.length?' (dados de quem vai)':'')}
+  if(A&&B&&typeof A==='object'&&typeof B==='object'&&!Array.isArray(A)){const ks=[...new Set([...Object.keys(A),...Object.keys(B)])].filter(x=>JSON.stringify(A[x])!==JSON.stringify(B[x])).map(x=>SUBL[x]||x);return nm+(ks.length?' ('+ks.slice(0,6).join(', ')+(ks.length>6?'…':'')+')':'')}
+  if(typeof B==='number'||typeof A==='number')return nm+' ('+(A==null?'—':brl(+A))+' → '+(B==null?'—':brl(+B))+')';
+  if(typeof B==='string'&&B.length<40)return nm+' ('+(A||'—')+' → '+B+')';return nm}
+function aplicaEd(){if(!ready()||S.demo)return false;const L=myOwn();let mud=false;
+  L.forEach((x,i)=>{const g=S.goals.find(y=>y.id===x.gid);if(!g)return;const ap={...(x.ap||{})},log=(x.log||[]).slice();let tocou=false;
+    joinersOf(x.code).forEach(j=>{const lv=+((x.perm||{})[j.uid])||0;(j.ed||[]).filter(e=>e.code===x.code&&e.ts>(ap[j.uid]||0)).sort((a,b)=>a.ts-b.ts).forEach(e=>{ap[j.uid]=e.ts;tocou=true;
+      if(!(lv>0)){log.push({ts:e.ts,nk:j.nick||'Convidado',t:'tentou alterar, mas não tem permissão',neg:1});return}
+      const ant=JSON.parse(JSON.stringify(g)),feitos=[],neg=[];Object.keys(e.patch).forEach(k=>{if(podeK(lv,k)){g[k]=e.patch[k];feitos.push(k)}else neg.push(LAB[k]||k)});
+      const tx=feitos.map(k=>difTxt(ant,g,k)).filter(Boolean);if(tx.length)log.push({ts:e.ts,nk:j.nick||'Convidado',t:'alterou: '+tx.join('; ')});if(neg.length)log.push({ts:e.ts,nk:j.nick||'Convidado',t:'não pôde alterar (sem permissão): '+neg.join(', '),neg:1});if(feitos.length)mud=true})});
+    if(tocou){L[i]=snap(g,{...x,ap,log:log.slice(-60)});mud=true}});
+  if(mud){MS.own[me()]={...(MS.own[me()]||{}),L};try{save()}catch(_){}pushOwn(L).catch(()=>{});return true}return false}
+let SH=null;
+try{if(Array.isArray(S.goals)&&S.goals.some(g=>g&&g._sh))S.goals=S.goals.filter(g=>!g._sh)}catch(_){}
+function abreEd(code){const x=byCode(code),lv=+(((x||{}).perm||{})[me()])||0;if(!x||!(lv>0)||!x.full)return toast('Você ainda não tem permissão para alterar esta meta.');
+  let G;try{G=JSON.parse(x.full)}catch(_){return toast('Não consegui abrir a meta agora.')}const id='sh_'+code;S.goals=S.goals.filter(y=>y.id!==id);
+  G={...G,id,guardado:+x.gu||0,_sh:code,_lv:lv};S.goals.push(G);SH={code,id,orig:JSON.stringify(G),lv,dono:x.ownNick};UI.msv=null;UI.tab='metas';UI.plan=id;render()}
+function fechaEd(enviar){if(!SH)return;const sh=SH;SH=null;const g=S.goals.find(y=>y.id===sh.id);S.goals=S.goals.filter(y=>y.id!==sh.id);try{save()}catch(_){}
+  if(enviar&&g){const O=JSON.parse(sh.orig),patch={},neg=[];Object.keys({...O,...g}).forEach(k=>{if(k[0]==='_'||PRIV.includes(k))return;if(JSON.stringify(O[k])!==JSON.stringify(g[k])){if(podeK(sh.lv,k))patch[k]=g[k]===undefined?null:g[k];else neg.push(LAB[k]||k)}});
+    if(Object.keys(patch).length){const e={id:'e'+Date.now().toString(36),code:sh.code,ts:Date.now(),patch};putJ({ed:[...(myJ().ed||[]),e].slice(-30)}).then(()=>toast('Alterações enviadas para '+sh.dono+'. Elas entram na meta quando o app de '+sh.dono+' estiver aberto.')).catch(()=>toast('Não consegui enviar as alterações. Tente de novo.'))}
+    else toast(neg.length?'Você não tem permissão para mudar: '+neg.join(', ')+'.':'Nenhuma alteração para enviar.')}
+  UI.plan=null;UI.msv=sh.code;render()}
+function edBanner(g){return `<div class="note info" style="display:grid;gap:8px;border:2px solid var(--meta,#7c5cff)"><b>✏️ Você está alterando a meta de ${esc(SH?SH.dono:'')}</b><span class="small">Pode mudar: <b>${esc(NIV[g._lv]||'')}</b>. Ao tocar em Enviar, as mudanças vão para ${esc(SH?SH.dono:'')} e entram na meta quando o app dele estiver aberto. Fica registrado o que você mudou.</span><div class="row"><button class="btn meta" type="button" data-ms="edsend">Enviar alterações</button><button class="btn ghost" type="button" data-ms="edcancel">Cancelar</button></div></div>`}
+function logHtml(x,aberto){const L=(x.log||[]).slice().reverse();if(!L.length)return '';return `<details class="card fold"${aberto?' open':''}><summary>📝 Alterações feitas por convidados (${L.length})</summary><div class="list">${L.map(l=>`<div class="item" style="display:grid;gap:2px"><span class="small"><b>${esc(l.nk)}</b> ${esc(l.t)}</span><span class="muted small">${new Date(l.ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')}</div></details>`}
 function pushOwn(L){return db().collection('msh').doc(me()).set({nick:nickG()||'',L:L.slice(0,20)})}
-function sync(){if(!ready()||!MS.ok1||S.demo)return;const L=myOwn();if(!L.length)return;let ch=false;
+function sync(){if(!ready()||!MS.ok1||S.demo)return;if(MS.ok2&&aplicaEd())return;const L=myOwn();if(!L.length)return;let ch=false;
   const N=L.map(x=>{const g=S.goals.find(y=>y.id===x.gid);if(!g){ch=true;return null}const s=snap(g,x);if(JSON.stringify(s)!==JSON.stringify(x))ch=true;return s}).filter(Boolean);
   if(ch)pushOwn(N).catch(()=>{})}
 const later=()=>{clearTimeout(MS.tm);MS.tm=setTimeout(sync,1500)};
@@ -2966,7 +2999,7 @@ if(typeof save==='function'){const _s=save;save=function(){const r=_s.apply(this
 const rr=()=>{if(UI.tab!=='metas')return;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;render(true)};
 function start(){if(MS.sub||!ready())return;MS.sub=true;
   db().collection('msh').onSnapshot(sn=>{const o={};sn.docs.forEach(d=>{const v=d.data()||{};o[d.id]={nick:String(v.nick||'').slice(0,20),L:Array.isArray(v.L)?v.L.filter(x=>x&&typeof x.code==='string').slice(0,20):[]}});MS.own=o;if(!MS.ok1){MS.ok1=true;later()}rr()},()=>{MS.sub=false});
-  db().collection('mshj').onSnapshot(sn=>{MS.joins=sn.docs.map(d=>{const v=d.data()||{};return {uid:d.id,nick:String(v.nick||'').slice(0,20),codes:Array.isArray(v.codes)?v.codes.filter(x=>typeof x==='string').slice(0,20):[],pay:Array.isArray(v.pay)?v.pay.filter(p=>p&&typeof p.code==='string'&&+p.v>0).slice(-200):[],who:v.who&&typeof v.who==='object'&&!Array.isArray(v.who)?v.who:{}}});MS.ok2=true;rr()},()=>{})}
+  db().collection('mshj').onSnapshot(sn=>{MS.joins=sn.docs.map(d=>{const v=d.data()||{};return {uid:d.id,nick:String(v.nick||'').slice(0,20),codes:Array.isArray(v.codes)?v.codes.filter(x=>typeof x==='string').slice(0,20):[],pay:Array.isArray(v.pay)?v.pay.filter(p=>p&&typeof p.code==='string'&&+p.v>0).slice(-200):[],who:v.who&&typeof v.who==='object'&&!Array.isArray(v.who)?v.who:{},ed:Array.isArray(v.ed)?v.ed.filter(e=>e&&typeof e.code==='string'&&e.patch&&typeof e.patch==='object').slice(-30):[]}});MS.ok2=true;rr();try{later()}catch(_){}},()=>{})}
 const iv=setInterval(()=>{start();if(MS.sub)clearInterval(iv)},1200);
 
 /* ---------- telas ---------- */
@@ -2989,10 +3022,10 @@ function ownerCard(g){
    <div class="row" style="gap:6px">${[['wa','WhatsApp'],['mail','E-mail'],['sms','SMS'],['copy','Copiar convite']].map(([k,l])=>`<button class="btn ${k==='wa'?'meta':'ghost'} sm" data-ms="shch" data-ch="${k}" data-c="${esc(x.code)}" data-g="${g.id}">${l}</button>`).join('')}${navigator.share?`<button class="btn ghost sm" data-ms="shch" data-ch="more" data-c="${esc(x.code)}" data-g="${g.id}">Mais opções…</button>`:''}</div>
    ${(g.membros||[]).length?`<button class="btn ghost sm" data-ms="goinv" style="justify-self:start">👥 Convidar pessoa por pessoa da lista (${g.membros.length})</button>`:''}</div>
    <div class="row"><button class="btn ghost sm" data-ms="chat" data-c="${esc(x.code)}">💬 Conversa do grupo</button></div>
-   <details class="fold"${J.length?'':' open'}><summary>Quem entrou (${J.length})</summary>${J.length?`<div class="list">${J.map(j=>{const mm=(x.mem||[]).find(m=>m.id&&j.who&&j.who[x.code]===m.id);return `<div class="item"><span>${esc(j.nick||'Usuário')}${mm?' <span class="muted small">· é '+esc(mm.n)+' na lista</span>':''}</span></div>`}).join('')}</div>`:'<p class="muted small">Ninguém entrou ainda. Mande o convite com o código.</p>'}</details>
+   <details class="fold"${J.length?'':' open'}><summary>Quem entrou (${J.length})</summary>${J.length?`<div class="list">${J.map(j=>{const mm=(x.mem||[]).find(m=>m.id&&j.who&&j.who[x.code]===m.id);const lv=+((x.perm||{})[j.uid])||0;return `<div class="item" style="display:grid;gap:6px"><span>${esc(j.nick||'Usuário')}${mm?' <span class="muted small">· é '+esc(mm.n)+' na lista</span>':''}${lv?' <span class="pill ok">✏️ pode alterar</span>':''}</span><label class="small" style="display:grid;gap:4px">Pode alterar a meta?<select data-msperm="${esc(j.uid)}" data-c="${esc(x.code)}" style="min-height:40px"><option value="0"${lv?'':' selected'}>Não, só acompanha</option>${[1,2,3].map(n=>`<option value="${n}"${lv===n?' selected':''}>${NIV[n]}</option>`).join('')}</select></label></div>`}).join('')}</div><p class="muted small" style="margin:6px 0 0">Habilite só pessoas de confiança. Tudo o que alguém mudar fica registrado aqui embaixo.</p>`:'<p class="muted small">Ninguém entrou ainda. Mande o convite com o código.</p>'}</details>
    ${pend.length?`<div class="note info" style="display:grid;gap:8px"><b>Avisos de pagamento para conferir (${pend.length})</b>${pend.map(p=>`<div style="display:grid;gap:4px;border-top:1px solid var(--line);padding-top:8px"><span><b>${esc(p.nick)}</b> diz que pagou <b class="num">${brl(p.v)}</b> em ${fd(String(p.ts).slice(0,10))}${p.note?' · '+esc(p.note):''}${p.cp?'':' · <span class="muted">sem comprovante</span>'}</span>${cpBtn(p.from,p)}<div class="row"><button class="btn meta sm" data-ms="ok" data-c="${esc(x.code)}" data-p="${esc(p.id)}">Recebi</button><button class="btn ghost sm" data-ms="no" data-c="${esc(x.code)}" data-p="${esc(p.id)}">Não recebi</button></div></div>`).join('')}<span class="muted small">Ao confirmar, o valor entra no "Dinheiro juntado" desta meta.</span></div>`:''}
    ${done.length?`<details class="fold"><summary>Pagamentos já conferidos (${done.length})</summary><div class="list">${done.map(p=>`<div class="item" style="flex-wrap:wrap"><span>${esc(p.nick)} · ${fd(String(p.ts).slice(0,10))}</span><span><b class="num">${brl(p.v)}</b> <span class="pill ${ST[st[p.id]][1]}">${ST[st[p.id]][0]}</span></span>${p.cp?`<div style="flex-basis:100%">${cpBtn(p.from,p)}</div>`:''}</div>`).join('')}</div></details>`:''}
-   <button class="btn danger sm" data-ms="stop" data-c="${esc(x.code)}" style="justify-self:start">Parar de compartilhar</button></div>`}
+   ${logHtml(x,false)}<button class="btn danger sm" data-ms="stop" data-c="${esc(x.code)}" style="justify-self:start">Parar de compartilhar</button></div>`}
 function joinedList(){
   const mine=(myJ().codes||[]).map(byCode).filter(x=>x&&x.own!==me());
   const rows=mine.map(x=>{const pct=x.total>0?Math.min(100,x.gu/x.total*100):0;return `<button class="item" data-ms="view" data-c="${esc(x.code)}" style="width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;align-items:center"><span class="l"><b>${esc(x.nome)}</b><span class="muted small">de ${esc(x.ownNick)} · ${Math.round(pct)}% juntado</span></span><span class="r gchev" aria-hidden="true">›</span></button>`}).join('');
@@ -3006,7 +3039,7 @@ function shView(code){const x=byCode(code);
   const tbl=(x.mem||[]).length?`<details class="card fold"><summary>Quanto cada um paga (${x.mem.length})</summary><div class="list">${x.mem.map(m=>`<div class="item"><span class="l"><b>${esc(m.n)}</b><span class="muted small">Juntou ${brl0(m.gu)} · falta ${brl0(Math.max(0,m.p-m.gu))}</span></span><b class="r num">${brl0(m.p)}</b></div>`).join('')}</div></details>`:'';
   return back+`<div class="hero"><span class="sticker" style="justify-self:start">Meta compartilhada por ${esc(x.ownNick)}</span><h2 style="margin:0">${esc(x.nome)}</h2><span>Juntado pelo grupo</span><div class="big num">${brl0(gu)}</div><span>${tot>0?'de '+brl0(tot)+' · até '+(x.prazo?fd(x.prazo):'—'):'O dono ainda está calculando o total.'}</span></div>
    <div class="card"><div class="sum3"><div><span class="muted small">Juntado</span><b class="num">${brl0(gu)}</b></div><div><span class="muted small">Total</span><b class="num">${brl0(tot)}</b></div><div><span class="muted small">Falta</span><b class="num">${brl0(falta)}</b></div></div><div class="bar2" role="img" aria-label="${Math.round(pct)} por cento juntado"><i style="width:${pct.toFixed(1)}%"></i></div>
-    <button class="btn meta" data-ms="chat" data-c="${esc(code)}">💬 Conversa do grupo</button></div>
+    <button class="btn meta" data-ms="chat" data-c="${esc(code)}">💬 Conversa do grupo</button>${(+((x.perm||{})[me()])||0)>0?`<button class="btn ghost" data-ms="edit" data-c="${esc(code)}">✏️ Alterar a meta</button><span class="muted small">${esc(x.ownNick)} deixou você alterar: ${esc(NIV[+x.perm[me()]])}.</span>`:'<span class="muted small">Você acompanha esta meta. Só quem criou pode alterar, ou quem receber permissão.</span>'}</div>${logHtml(x,false)}
    ${whoCard(x,code)}${tbl}
    <form class="card" id="msp" data-c="${esc(code)}"><h3>Eu paguei</h3><p class="muted small">Avise quanto você pagou ou mandou para ${esc(x.ownNick)}. Quando ${esc(x.ownNick)} confirmar, o valor entra na meta do grupo.</p>
     <div class="grid2"><label>Valor (R$)<input id="msp-v" inputmode="decimal" placeholder="Ex.: 200"></label><label>Recado (opcional)<input id="msp-o" maxlength="40" placeholder="Ex.: parcela de março"></label></div>
@@ -3019,7 +3052,7 @@ function shView(code){const x=byCode(code);
 const _vm=VIEWS.metas;VIEWS.metas=function(){
   if(UI.msv&&!kid())return `${shView(UI.msv)}`;
   let h=_vm();if(kid())return h;
-  if(UI.plan){const g=S.goals.find(x=>x.id===UI.plan);if(g){h+=saveBar();const mk='<div class="card"><label>Nome da meta<input data-gn="1"';const i=h.indexOf(mk);h=i>=0?h.slice(0,i)+ownerCard(g)+h.slice(i):h+ownerCard(g)}return h}
+  if(UI.plan){const g=S.goals.find(x=>x.id===UI.plan);if(g&&g._sh){if(!SH||SH.id!==g.id){S.goals=S.goals.filter(y=>!y._sh);UI.plan=null;return _vm()}h=h.replace(/<button[^>]*data-del="goal:[^"]*"[^>]*>[\s\S]*?<\/button>/g,'');return edBanner(g)+h+edBanner(g)}if(g){h+=saveBar();const mk='<div class="card"><label>Nome da meta<input data-gn="1"';const i=h.indexOf(mk);h=i>=0?h.slice(0,i)+ownerCard(g)+h.slice(i):h+ownerCard(g)}return h}
   h=h.replace(/<button class="btn ghost sm" data-edit="goal:([^"]+)">/g,(m,id)=>{const g=S.goals.find(x=>x.id===id);return `<button class="btn ghost sm" data-ms="goto" data-g="${id}">${g&&shareOf(g)?'👥 Compartilhada':'👥 Compartilhar'}</button>`+m});
   const mk='<form class="card" id="f-goal">',i=h.indexOf(mk);return i>=0?h.slice(0,i)+joinedList()+h.slice(i):h+joinedList()};
 
@@ -3079,11 +3112,11 @@ document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='ms-inv')UI.in
 /* ---------- ações ---------- */
 function ensureNick(id,er){let n=nickG();if(n)return n;const el=document.getElementById(id);n=el?el.value.trim().replace(/\s+/g,' '):'';
   if(n.length<3||n.length>20){er('Escolha um apelido de 3 a 20 letras.');return null}if(BAD.test(n.replace(/[\s.\-]/g,''))){er('O apelido não pode ter telefone, e-mail ou link.');return null}nickS(n);return n}
-function putJ(patch){const j=myJ(),v={nick:j.nick||nickG()||'',codes:j.codes||[],pay:j.pay||[],who:j.who||{},...patch};
+function putJ(patch){const j=myJ(),v={nick:j.nick||nickG()||'',codes:j.codes||[],pay:j.pay||[],who:j.who||{},ed:j.ed||[],...patch};
   const i=MS.joins.findIndex(x=>x.uid===me());if(i>=0)MS.joins[i]={uid:me(),...v};else MS.joins.push({uid:me(),...v});
   return db().collection('mshj').doc(me()).set(v)}
 document.addEventListener('click',e=>{
-  const tb=e.target.closest('button[data-tab],button[data-go]');if(tb){UI.msv=null}
+  const tb=e.target.closest('button[data-tab],button[data-go]');if(tb){UI.msv=null;if(SH){fechaEd(true);UI.msv=null}}
   const b=e.target.closest('button[data-ms]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();const a=b.dataset.ms,c=b.dataset.c;
   if(a==='savenow'){doSave();return}
   if(a==='whoedit'){UI.whoE=true;return render(true)}
@@ -3113,6 +3146,9 @@ document.addEventListener('click',e=>{
     pushOwn(L).then(()=>{toast('Meta compartilhada. Mande o código para o grupo.');if(window.DM&&DM.ensureGroup)DM.ensureGroup('ms'+code,g.nome).catch(()=>{})}).catch(()=>{delete MS.own[me()];toast('Não foi possível compartilhar agora.');render(true)});
     return render(true)}
   if(a==='cpx'){CPIMG='';return render(true)}
+  if(a==='edit')return abreEd(c);
+  if(a==='edsend')return fechaEd(true);
+  if(a==='edcancel')return fechaEd(false);
   if(a==='copy'){const x=byCode(c);if(!x)return;copy(invTxt(x.nome,c,''));return}
   if(a==='ok'||a==='no'){const L=myOwn(),i=L.findIndex(x=>x.code===c);if(i<0)return;const p=paysOf(c).find(x=>x.id===b.dataset.p);if(!p)return;const st={...(L[i].st||{})};if(st[p.id])return;st[p.id]=a;
     if(a==='ok'){const g=S.goals.find(x=>x.id===L[i].gid);if(g){g.guardado=r2((+g.guardado||0)+(+p.v));g.aportes=g.aportes||[];g.aportes.unshift({d:TODAYISO,v:+p.v,qn:p.nick});const jj=MS.joins.find(q=>q.uid===p.from),mid=jj&&jj.who&&jj.who[c],m=(mid&&(g.membros||[]).find(m=>m.id===mid))||(g.membros||[]).find(m=>String(m.nome||'').trim().toLowerCase()===String(p.nick).trim().toLowerCase());if(m)m.guardado=r2((+m.guardado||0)+(+p.v));L[i]=snap(g,{...L[i],st});save()}else L[i]={...L[i],st}}else L[i]={...L[i],st};
@@ -3138,6 +3174,7 @@ document.addEventListener('submit',e=>{const f=e.target;if(f.id!=='msj'&&f.id!==
   const p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),code:c,v:r2(v),note,ts:new Date().toISOString()},img=CPIMG,xo=byCode(c);
   if(img)p.cp=1;
   (img?db().collection('mscp').doc(me()+'_'+p.id).set({ow:me(),para:(xo&&xo.own)||'',pid:p.id,img}):Promise.resolve()).then(()=>putJ({pay:[...(myJ().pay||[]),p].slice(-200)})).then(()=>{CPIMG='';toast('Aviso enviado'+(img?' com o comprovante':'')+'. Agora é só esperar a confirmação.');render(true)}).catch(()=>{MS.T=0;toast('Não foi possível enviar agora.')});render(true)},true);
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.msperm)return;const c=t.dataset.c,u=t.dataset.msperm,v=+t.value||0,L=myOwn(),i=L.findIndex(x=>x.code===c);if(i<0)return;const g=S.goals.find(y=>y.id===L[i].gid);const perm={...(L[i].perm||{})};if(v)perm[u]=v;else delete perm[u];const nk=((MS.joins.find(j=>j.uid===u)||{}).nick)||'Convidado';const log=[...(L[i].log||[]),{ts:Date.now(),nk:'Você',t:v?'deu permissão para '+nk+': '+NIV[v]:'tirou a permissão de '+nk}].slice(-60);L[i]=g?snap(g,{...L[i],perm,log}):{...L[i],perm,log};MS.own[me()]={...(MS.own[me()]||{}),L};pushOwn(L).then(()=>toast(v?nk+' agora pode alterar: '+NIV[v]+'.':nk+' volta a só acompanhar.')).catch(()=>toast('Não foi possível salvar agora.'));render(true)},true);
 document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='msp-f'||!t.files||!t.files[0])return;const v=(document.getElementById('msp-v')||{}).value,o=(document.getElementById('msp-o')||{}).value;cpShrink(t.files[0]).then(d=>{CPIMG=d;render(true);const a=document.getElementById('msp-v'),b=document.getElementById('msp-o');if(a)a.value=v||'';if(b)b.value=o||''}).catch(()=>toast('Não consegui ler essa imagem. Tente uma foto ou print.'))},true);
 })();
 
