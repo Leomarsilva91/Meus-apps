@@ -28,6 +28,7 @@ service cloud.firestore {
       allow create, update: if entrou() && request.resource.data.ow == request.auth.uid
         && id == request.auth.uid + '_' + request.resource.data.oid
         && request.resource.data.end is string && request.resource.data.end.size() <= 160
+        && (!('rx' in request.resource.data) || (request.resource.data.rx is string && request.resource.data.rx.size() <= 200000))
         && (resource == null || resource.data.ow == request.auth.uid);
       allow delete: if entrou() && resource.data.ow == request.auth.uid;
     }
