@@ -1007,6 +1007,9 @@ document.addEventListener('click',async function(ev){var b=ev.target.closest&&ev
   toast(it.v==='s'?'Obrigado! Marcado que você viu hoje.':'Obrigado! Marcado que você passou e não viu hoje.')}catch(_){try{toast('Não consegui salvar agora.')}catch(__){}}},true);
 var iv=setInterval(function(){if(ini)return;var d=null;try{d=DB}catch(_){}if(!d){if(++tr>40)clearInterval(iv);return}ini=1;clearInterval(iv);
  try{d.collection('obn').onSnapshot(function(sn){OBN=sn.docs.map(function(x){return {uid:x.id,items:(x.data()||{}).items||[]}});try{if(S.v==='det'){var a=document.activeElement;if(!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))render()}}catch(_){}},function(){})}catch(_){}},500);
+window.RSEPOCA=function(pid,k){try{var M=dados(pid),a=M[k];if(!a)return '';var x=resumo(a),MF=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],fx=function(ms){if(!ms.length)return '';var r=[],i=0,S=ms.slice().sort(function(a,b){return a-b});while(i<S.length){var j=i;while(j+1<S.length&&S[j+1]===S[j]+1)j++;r.push(j>i?MF[S[i]]+(j===i+1?' e ':' a ')+MF[S[j]]:MF[S[i]]);i=j+1}return r.length>1?r.slice(0,-1).join(', ')+' e '+r[r.length-1]:r[0]},hj=new Date().getMonth(),t=[];
+ if(x.ms.length)t.push('Costuma ser visto em '+fx(x.ms)+'.');if(x.ms.indexOf(hj)>=0)t.push('Estamos na época: fique atento.');
+ if(x.rs&&x.rs>=x.rn)t.push('Foi visto nos últimos dois meses.');else if(x.rn)t.push('Não foi visto nos últimos dois meses.');return t.join(' ')}catch(_){return ''}};
 })();
 </script>
 <style>
@@ -1109,11 +1112,16 @@ var iv=setInterval(function(){if(ini)return;var d=null;try{d=DB}catch(_){}if(!d)
 .segeu{width:22px;height:22px;border-radius:50%;background:#1A73E8;border:3px solid #fff;box-shadow:0 0 0 2px rgba(26,115,232,.35);position:relative}
 .segeu i{position:absolute;left:50%;top:-13px;margin-left:-6px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #1A73E8}
 .segob{font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.segav{display:grid;gap:4px;margin:0 10px 6px;padding:10px 12px;border-radius:14px;background:#FFF3CD;border:2px solid #E0A800;color:#3d2c00;font-size:15px}.segav[hidden]{display:none}.segav button{justify-self:start}
 </style>
 <script>
 /* ---- Seguir uma trilha gravada com o GPS: mostra o caminho, onde você está, para onde ir e o que vem pela frente ---- */
 (function(){
-var G=null,MAP=null,LIN=null,EU=null,WID=null,WL=null,HEAD=null,ULT=null,FORA=0,AUTO=true,REV=false,LF=0;
+var G=null,MAP=null,LIN=null,EU=null,WID=null,WL=null,HEAD=null,ULT=null,FORA=0,AUTO=true,REV=false,LF=0,AVI={},VOZ=(function(){try{return localStorage.getItem('rs_voz')!=='0'}catch(_){return true}})();
+function diz(t){if(!VOZ||!window.speechSynthesis)return;try{var u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';u.rate=1;var v=speechSynthesis.getVoices().find(function(x){return /pt[-_]BR/i.test(x.lang)});if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(_){}}
+function avTxt(o){var O=['📌','Ponto marcado'];try{O=OBK[o.k]||O}catch(_){}var ep='';try{ep=window.RSEPOCA&&G.t&&G.t.pid?RSEPOCA(G.t.pid,o.k):''}catch(_){}return {ic:O[0],nome:O[1]+(o.txt?': '+o.txt:''),ep:ep}}
+function aviso(o,dist){var a=avTxt(o),el=document.getElementById('segav');if(el){el.innerHTML='<b>'+a.ic+' Atenção: '+e(a.nome)+'</b><span>'+(dist>8?'Daqui a '+mt(dist)+'. ':'Você está passando pelo local. ')+e(a.ep)+'</span><button type="button" class="chip" data-segav="1" style="min-height:36px">Entendi</button>';el.hidden=false}
+ try{navigator.vibrate&&navigator.vibrate([300,120,300])}catch(_){}diz('Atenção. '+(dist>8?'Daqui a '+Math.round(dist/10)*10+' metros: ':'Você está passando por: ')+a.nome.replace(/[^\p{L}\p{N}\s,.:]/gu,'')+'. '+a.ep)}
 function e(x){try{return esc(x)}catch(_){return String(x)}}
 function leaflet(cb){if(window.L)return cb();if(LF===1){setTimeout(function(){leaflet(cb)},300);return}LF=1;var l=document.createElement('link');l.rel='stylesheet';l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(l);var sc=document.createElement('script');sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';sc.onload=function(){LF=2;cb()};sc.onerror=function(){LF=3;cb()};document.head.appendChild(sc)}
 function trilha(tipo,id){var t=null;try{t=tipo==='pub'?flat(trlAll).find(function(x){return x.id===id}):TRL.find(function(x){return x.id===id})}catch(_){}return t}
@@ -1130,7 +1138,7 @@ function rumo(a,b){var g=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;return (g+3
 function fala(rel,fora){var a=Math.abs(rel),lado=rel>0?'direita':'esquerda';if(fora)return a<30?'Volte para o caminho: siga em frente':a>150?'Volte para o caminho: dê meia-volta':'Volte para o caminho: vá para a '+lado;
  if(a<25)return 'Siga em frente';if(a<70)return 'Vá um pouco para a '+lado;if(a<140)return 'Vire à '+lado;return 'Dê meia-volta'}
 function tela(){var el=document.getElementById('seg');if(!el){el=document.createElement('div');el.id='seg';document.body.appendChild(el)}
- el.innerHTML='<div class="st"><div class="seta" id="segseta" aria-hidden="true">⬆</div><div class="tx" role="status" aria-live="polite"><b id="segt">Procurando você no GPS…</b><span id="segs">Fique num lugar aberto para o sinal ficar bom.</span></div><button class="fe" type="button" data-segx="1">Fechar</button></div><div id="segm"></div><div class="rd"><div id="segi" class="m" style="font-size:14.5px"></div><div class="row"><button class="chip" type="button" data-segc="1">📍 Centralizar em mim</button><button class="chip" type="button" data-segr="1" aria-pressed="'+REV+'">⇄ Sentido contrário</button></div><p class="m" style="margin:0">A tela fica acesa enquanto você segue a trilha. Use o caminho com atenção e confira as placas do lugar.</p></div>';
+ el.innerHTML='<div class="st"><div class="seta" id="segseta" aria-hidden="true">⬆</div><div class="tx" role="status" aria-live="polite"><b id="segt">Procurando você no GPS…</b><span id="segs">Fique num lugar aberto para o sinal ficar bom.</span></div><button class="fe" type="button" data-segx="1">Fechar</button></div><div id="segav" class="segav" role="alert" hidden></div><div id="segm"></div><div class="rd"><div id="segi" class="m" style="font-size:14.5px"></div><div class="row"><button class="chip" type="button" data-segvoz="1" aria-pressed="'+VOZ+'">'+(VOZ?'🔊 Voz ligada':'🔇 Voz desligada')+'</button><button class="chip" type="button" data-segc="1">📍 Centralizar em mim</button><button class="chip" type="button" data-segr="1" aria-pressed="'+REV+'">⇄ Sentido contrário</button></div><p class="m" style="margin:0">A tela fica acesa enquanto você segue a trilha. Use o caminho com atenção e confira as placas do lugar.</p></div>';
  document.body.style.overflow='hidden'}
 function desenha(){var el=document.getElementById('segm');if(!el)return;if(!window.L){el.innerHTML='<div style="padding:16px"><p class="m">Não consegui abrir o mapa agora, mas a seta e as distâncias continuam funcionando.</p></div>';return}
  try{if(MAP)MAP.remove()}catch(_){}MAP=L.map(el,{zoomControl:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© colaboradores do OpenStreetMap'}).addTo(MAP);
@@ -1148,24 +1156,27 @@ function atualiza(pos){var la=pos.coords.latitude,lo=pos.coords.longitude,acc=po
  if(T)T.textContent=chegou?'Você chegou ao fim da trilha! 🎉':hd==null?(fora?'Volte para o caminho: siga a seta':'Siga o traçado verde'):fala(rel,fora);
  if(Sb)Sb.textContent=chegou?'Andou '+mt(G.tot)+'.':fora?'Você está a '+mt(pr.d)+' do traçado.'+(hd==null?' A seta aponta em relação ao norte (para cima).':''):(hd==null?'Ande alguns passos para a seta virar para a sua direção. Até lá, ela aponta em relação ao norte (para cima).':'Você está no caminho.');
  if(fora&&!FORA){FORA=1;try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(_){}}if(!fora)FORA=0;
+ if(!fora)G.obs.forEach(function(o,i){var d=o.s-pr.s;if(d<=60&&d>=-15&&!AVI[i]){AVI[i]=1;aviso(o,Math.max(0,d))}});
  var prox=G.obs.filter(function(o){return o.s>pr.s+5}).sort(function(a,b){return a.s-b.s})[0],I=document.getElementById('segi');
- if(I){var O=prox?(function(){try{return OBK[prox.k]||['📌','Ponto marcado']}catch(_){return ['📌','Ponto marcado']}})():null;I.innerHTML='<b style="color:var(--ink)">Andou '+mt(Math.max(0,pr.s))+' de '+mt(G.tot)+' · falta '+mt(Math.max(0,fim))+'</b>'+(O?'<br>Pela frente: '+O[0]+' '+e(O[1])+(prox.txt?' ('+e(prox.txt)+')':'')+' em '+mt(prox.s-pr.s):'')}
+ if(I){var O=prox?(function(){try{return OBK[prox.k]||['📌','Ponto marcado']}catch(_){return ['📌','Ponto marcado']}})():null;I.innerHTML='<b style="color:var(--ink)">Andou '+mt(Math.max(0,pr.s))+' de '+mt(G.tot)+' · falta '+mt(Math.max(0,fim))+'</b>'+(O?'<br>Pela frente: '+O[0]+' '+e(O[1])+(prox.txt?' ('+e(prox.txt)+')':'')+' em '+mt(prox.s-pr.s)+(function(){var ep=avTxt(prox).ep;return ep?'<br><span style="font-size:13px">'+e(ep)+'</span>':''})():'')}
  if(MAP&&window.L){if(!EU){EU=L.marker([la,lo],{icon:L.divIcon({className:'',html:'<div class="segeu"><i></i></div>',iconSize:[22,22],iconAnchor:[11,11]}),zIndexOffset:1000}).addTo(MAP)}else EU.setLatLng([la,lo]);
   var ic=EU.getElement&&EU.getElement();if(ic){var dv=ic.querySelector('.segeu');if(dv)dv.style.transform=hd==null?'':'rotate('+hd+'deg)';var ii=ic.querySelector('i');if(ii)ii.style.display=hd==null?'none':''}
   if(AUTO)MAP.setView([la,lo],Math.max(MAP.getZoom(),17))}}
 function bussola(ev){var h=null;if(ev.webkitCompassHeading!=null)h=ev.webkitCompassHeading;else if(ev.absolute&&ev.alpha!=null)h=360-ev.alpha;if(h!=null&&isFinite(h))HEAD={v:(h+360)%360,bus:true}}
 async function abre(tipo,id){var t=trilha(tipo,id);if(!t||!t.pts||t.pts.length<2)return toast('Esta trilha não tem traçado para seguir.');if(!navigator.geolocation)return toast('Este aparelho não tem GPS disponível.');
- G=prep(t);G.tipo=tipo;G.id=id;AUTO=true;HEAD=null;ULT=null;FORA=0;tela();
+ G=prep(t);G.tipo=tipo;G.id=id;AUTO=true;HEAD=null;ULT=null;FORA=0;AVI={};tela();if(G.obs.length)diz('Vou avisar quando você chegar perto dos pontos marcados na trilha.');
  try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function')await DeviceOrientationEvent.requestPermission()}catch(_){}
  window.addEventListener('deviceorientationabsolute',bussola,true);window.addEventListener('deviceorientation',bussola,true);
  try{if(navigator.wakeLock)WL=await navigator.wakeLock.request('screen')}catch(_){}
  leaflet(function(){if(G)desenha()});
  WID=navigator.geolocation.watchPosition(function(p){if(G)atualiza(p)},function(er){var T=document.getElementById('segt');if(T)T.textContent=er&&er.code===1?'A localização está bloqueada':'Sem sinal do GPS agora';var S2=document.getElementById('segs');if(S2)S2.textContent=er&&er.code===1?'Libere a localização para o Respiro nas configurações do celular.':'Vá para um lugar mais aberto e espere um pouco.'},{enableHighAccuracy:true,maximumAge:3000,timeout:30000})}
-function fecha(){try{if(WID!=null)navigator.geolocation.clearWatch(WID)}catch(_){}WID=null;try{WL&&WL.release()}catch(_){}WL=null;window.removeEventListener('deviceorientationabsolute',bussola,true);window.removeEventListener('deviceorientation',bussola,true);try{MAP&&MAP.remove()}catch(_){}MAP=null;EU=null;G=null;var el=document.getElementById('seg');if(el)el.innerHTML='';document.body.style.overflow=''}
+function fecha(){try{speechSynthesis.cancel()}catch(_){}var av=document.getElementById('segav');if(av)av.hidden=true;try{if(WID!=null)navigator.geolocation.clearWatch(WID)}catch(_){}WID=null;try{WL&&WL.release()}catch(_){}WL=null;window.removeEventListener('deviceorientationabsolute',bussola,true);window.removeEventListener('deviceorientation',bussola,true);try{MAP&&MAP.remove()}catch(_){}MAP=null;EU=null;G=null;var el=document.getElementById('seg');if(el)el.innerHTML='';document.body.style.overflow=''}
 document.addEventListener('visibilitychange',async function(){if(G&&document.visibilityState==='visible'&&navigator.wakeLock&&!WL)try{WL=await navigator.wakeLock.request('screen')}catch(_){}});
-document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-seg],[data-segx],[data-segc],[data-segr]');if(!b)return;ev.preventDefault();ev.stopPropagation();var D=b.dataset;
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-seg],[data-segx],[data-segc],[data-segr],[data-segav],[data-segvoz]');if(!b)return;ev.preventDefault();ev.stopPropagation();var D=b.dataset;
  if(D.seg){var a=D.seg.split('|');REV=false;abre(a[0],a[1]);return}
  if(D.segx){fecha();return}
+ if(D.segav){var av=document.getElementById('segav');if(av)av.hidden=true;try{speechSynthesis.cancel()}catch(_){}return}
+ if(D.segvoz){VOZ=!VOZ;try{localStorage.setItem('rs_voz',VOZ?'1':'0')}catch(_){}b.setAttribute('aria-pressed',VOZ);b.textContent=VOZ?'🔊 Voz ligada':'🔇 Voz desligada';if(VOZ)diz('Voz ligada.');else try{speechSynthesis.cancel()}catch(_){}return}
  if(D.segc){AUTO=true;if(EU&&MAP)MAP.setView(EU.getLatLng(),Math.max(MAP.getZoom(),17));return}
  if(D.segr&&G){var tp=G.tipo,id=G.id;REV=!REV;var r=REV;fecha();REV=r;abre(tp,id).then(function(){toast(REV?'Seguindo no sentido contrário.':'Seguindo no sentido em que foi gravada.')})}},true);
 document.addEventListener('keydown',function(e2){if(e2.key==='Escape'&&G)fecha()});
