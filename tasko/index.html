@@ -1861,7 +1861,7 @@ const ptsIn=at=>{const f=ptsFrom();return !!f&&ldate(at)>=f};
 const ptsFmt=()=>{const f=ptsFrom();return f?new Date(f+'T12:00:00').toLocaleDateString('pt-BR'):''};
 const ptsBn=()=>{const f=ptsFrom();return `<p class="muted" style="margin:6px 0 0;font-size:13px" role="status">${!f?'O programa de pontos ainda não tem data de início. Por enquanto, serviços, vídeos e projetos não rendem pontos.':ldate(new Date())<f?'O programa começa em <b>'+ptsFmt()+'</b>. Só contam serviços, vídeos e projetos a partir dessa data.':'Programa valendo desde <b>'+ptsFmt()+'</b>. Só contam serviços, vídeos e projetos a partir dessa data.'}</p>`};
 const isTester=()=>!!S.user&&(TESTERS.includes(String(S.user.email).toLowerCase())||(cfg().testers||[]).includes(String(S.user.email).toLowerCase()));
-const isAdmin=()=>!!S.user&&ADMINS.includes(String(S.user.email).toLowerCase());
+const isAdmin=()=>{if(!S.user)return false;const u=meU()||{},L=[S.user.email,u.email,u.em2,...(u.emHist||[]).map(x=>x&&x.de)].filter(Boolean).map(x=>String(x).toLowerCase());return L.some(e=>ADMINS.includes(e))};
 function cfgApply(){const c=cfg();FEE=Number.isInteger(c.fee)&&c.fee>=0&&c.fee<=100000?c.fee:990;PGFEE=Number.isInteger(c.pg)&&c.pg>=0&&c.pg<=100000?c.pg:FEE+500}
 const isCliSide=q=>!!q&&q.email===S.user.email&&!(isTester()&&S.user.role==='pro');
 const mineMsg=m=>m.from===S.user.email&&(!isTester()||!m.side||m.side===S.user.role);
