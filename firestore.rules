@@ -22,10 +22,19 @@ service cloud.firestore {
         allow read, update, delete: if entrou() && get(/databases/$(database)/documents/apps/$(app)/cofs/$(code)).data.owner == request.auth.uid;
       }
     }
+    // Endereço de entrega da compra compartilhada: só quem pediu e o vizinho liberado leem.
+    match /apps/{app}/cce/{id} {
+      allow read: if entrou() && (resource.data.ow == request.auth.uid || resource.data.para == request.auth.uid || adm());
+      allow create, update: if entrou() && request.resource.data.ow == request.auth.uid
+        && id == request.auth.uid + '_' + request.resource.data.oid
+        && request.resource.data.end is string && request.resource.data.end.size() <= 160
+        && (resource == null || resource.data.ow == request.auth.uid);
+      allow delete: if entrou() && resource.data.ow == request.auth.uid;
+    }
     // Áreas que só o administrador lê por inteiro (cada pessoa vê só o seu).
     match /apps/{app}/{col}/{uid} {
       allow read: if entrou() && (
-        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr']) || request.auth.uid == uid || adm());
+        !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr', 'cce']) || request.auth.uid == uid || adm());
       allow write: if entrou() && (
         (!(col in ['config', 'comx', 'pts', 'offers', 'pub', 'news', 'stores', 'ph', 'tips', 'ads']) && request.auth.uid == uid) || adm());
     }
