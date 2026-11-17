@@ -75,11 +75,11 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chip); else chip();
   /* ---- código deste aparelho no Firebase, para cadastrar na coleção "admins" (só aparece no modo administrador) ---- */
   function chipUid() {
-    if (!isAdm() || document.getElementById('ia-uidchip')) return;
+    var ft = document.getElementById('ia-admlink'); if (!isAdm() || !ft || document.getElementById('ia-uidchip')) return;
     fbUid().then(function (u) {
       if (!u || document.getElementById('ia-uidchip')) return;
       var b = document.createElement('button'); b.id = 'ia-uidchip'; b.type = 'button';
-      b.style.cssText = 'position:fixed;z-index:39;right:max(10px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 102px);min-height:34px;padding:0 12px;border-radius:999px;border:1.5px solid rgba(127,127,127,.55);background:rgba(255,248,230,.96);color:#111;font:700 12.5px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer';
+      b.style.cssText = 'display:inline-block;margin-top:14px;min-height:38px;padding:0 12px;border-radius:999px;border:1.5px solid rgba(127,127,127,.55);background:rgba(255,248,230,.96);color:#111;font:700 12.5px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer';
       b.textContent = '🔑 Código do admin';
       b.onclick = function () {
         var d = document.createElement('div');
@@ -101,7 +101,7 @@
         } catch (_) { st.textContent = '⚠ Não consegui conferir agora.'; }
         document.body.appendChild(d);
       };
-      document.body.appendChild(b);
+      var w = document.createElement('div'); w.appendChild(b); ft.appendChild(w);
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chipUid); else chipUid();
@@ -160,7 +160,6 @@
     var a = document.createElement('div'); a.id = 'ia-admlink';
     a.style.cssText = 'text-align:center;padding:18px 12px 90px;font:13px system-ui,sans-serif';
     a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>';
-    if (isAdm()) fbUid().then(function (u) { if (!u) return; var s = document.createElement('div'); s.style.cssText = 'margin-top:10px;opacity:.75;font-size:12px;user-select:all;word-break:break-all'; s.textContent = 'Código da conta na nuvem (administrador): ' + u; a.appendChild(s); });
     var q = a.querySelector('a'); q.onclick = function (ev) { ev.preventDefault(); logado() ? sair() : entrar(); };
     document.body.appendChild(a);
   }
