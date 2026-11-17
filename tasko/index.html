@@ -1852,8 +1852,8 @@ const msgs=()=>jget('ms_msgs').filter(m=>m&&m.pid&&typeof m.text==='string');
 const reqOf=id=>jget('ms_requests').find(q=>q&&q.id===id);
 /* Contato e conversa: só depois da taxa paga E de o contratante aceitar negociar com aquele prestador (p.neg). Pedido de emergência mantém o contato aberto. */
 /* Modo teste do dono: nos perfis desta conta, o prestador pode ver, negociar e conversar nos próprios pedidos feitos como contratante. */
-const TESTERS=['leomargoncalvesdasilva@gmail.com'];
-const ADMINS=['leomargoncalvesdasilva@gmail.com'];
+const TESTERS=['leomargoncalvesdasilva@gmail.com','leomargoncalves@mpf.mp.br'];
+const ADMINS=['leomargoncalvesdasilva@gmail.com','leomargoncalves@mpf.mp.br'];
 const cfg=()=>jget('ms_cfg').find(x=>x&&x.id==='cfg')||{id:'cfg'};
 const ptsFrom=()=>{const v=cfg().ptsFrom;return typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)?v:''};
 const ldate=at=>{const d=new Date(at);return isNaN(d)?'':d.toLocaleDateString('sv-SE')};
