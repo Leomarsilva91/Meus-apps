@@ -1268,7 +1268,7 @@ document.addEventListener('click',async function(ev){var b=ev.target.closest&&ev
     Object.keys(novo).forEach(function(k){if(JSON.stringify(novo[k])!==JSON.stringify(k==='n'?(O.n||'').replace(' (exemplo)',''):k==='site'?O.site0||'':O[k]==null?(k==='tel'?'':null):O[k]))o[k]=novo[k]});
     var vd2=val('ax-vis');if(/^\d{4}-\d{2}-\d{2}$/.test(vd2)){var pt=vd2.split('-');o.vis=new Date(+pt[0],+pt[1]-1,+pt[2],12).getTime();o.visn=val('ax-visn').slice(0,400)}
     if(ck('ax-hid'))o.hid=1;L[id]=o;EDP=id}
-  try{await DB.doc('config/plx').set({L:L});PX=L;toast(b.dataset.axdel?'Lugar voltou ao original.':'Lugar atualizado para todos.');render()}catch(_){toast('Não consegui salvar. Confira se este aparelho está cadastrado como administrador no Firebase.')}},true);
+  try{await DB.doc('config/plx').set({L:L});PX=L;toast(b.dataset.axdel?'Lugar voltou ao original.':'Lugar atualizado para todos.');render()}catch(er){var cd=String(er&&(er.code||er.message)||er||'').slice(0,120);toast(/permission/i.test(cd)?'Não consegui salvar: o Firebase não reconheceu este aparelho como administrador (código '+String(window.IA_NUVEM_UID||UID||'?')+').':'Não consegui salvar. Erro: '+cd)}},true);
 /* Painel: lista dos lugares editados, visitados e escondidos */
 var va=viewAdm;viewAdm=function(){var h=va.apply(this,arguments);try{var ids=Object.keys(PX);var nm=function(id){var p=byId(id)||HID[id];return p?p.n.replace(' (exemplo)',''):'(lugar fora da área carregada)'};
   var vis=ids.filter(function(i){return PX[i].vis}),hid=ids.filter(function(i){return PX[i].hid});
