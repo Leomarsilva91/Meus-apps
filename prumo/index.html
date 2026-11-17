@@ -2931,7 +2931,8 @@ window.DM={
 /* ---- Metas compartilhadas: o grupo vê a mesma meta, avisa "paguei" e conversa num grupo próprio ---- */
 (function(){
 const MS={own:{},joins:[],sub:false,ok1:false,ok2:false,tm:null,T:0};
-const db=()=>PT.db,me=()=>PT.uid,kid=()=>typeof VIS!=='undefined'&&VIS&&VIS.kid;
+const MST=()=>{try{return !!PT.adm&&localStorage.getItem('prumo_mstest')==='1'}catch(_){return false}};
+const db=()=>PT.db,me=()=>PT.uid&&MST()?PT.uid+'_teste':PT.uid,kid=()=>typeof VIS!=='undefined'&&VIS&&VIS.kid;
 const nickG=()=>{try{return localStorage.getItem('prumo_nick')||''}catch(_){return''}},nickS=n=>{try{localStorage.setItem('prumo_nick',n)}catch(_){}};
 const CH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',mkCode=()=>Array.from({length:6},()=>CH[Math.floor(Math.random()*CH.length)]).join('');
 const BAD=/\d{8,}|@|https?:|www\./i;
@@ -3005,7 +3006,7 @@ const iv=setInterval(()=>{start();if(MS.sub)clearInterval(iv)},1200);
 /* ---------- telas ---------- */
 const nickField=id=>nickG()?'':`<label>Seu apelido para o grupo (3 a 20 letras)<input id="${id}" maxlength="20" autocomplete="off" placeholder="Ex.: Leo"></label>`;
 const ST={ok:['Confirmado','ok'],no:['Não confirmado','bad']};
-function ownerCard(g){
+function ownerCard(g){if(MST())return `<div class="note warn" style="display:grid;gap:6px"><b>🧪 Você está no modo teste como convidado</b><span class="small">Para compartilhar ou conferir pagamentos desta meta, volte a ser o dono em Metas compartilhadas comigo.</span><button class="btn ghost sm" type="button" data-ms="mstest" style="justify-self:start">Voltar a ser o dono</button></div>`;
   if(kid())return '';
   const head='<h3>👥 Compartilhar com o grupo</h3>';
   if(S.demo)return `<div class="card" id="ms-card">${head}<p class="muted small">Compartilhar funciona com as suas próprias metas. Toque em "Começar do zero" lá em cima e crie a sua.</p></div>`;
@@ -3030,7 +3031,8 @@ function joinedList(){
   const mine=(myJ().codes||[]).map(byCode).filter(x=>x&&x.own!==me());
   const rows=mine.map(x=>{const pct=x.total>0?Math.min(100,x.gu/x.total*100):0;return `<button class="item" data-ms="view" data-c="${esc(x.code)}" style="width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;align-items:center"><span class="l"><b>${esc(x.nome)}</b><span class="muted small">de ${esc(x.ownNick)} · ${Math.round(pct)}% juntado</span></span><span class="r gchev" aria-hidden="true">›</span></button>`}).join('');
   const form=ready()&&!S.demo?`<form id="msj" style="display:grid;gap:8px">${nickField('msj-n')}<div class="row" style="flex-wrap:nowrap"><input id="msj-c" maxlength="8" autocomplete="off" placeholder="Código, ex.: K7M2QX" style="text-transform:uppercase;letter-spacing:.1em" aria-label="Código da meta"><button class="btn meta" type="submit" style="flex:none">Entrar</button></div><div class="err" id="msj-e" role="alert" style="color:var(--bad);font-size:13.5px"></div></form>`:`<p class="muted small">${S.demo?'Toque em "Começar do zero" para entrar em metas de outras pessoas.':'Para entrar numa meta compartilhada, abra o Prumo com a sua conta.'}</p>`;
-  return `<details class="card fold"${mine.length?' open':''} style="padding-top:12px"><summary>👥 Metas compartilhadas comigo${mine.length?' ('+mine.length+')':''}</summary>${rows?`<div class="list">${rows}</div>`:'<p class="muted small">Alguém do seu grupo compartilhou uma meta? Digite o código que a pessoa mandou.</p>'}<b style="font-size:14px">Entrar com código</b>${form}</details>`}
+  const tst=PT.adm&&ready()&&!S.demo?`<div class="note ${MST()?'warn':'info'}" style="display:grid;gap:6px"><b>🧪 Teste do administrador</b><span class="small">${MST()?'Agora você está como <b>Convidado (teste)</b>: entre com o código da sua própria meta, avise que pagou, mande comprovante e, se tiver permissão, altere a meta. Depois volte para conferir como dono.':'Para testar sozinho o compartilhamento, ligue o modo teste: você passa a agir como um convidado na sua própria meta.'}</span><button class="btn ${MST()?'meta':'ghost'} sm" type="button" data-ms="mstest" style="justify-self:start">${MST()?'Voltar a ser o dono':'Agir como convidado (teste)'}</button></div>`:'';
+  return tst+`<details class="card fold"${mine.length?' open':''} style="padding-top:12px"><summary>👥 Metas compartilhadas comigo${mine.length?' ('+mine.length+')':''}</summary>${rows?`<div class="list">${rows}</div>`:'<p class="muted small">Alguém do seu grupo compartilhou uma meta? Digite o código que a pessoa mandou.</p>'}<b style="font-size:14px">Entrar com código</b>${form}</details>`}
 function shView(code){const x=byCode(code);
   const back=`<div class="row"><button class="btn ghost sm" data-ms="back">Voltar para as metas</button></div>`;
   if(!x)return back+`<div class="card"><h3>Esta meta não está mais compartilhada</h3><p class="muted small">${MS.ok1?'O dono parou de compartilhar ou apagou a meta.':'Carregando…'}</p>${MS.ok1?`<button class="btn ghost sm" data-ms="leave" data-c="${esc(code)}" style="justify-self:start">Tirar da minha lista</button>`:''}</div>`;
@@ -3112,7 +3114,7 @@ document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='ms-inv')UI.in
 /* ---------- ações ---------- */
 function ensureNick(id,er){let n=nickG();if(n)return n;const el=document.getElementById(id);n=el?el.value.trim().replace(/\s+/g,' '):'';
   if(n.length<3||n.length>20){er('Escolha um apelido de 3 a 20 letras.');return null}if(BAD.test(n.replace(/[\s.\-]/g,''))){er('O apelido não pode ter telefone, e-mail ou link.');return null}nickS(n);return n}
-function putJ(patch){const j=myJ(),v={nick:j.nick||nickG()||'',codes:j.codes||[],pay:j.pay||[],who:j.who||{},ed:j.ed||[],...patch};
+function putJ(patch){const j=myJ(),v={nick:MST()?'Convidado (teste)':(j.nick||nickG()||''),codes:j.codes||[],pay:j.pay||[],who:j.who||{},ed:j.ed||[],...patch};
   const i=MS.joins.findIndex(x=>x.uid===me());if(i>=0)MS.joins[i]={uid:me(),...v};else MS.joins.push({uid:me(),...v});
   return db().collection('mshj').doc(me()).set(v)}
 document.addEventListener('click',e=>{
@@ -3145,6 +3147,7 @@ document.addEventListener('click',e=>{
     const L=[...myOwn(),{code,...snap(g),st:{},ts:new Date().toISOString()}];MS.own[me()]={nick:nk,L};
     pushOwn(L).then(()=>{toast('Meta compartilhada. Mande o código para o grupo.');if(window.DM&&DM.ensureGroup)DM.ensureGroup('ms'+code,g.nome).catch(()=>{})}).catch(()=>{delete MS.own[me()];toast('Não foi possível compartilhar agora.');render(true)});
     return render(true)}
+  if(a==='mstest'){if(!PT.adm)return;try{localStorage.setItem('prumo_mstest',MST()?'0':'1')}catch(_){}UI.msv=null;toast(MST()?'Modo teste: você agora é o Convidado (teste).':'Você voltou a ser o dono das suas metas.');try{later()}catch(_){}return render(true)}
   if(a==='cpx'){CPIMG='';return render(true)}
   if(a==='edit')return abreEd(c);
   if(a==='edsend')return fechaEd(true);

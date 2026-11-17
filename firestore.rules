@@ -35,8 +35,8 @@ service cloud.firestore {
     // Comprovante de pagamento de meta compartilhada (Prumo): só quem enviou e o dono da meta veem.
     match /apps/{app}/mscp/{id} {
       allow read: if entrou() && (resource.data.ow == request.auth.uid || resource.data.para == request.auth.uid || adm());
-      allow create: if entrou() && request.resource.data.ow == request.auth.uid
-        && id == request.auth.uid + '_' + request.resource.data.pid
+      allow create: if entrou() && (request.resource.data.ow == request.auth.uid || adm())
+        && id == request.resource.data.ow + '_' + request.resource.data.pid
         && request.resource.data.img is string && request.resource.data.img.size() <= 200000;
       allow delete: if entrou() && resource.data.ow == request.auth.uid;
     }
