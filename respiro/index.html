@@ -1213,4 +1213,63 @@ document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.targe
 })();
 </script>
 <script>document.addEventListener('input',e=>{const fm=e.target.closest&&e.target.closest('#tif');if(!fm)return;const f={};Object.keys(TINF).forEach(k=>{const r=fm.querySelector('input[name="ti_'+k+'"]:checked');if(r)f[k]=r.value});f.c=($('#ti_c')||{}).value||'';const b=$('#tiprev');if(b)b.innerHTML=infoHtml(f,'👀 Como os outros vão ver:')||'<span class="m">👀 Marque as opções acima e o texto aparece aqui, do jeito que os outros vão ver.</span>'});</script>
+<script>
+/* ---- Editor do administrador: corrige o que aparece em cada lugar e registra a visita oficial da equipe ---- */
+(function(){
+var PX={},HID={},ini=0,tr=0,EDP=null;
+var CAMPOS=['n','t','ob','du','dias','hor','pr','dia','k','pet','pis','tri','est','tel','site','lat','lon','vis','visn'];
+function orig(p){if(!p._o){p._o={};CAMPOS.forEach(function(k){p._o[k]=p[k]===undefined?null:JSON.parse(JSON.stringify(p[k]))});p._o.site0=p.emp&&p.emp.site||null}return p._o}
+function aplica(){try{var L=P0.concat(S.mine||[]);L.forEach(function(p){var o=PX[p.id];if(!o&&!p._o)return;var O=orig(p);CAMPOS.forEach(function(k){var v=o&&o[k]!==undefined&&o[k]!==null&&o[k]!==''?o[k]:O[k];if(k==='site'){if(v){p.emp=p.emp||{};p.emp.site=v}else if(p.emp&&O.site0==null&&o&&o.site===''){delete p.emp.site}return}if(v===null)delete p[k];else p[k]=JSON.parse(JSON.stringify(v))});p._px=!!o});
+  for(var i=P0.length-1;i>=0;i--){var p=P0[i];if(PX[p.id]&&PX[p.id].hid&&!ADM){HID[p.id]=p;P0.splice(i,1)}}
+  Object.keys(HID).forEach(function(id){if(!(PX[id]&&PX[id].hid&&!ADM)){if(!P0.some(function(x){return x.id===id}))P0.push(HID[id]);delete HID[id]}})}catch(_){}}
+var _r=window.render;window.render=function(){aplica();return _r.apply(this,arguments)};
+var iv=setInterval(function(){var d=null;try{d=DB}catch(_){}if(!d){if(++tr>40)clearInterval(iv);return}clearInterval(iv);if(ini)return;ini=1;
+  d.doc('config/plx').onSnapshot(function(sn){var v=sn.exists?sn.data()||{}:{};PX=v.L&&typeof v.L==='object'?v.L:{};try{render()}catch(_){}},function(){})},800);
+var fdt=function(t){var d=new Date(t);return d.toLocaleDateString('pt-BR')};
+function selo(p){var o=PX[p.id];if(!o||!o.vis)return '';return '<div class="card" style="border:2px solid var(--ok,#2E7D32);background:color-mix(in srgb,var(--ok,#2E7D32) 8%,var(--card))"><b>✔ Visitado pela equipe do Respiro</b><span class="m"> em '+fdt(o.vis)+'. As informações foram conferidas no local.</span>'+(o.visn?'<p style="margin:6px 0 0">'+esc(o.visn)+'</p>':'')+'</div>'}
+function chk(id,l,on){return '<label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+' style="width:22px;height:22px"> '+l+'</label>'}
+function inp(id,l,v,at){return '<label style="display:grid;gap:4px;font-weight:600">'+l+'<input id="'+id+'" value="'+esc(v==null?'':v)+'" '+(at||'')+' style="min-height:44px"></label>'}
+function form(p){var o=PX[p.id]||{},site=p.emp&&p.emp.site||'',ll=pLL(p);
+  return '<div class="card" style="border:2px dashed var(--sun,#F2A43A)"><details data-k="admed" '+(EDP===p.id?'open':'')+'><summary>🛠️ Editar este lugar (administrador)</summary><div class="dbody" style="display:grid;gap:10px">'
+  +'<p class="m">O que você salvar aqui aparece para todos no app. "Voltar ao original" desfaz tudo.</p>'
+  +'<div style="display:grid;gap:8px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--ok,#2E7D32) 8%,transparent)"><b>📋 Visita oficial</b>'+inp('ax-vis','Data da visita',o.vis?new Date(o.vis).toISOString().slice(0,10):'','type="date"')+'<label style="display:grid;gap:4px;font-weight:600">O que a equipe viu (aparece para todos)<textarea id="ax-visn" rows="3" maxlength="400" placeholder="Ex.: trilha bem sinalizada, banheiros limpos, sombra na área de piquenique">'+esc(o.visn||'')+'</textarea></label><span class="m">Com a data preenchida, o lugar ganha o selo ✔ Visitado pela equipe.</span></div>'
+  +inp('ax-n','Nome',p.n.replace(' (exemplo)',''),'maxlength="80"')
+  +'<label style="display:grid;gap:4px;font-weight:600">Tipo<select id="ax-t" style="min-height:44px">'+Object.keys(TIPOS).map(function(k){return '<option value="'+k+'"'+(p.t===k?' selected':'')+'>'+TIPOS[k][0]+'</option>'}).join('')+'</select></label>'
+  +'<label style="display:grid;gap:4px;font-weight:600">Descrição<textarea id="ax-ob" rows="3" maxlength="400">'+esc(p.ob||'')+'</textarea></label>'
+  +chk('ax-du','Tem day use',p.du)+'<b>Dias de funcionamento</b><div class="row" style="gap:6px;flex-wrap:wrap">'+DN.map(function(n,i){return '<label class="row" style="gap:4px"><input type="checkbox" class="ax-dia" value="'+i+'"'+((p.dias||[]).indexOf(i)>=0?' checked':'')+'> '+n+'</label>'}).join('')+'</div>'
+  +inp('ax-hor','Horário',p.hor,'maxlength="60"')
+  +'<div class="row" style="gap:8px;flex-wrap:nowrap">'+inp('ax-p0','Preço mínimo (R$)',p.pr?p.pr[0]:0,'inputmode="decimal"')+inp('ax-p1','Preço máximo (R$)',p.pr?p.pr[1]:0,'inputmode="decimal"')+'</div><span class="m">Gratuito: deixe os dois em 0.</span>'
+  +'<div class="row" style="gap:8px;flex-wrap:nowrap">'+inp('ax-d0','Diária mín. (opcional)',p.dia?p.dia[0]:'','inputmode="decimal"')+inp('ax-d1','Diária máx. (opcional)',p.dia?p.dia[1]:'','inputmode="decimal"')+'</div>'
+  +'<b>O que tem no lugar</b><div class="row" style="gap:10px;flex-wrap:wrap">'+chk('ax-k','Criança',p.k)+chk('ax-pet','Pet',p.pet)+chk('ax-pis','Piscina',p.pis)+chk('ax-tri','Trilha',p.tri)+chk('ax-est','Estacionamento',p.est)+'</div>'
+  +inp('ax-tel','Telefone',p.tel||'','inputmode="tel" maxlength="20"')+inp('ax-site','Site (https://...)',site,'maxlength="200"')
+  +'<div class="row" style="gap:8px;flex-wrap:nowrap">'+inp('ax-lat','Latitude',ll.lat.toFixed(5),'inputmode="decimal"')+inp('ax-lon','Longitude',ll.lon.toFixed(5),'inputmode="decimal"')+'</div><button class="btn gh" type="button" data-axgps="1">📍 Usar minha localização atual (estou no lugar)</button>'
+  +chk('ax-hid','Esconder este lugar do app (só o administrador continua vendo)',o.hid)
+  +'<div class="row" style="gap:8px"><button class="btn sun" type="button" data-axsave="'+p.id+'">Salvar</button>'+(PX[p.id]?'<button class="btn gh" type="button" data-axdel="'+p.id+'">Voltar ao original</button>':'')+'</div>'
+  +(o.at?'<p class="m">Última edição em '+fdt(o.at)+'.</p>':'')+'</div></details></div>'}
+var vd=window.viewDet||viewDet;viewDet=function(){var h=vd.apply(this,arguments);try{var p=byId(S.id);if(!p)return h;var pre=selo(p)+(PX[p.id]&&PX[p.id].hid?'<div class="card" style="border:2px solid var(--warn,#B45309)"><b>🙈 Lugar escondido</b><span class="m"> Só o administrador vê.</span></div>':'');if(pre){var k=h.indexOf('data-act="fav"'),e=k>0?h.indexOf('</div></div>',k):-1;h=e>0?h.slice(0,e+12)+pre+h.slice(e+12):pre+h}if(ADM)h+=form(p)}catch(_){}return h};
+var vt=tileP;tileP=function(p){var h=vt.apply(this,arguments);if(PX[p.id]&&PX[p.id].vis)h=h.replace('</button>','<span class="tag ok" style="justify-self:start">✔ Visitado pela equipe</span></button>');return h};
+function num(v){var n=parseFloat(String(v||'').replace(/\./g,'').replace(',','.'));return isFinite(n)?n:null}
+function val(id){var e=document.getElementById(id);return e?String(e.value||'').trim():''}
+function ck(id){var e=document.getElementById(id);return !!(e&&e.checked)}
+document.addEventListener('click',async function(ev){var b=ev.target.closest&&ev.target.closest('[data-axsave],[data-axdel],[data-axgps]');if(!b||!ADM)return;ev.preventDefault();ev.stopImmediatePropagation();
+  if(b.dataset.axgps){if(!navigator.geolocation)return toast('Este aparelho não informa a localização.');toast('Buscando a sua localização…');navigator.geolocation.getCurrentPosition(function(g){var a=document.getElementById('ax-lat'),o=document.getElementById('ax-lon');if(a)a.value=g.coords.latitude.toFixed(5);if(o)o.value=g.coords.longitude.toFixed(5);toast('Localização preenchida. Confira e salve.')},function(){toast('Não consegui pegar a localização.')},{enableHighAccuracy:true,timeout:15000});return}
+  var id=b.dataset.axsave||b.dataset.axdel,L=Object.assign({},PX);
+  if(b.dataset.axdel){if(!confirm('Voltar este lugar às informações originais?'))return;delete L[id]}
+  else{var p=byId(id);if(!p)return;var O=orig(p),o={at:Date.now()},n=val('ax-n');if(n.length<3)return toast('Informe o nome do lugar.');
+    var dias=[].slice.call(document.querySelectorAll('.ax-dia:checked')).map(function(x){return +x.value}),p0=num(val('ax-p0'))||0,p1=num(val('ax-p1'));if(p1==null||p1<p0)p1=p0;var d0=num(val('ax-d0')),d1=num(val('ax-d1'));
+    var site=val('ax-site');if(site&&!/^https:\/\/[^\s]+\.[^\s]+/.test(site))return toast('O site precisa começar com https://');
+    var lat=num(val('ax-lat')),lon=num(val('ax-lon'));if(lat!=null&&(lat<-34||lat>6))lat=null;if(lon!=null&&(lon<-75||lon>-28))lon=null;
+    var novo={n:n,t:val('ax-t'),ob:val('ax-ob').slice(0,400),du:ck('ax-du')?1:0,dias:dias,hor:val('ax-hor').slice(0,60),pr:[p0,p1],k:ck('ax-k')?1:0,pet:ck('ax-pet')?1:0,pis:ck('ax-pis')?1:0,tri:ck('ax-tri')?1:0,est:ck('ax-est')?1:0,tel:val('ax-tel').slice(0,20),site:site};
+    if(d0!=null&&d0>0)novo.dia=[d0,d1!=null&&d1>=d0?d1:d0];
+    var oll=pLL(Object.assign({},p,{lat:O.lat,lon:O.lon}));if(lat!=null&&lon!=null&&(Math.abs(lat-oll.lat)>1e-5||Math.abs(lon-oll.lon)>1e-5)){novo.lat=lat;novo.lon=lon}
+    Object.keys(novo).forEach(function(k){if(JSON.stringify(novo[k])!==JSON.stringify(k==='n'?(O.n||'').replace(' (exemplo)',''):k==='site'?O.site0||'':O[k]==null?(k==='tel'?'':null):O[k]))o[k]=novo[k]});
+    var vd2=val('ax-vis');if(/^\d{4}-\d{2}-\d{2}$/.test(vd2)){var pt=vd2.split('-');o.vis=new Date(+pt[0],+pt[1]-1,+pt[2],12).getTime();o.visn=val('ax-visn').slice(0,400)}
+    if(ck('ax-hid'))o.hid=1;L[id]=o;EDP=id}
+  try{await DB.doc('config/plx').set({L:L});PX=L;toast(b.dataset.axdel?'Lugar voltou ao original.':'Lugar atualizado para todos.');render()}catch(_){toast('Não consegui salvar. Confira se este aparelho está cadastrado como administrador no Firebase.')}},true);
+/* Painel: lista dos lugares editados, visitados e escondidos */
+var va=viewAdm;viewAdm=function(){var h=va.apply(this,arguments);try{var ids=Object.keys(PX);var nm=function(id){var p=byId(id)||HID[id];return p?p.n.replace(' (exemplo)',''):'(lugar fora da área carregada)'};
+  var vis=ids.filter(function(i){return PX[i].vis}),hid=ids.filter(function(i){return PX[i].hid});
+  h+='<div class="card"><details data-k="admpx" '+op('admpx',false)+'><summary>🛠️ Lugares editados ('+ids.length+') · visitados ('+vis.length+') · escondidos ('+hid.length+')</summary><div class="dbody">'+(ids.length?ids.sort(function(a,b){return (PX[b].at||0)-(PX[a].at||0)}).map(function(i){var o=PX[i];return '<div class="kv"><span><button class="lk" type="button" data-open="'+esc(i)+'">'+esc(nm(i))+'</button></span><span class="m">'+(o.vis?'✔ visitado '+fdt(o.vis)+' ':'')+(o.hid?'🙈 escondido ':'')+(o.at?'· editado '+fdt(o.at):'')+'</span></div>'}).join(''):'<p class="m">Nenhum lugar editado ainda. Abra um lugar e use "Editar este lugar".</p>')+'</div></details></div>'}catch(_){}return h};
+})();
+</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
