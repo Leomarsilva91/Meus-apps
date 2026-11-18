@@ -219,5 +219,17 @@
       return true;
     }
   };
-  window.claude = { use: async function (n) { if (n === 'assets') return (await assetsOn()) ? assets : null; return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : n === 'dbany' ? fbIni() : null; } };
+  /* ---- downloads: salva o arquivo no aparelho (Downloads) ---- */
+  var MIME = { pdf: 'application/pdf', csv: 'text/csv;charset=utf-8', json: 'application/json', vcf: 'text/vcard', txt: 'text/plain;charset=utf-8', png: 'image/png', jpg: 'image/jpeg' };
+  var downloads = {
+    save: async function (o) {
+      o = o || {}; var fn = String(o.filename || 'arquivo').replace(/[\\/:*?"<>|]+/g, '-'), ext = (fn.split('.').pop() || '').toLowerCase(), d = o.data;
+      var blob = d instanceof Blob ? d : new Blob([d instanceof Uint8Array || d instanceof ArrayBuffer ? d : String(d == null ? '' : d)], { type: MIME[ext] || 'application/octet-stream' });
+      var u = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = u; a.download = fn; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click();
+      setTimeout(function () { a.remove(); URL.revokeObjectURL(u); }, 60000);
+      return true;
+    }
+  };
+  window.claude = { use: async function (n) { if (n === 'downloads') return downloads; if (n === 'assets') return (await assetsOn()) ? assets : null; return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : n === 'dbany' ? fbIni() : null; } };
 })();
