@@ -176,7 +176,7 @@ function locCity(c){const P=locParts(c);return P.length?P[P.length-1]:''}
 
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const _store=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return localStorage}catch(e){const m={};return{getItem:k=>m[k]??null,setItem:(k,v)=>{m[k]=v},removeItem:k=>{delete m[k]}}}})();
-const SYNCK={ms_fb:1,ms_requests:1,ms_proposals:1,ms_msgs:1,ms_users:1,ms_plans:1,ms_jobs:1,ms_rec:1,ms_lists:1,ms_rates:1,ms_cfg:1,ms_reports:1,ms_adq:1};
+const SYNCK={ms_posts:1,ms_fb:1,ms_requests:1,ms_proposals:1,ms_msgs:1,ms_users:1,ms_plans:1,ms_jobs:1,ms_rec:1,ms_lists:1,ms_rates:1,ms_cfg:1,ms_reports:1,ms_adq:1};
 const SY={db:null,on:false,sent:{},q:Promise.resolve(),tm:{}};
 const rawSet=(k,v)=>_store.setItem(k,v);
 const syId=(k,x)=>String(k==='ms_users'||k==='ms_plans'?x.email:x.id).replace(/[^A-Za-z0-9_\-.~:@+]/g,'_').slice(0,180);
@@ -1212,7 +1212,8 @@ async function mPrice(ctx){
 }
 function vurl(s){s=(s||'').trim();if(!s)return'';if(s.length>300)return null;try{const u=new URL(s);return(u.protocol==='https:'||u.protocol==='http:')&&u.hostname.includes('.')?u.href:null}catch(e){return null}}
 const hostOf=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return''}};
-const vidHtml=q=>{if(closedQ(q))return'';if(q.vidAsset&&typeof q.video==='string'&&(/^\/_blob\//.test(q.video)||/^https:\/\/[^/]+\/vid\//.test(q.video)))return`<details style="margin-top:8px"><summary class="vlink" style="cursor:pointer;min-height:36px">▶ Ver vídeo do serviço a ser realizado</summary><video controls playsinline preload="none" src="${esc(q.video)}" style="width:100%;max-height:50vh;border-radius:12px;background:#000;margin-top:8px"></video></details>`;const u=q.video&&vurl(q.video);return u?`<a class="vlink" href="${esc(u)}" target="_blank" rel="noopener noreferrer">▶ Ver vídeo do cliente (${esc(hostOf(u))})</a>`:''};
+const vidGone=q=>!!q&&(closedQ(q)||!!q.fin);
+const vidHtml=q=>{if(vidGone(q)||q.vidDel)return (q.vidDel||q.video||q.vidAsset)?'<p class="muted" style="margin:8px 0 0">🎥 Este pedido tinha um vídeo do local. Ele foi apagado quando o pedido foi concluído.</p>':'';if(!BLOBOK&&typeof q.video==='string'&&/^\/_blob\//.test(q.video))return'<p class="muted" style="margin:8px 0 0">🎥 Este pedido tinha um vídeo feito na versão antiga do app, que não abre mais.</p>';if(q.vidAsset&&typeof q.video==='string'&&(/^\/_blob\//.test(q.video)||/^https:\/\/[^/]+\/vid\//.test(q.video)))return`<details style="margin-top:8px"><summary class="vlink" style="cursor:pointer;min-height:36px">▶ Ver vídeo do serviço a ser realizado</summary><video controls playsinline preload="none" src="${esc(q.video)}" style="width:100%;max-height:50vh;border-radius:12px;background:#000;margin-top:8px"></video></details>`;const u=q.video&&vurl(q.video);return u?`<a class="vlink" href="${esc(u)}" target="_blank" rel="noopener noreferrer">▶ Ver vídeo do cliente (${esc(hostOf(u))})</a>`:''};
 const vidAddBox=q=>{if(!S.user||q.email!==S.user.email||q.video||q.fin||closedQ(q)||q.sample)return '';const e=S.vadd&&S.vadd[q.id];return `<div class="card" style="margin:8px 0 0">${q.vidErr?'<p style="margin:0 0 6px"><b>⚠ O vídeo deste pedido não foi enviado.</b></p>':''}<p class="muted" style="margin:0 0 8px">Mande um vídeo de até 30 segundos mostrando o local ou o problema. Os profissionais veem no pedido e na conversa.</p>${e?`<div class="alert" role="alert" style="margin-bottom:8px">${esc(e)}</div>`:''}<input class="sr" type="file" id="vadd-${q.id}" accept="video/*" tabindex="-1" aria-label="Escolher vídeo do serviço"><button class="chip" data-act="vadd" data-qid="${q.id}">🎥 ${q.vidErr?'Enviar o vídeo de novo':'Adicionar vídeo do serviço'}</button></div>`};
 async function vidAdd(id,f){S.vadd=S.vadd||{};delete S.vadd[id];
   if(!f)return;if(!/^video\//.test(f.type||'')){S.vadd[id]='Escolha um arquivo de vídeo.';return render()}
@@ -1237,9 +1238,9 @@ async function pickReqVideo(f){
   if(r.vurl)URL.revokeObjectURL(r.vurl);r.vf=f;r.vurl=u;r.vdur=dur>0?dur:0;box();
 }
 let vSweeping=false;
-async function vidSweep(){if(vSweeping||!S.user)return;const L=jget('ms_requests').filter(q=>q&&q.email===S.user.email&&q.vidAsset&&closedQ(q));if(!L.length)return;vSweeping=true;
+async function vidSweep(){if(vSweeping||!S.user)return;const L=jget('ms_requests').filter(q=>q&&q.email===S.user.email&&q.vidAsset&&vidGone(q));if(!L.length)return;vSweeping=true;
   try{const as=window.claude&&await window.claude.use('assets');for(const q of L){let ok=!as?false:true;if(as){try{await as.delete(q.vidAsset)}catch(e){ok=/not.?found/i.test(String(e&&(e.code||e.message)))}}
-    if(ok){const all=jget('ms_requests'),x=all.find(y=>y&&y.id===q.id);if(x){delete x.vidAsset;x.video='';x.vidDel=new Date().toISOString();spSaveAll('ms_requests',all)}}}}catch(e){}
+    if(ok){const all=jget('ms_requests'),x=all.find(y=>y&&y.id===q.id);if(x){delete x.vidAsset;x.video='';x.vidDel=new Date().toISOString();spSaveAll('ms_requests',all)}}else if(!as&&q.video&&/^\/_blob\//.test(q.video)){const all=jget('ms_requests'),x=all.find(y=>y&&y.id===q.id);if(x){delete x.vidAsset;x.video='';x.vidDel=new Date().toISOString();spSaveAll('ms_requests',all)}}}}catch(e){}
   vSweeping=false}
 S.ep={per:'m0',from:'',to:''};S.done=null;S.inb='all';S.payid=null;
 const fmtPhone=d=>d.length>=10?'('+d.slice(0,2)+') '+d.slice(2,d.length-4)+'-'+d.slice(-4):d;
@@ -1538,7 +1539,8 @@ const MAXV=20*1024*1024;
 const newRec=()=>({file:null,url:'',title:'',desc:'',busy:false,err:'',auth:false});
 S.rec=newRec();S.del=null;
 const dt=iso=>{const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('pt-BR')};
-const validPost=p=>p&&p.id&&typeof p.url==='string'&&/^(\/_blob\/|https:\/\/)/.test(p.url)&&p.title&&p.name&&p.cat;
+const BLOBOK=!/github\.io$/i.test(location.hostname);
+const validPost=p=>p&&p.id&&typeof p.url==='string'&&(BLOBOK?/^(\/_blob\/|https:\/\/)/:/^https:\/\//).test(p.url)&&p.title&&p.name&&p.cat;
 function vInfo(R){const mb=R.file.size/1048576,pc=Math.min(100,Math.round(R.file.size/MAXV*100)),d=Math.round(R.dur||0),tm=d>0?Math.floor(d/60)+':'+String(d%60).padStart(2,'0')+' · ':'';
   return`<div class="card" style="margin:0"><div class="sum" style="margin:0"><span>${tm}${mb.toFixed(1).replace('.',',')} MB</span><span class="muted">limite 20 MB</span></div><div style="height:8px;border-radius:99px;background:var(--line);margin-top:8px;overflow:hidden" role="img" aria-label="${pc}% do limite de tamanho"><div style="height:100%;width:${pc}%;background:${pc>85?'var(--bad)':'var(--pri)'}"></div></div>${pc>85?'<p class="muted" style="margin:8px 0 0">Perto do limite. Se o envio falhar, grave um vídeo mais curto.</p>':''}</div>`}
 function recBody(){
@@ -2513,7 +2515,7 @@ function sayText(key,btn){
   const vs=ss.getVoices?ss.getVoices().filter(v=>/^pt/i.test(v.lang)):[];if(vs.length)u.voice=vs.find(v=>/pt-BR/i.test(v.lang))||vs[0];
   if(btn){btn.dataset.sl=btn.dataset.sl||btn.textContent;btn.textContent='⏹ Parar'}S.sayKey=key;
   const done=()=>{if(btn&&btn.dataset.sl)btn.textContent=btn.dataset.sl;if(S.sayKey===key)S.sayKey=null};u.onend=done;u.onerror=done;ss.speak(u)}
-function syncNotify(key){if(key==='ms_cfg')cfgApply();if(key==='ms_users'&&!S.user){const em=store.getItem('ms_session'),u=em&&users().find(x=>x.email===em);if(u&&!u.susp&&['welcome','login'].includes(S.v)){S.user=view(u,pickRole(u));go(needsC(u)?'accept':'home');return}}if(key==='ms_users'&&S.user&&(users().find(x=>x.email===S.user.email)||{}).susp){store.removeItem('ms_session');S.user=null;S.role=null;go('welcome');return}if(!S.user||!['ms_msgs','ms_proposals','ms_requests','ms_rec','ms_jobs'].includes(key))return;
+function syncNotify(key){if(key==='ms_cfg')cfgApply();if(key==='ms_users'&&!S.user){const em=store.getItem('ms_session'),u=em&&users().find(x=>x.email===em);if(u&&!u.susp&&['welcome','login'].includes(S.v)){S.user=view(u,pickRole(u));go(needsC(u)?'accept':'home');return}}if(key==='ms_users'&&S.user&&(users().find(x=>x.email===S.user.email)||{}).susp){store.removeItem('ms_session');S.user=null;S.role=null;go('welcome');return}if(S.user&&key==='ms_posts'&&['feed','workers','home'].includes(S.v)){try{render()}catch(er){}return}if(!S.user||!['ms_msgs','ms_proposals','ms_requests','ms_rec','ms_jobs'].includes(key))return;
   if(S.v==='chat'&&S.chat){const x=th();if(x)markSeen(x.p.id)}
   if(key==='ms_msgs')try{msgAlert()}catch(e){}
   if(key==='ms_requests')try{reqAlert();entryAlert()}catch(e){}
