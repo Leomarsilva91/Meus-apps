@@ -1238,7 +1238,7 @@ function axRec(e){var t=e.target,f=t&&t.closest&&t.closest('#axf');if(!f)return;
 document.addEventListener('input',axRec,true);document.addEventListener('change',axRec,true);
 document.addEventListener('focusout',function(e){if(!PEND)return;setTimeout(function(){if(PEND&&!axTyping()){PEND=0;try{render()}catch(_){}}},150)},true);
 document.addEventListener('toggle',function(e){var d=e.target;if(!d||!d.getAttribute||!d.getAttribute('data-axpid'))return;if(d.open)EDP=d.getAttribute('data-axpid');else if(EDP===d.getAttribute('data-axpid')&&!AXD[EDP])EDP=null},true);
-window.axClear=function(id){delete AXD[id]};
+window.axClear=function(id){delete AXD[id]};window.PXof=function(id){return PX[id]};
 var iv=setInterval(function(){var d=null;try{d=DB}catch(_){}if(!d){if(++tr>40)clearInterval(iv);return}clearInterval(iv);if(ini)return;ini=1;
   d.doc('config/plx').onSnapshot(function(sn){var v=sn.exists?sn.data()||{}:{};PX=v.L&&typeof v.L==='object'?v.L:{};try{render()}catch(_){}},function(){})},800);
 var fdt=function(t){var d=new Date(t);return d.toLocaleDateString('pt-BR')};
@@ -1316,6 +1316,44 @@ window.llDeLink=function(t){t=String(t||'');try{t=decodeURIComponent(t)}catch(e)
 document.addEventListener('input',function(e){var t=e.target;if(!t||t.id!=='ax-link')return;var r=llDeLink(t.value),m=document.getElementById('ax-linkm');if(!t.value.trim()){if(m)m.textContent='';return}
   if(r){var a=document.getElementById('ax-lat'),b=document.getElementById('ax-lon');if(a){a.value=r.lat.toFixed(6);a.dispatchEvent(new Event('change',{bubbles:true}))}if(b){b.value=r.lon.toFixed(6);b.dispatchEvent(new Event('change',{bubbles:true}))}if(m)m.textContent='✔ Posição preenchida pelo link. Confira e toque em Salvar.'}
   else if(m)m.textContent=/goo\.gl|maps\.app/.test(t.value)?'Link curto: abra o link no navegador, copie o endereço completo que aparecer e cole aqui. Ou use o botão 📍 estando no lugar.':'Não achei a posição neste link. Cole o link completo do Google Maps, Waze ou OpenStreetMap.'},true);
+})();
+</script>
+<script>
+/* Página do lugar em duas partes: informações oficiais (equipe e dono) e o que os visitantes dizem (comentários, avaliações, fotos, avisos). A equipe modera tudo. */
+(function(){
+var OFK=['o1','o2','d1','d2','d3','d4'],VISK=['avc','avn','fot','epo','epx','rv','rvf','d5'];
+function cmCard(p){var L=[];try{L=posts().filter(function(x){return x.pid===p.id&&!x.re}).sort(function(a,b){return b.at-a.at})}catch(_){}
+  var mais=S.cmAll===p.id?L:L.slice(0,6);
+  return '<div class="card" id="cmcard"><b>💬 Comentários dos visitantes'+(L.length?' <span class="m">· '+L.length+'</span>':'')+'</b><p class="m" style="margin:4px 0 8px">Impressões e informações de quem foi. Não são conferidas pela equipe, que modera tudo o que é publicado.</p>'
+   +(DB&&UID?'<label for="cm_t" class="m" style="display:block">Seu comentário</label><textarea id="cm_t" maxlength="500" rows="3" placeholder="Ex.: fui no sábado, tinha sombra e o banheiro estava limpo. O preço subiu para R$ 20."></textarea><p class="err" id="cm_e" role="alert" style="margin:4px 0 0"></p><button class="btn sun" type="button" data-cm="'+esc(p.id)+'" style="margin-top:6px">Comentar</button>':'<p class="m">Entre no app para comentar.</p>')
+   +'<div style="display:grid;gap:8px;margin-top:10px">'+(mais.map(function(x){try{return postCard(x)}catch(_){return ''}}).join('')||'<p class="m">Ninguém comentou ainda. Seja a primeira pessoa.</p>')+'</div>'
+   +(L.length>6&&S.cmAll!==p.id?'<button class="chip" type="button" data-cmall="'+esc(p.id)+'" style="margin-top:8px">Ver todos os '+L.length+' comentários</button>':'')+'</div>'}
+function hdr(ic,t,sub){var d=document.createElement('div');d.className='sec-h';d.style.cssText='margin:18px 4px 6px';d.innerHTML='<h2 style="margin:0;font-size:19px">'+ic+' '+t+'</h2><p class="m" style="margin:2px 0 0">'+sub+'</p>';return d}
+function organiza(){if(S.v!=='det')return;var app=document.getElementById('app');if(!app||app.querySelector('.sec-h'))return;var p=byId(S.id);if(!p)return;
+  var K=[].slice.call(app.children);if(K.length<3)return;var head=[],main=K[0],of=[],vi=[],neu=[],adm=[],resto=[];
+  K.forEach(function(c,i){if(c.tagName==='HEADER'||c.tagName==='NAV'||c.classList.contains('top')){head.push(c);return}if(c===main)return;var ks=[].slice.call(c.querySelectorAll('details[data-k]')).map(function(d){return d.dataset.k}),tx=(c.innerText||'').slice(0,200);
+    if(c.id==='axf'){adm.push(c);return}
+    if(ks.some(function(k){return k==='cp'})){c.remove();return}
+    if(ks.some(function(k){return OFK.indexOf(k)>=0})||/Visitado pela equipe|O que tem no lugar|^Fonte:/.test(tx)){of.push(c);return}
+    if(/Enviar este lugar/.test(tx)){neu.push(c);return}
+    vi.push(c)});
+  if(K[0]&&K[0].tagName==='HEADER'){main=K[1]}
+  var frag=document.createDocumentFragment();
+  frag.appendChild(hdr('📋','Informações oficiais',p.eq||(window.PXof&&PXof(p.id))?'Da equipe do Respiro'+(String(p.id).charAt(0)==='m'?' e do dono do lugar':'')+'. Conferidas e moderadas pela equipe.':String(p.id).charAt(0)==='m'?'Do dono do lugar. Moderadas pela equipe do Respiro.':'Do mapa (OpenStreetMap ou Google) e da equipe do Respiro. Confirme antes de ir.'));
+  if(main)frag.appendChild(main);of.forEach(function(c){frag.appendChild(c)});neu.forEach(function(c){frag.appendChild(c)});
+  frag.appendChild(hdr('👥','Dos visitantes','Comentários, avaliações, fotos e avisos de quem foi. Não são conferidos pela equipe, mas a equipe modera tudo.'));
+  var cm=document.createElement('div');cm.innerHTML=cmCard(p);frag.appendChild(cm.firstChild);vi.forEach(function(c){frag.appendChild(c)});adm.forEach(function(c){frag.appendChild(c)});
+  var first=app.firstElementChild;var ref=null;K.forEach(function(c){if(head.indexOf(c)>=0)ref=c});
+  app.insertBefore(frag,ref?ref.nextSibling:app.firstChild)}
+window.organizaLugar=organiza;var _r=window.render,CPEND=0;window.render=function(){var a=document.activeElement;if(a&&a.id==='cm_t'){CPEND=1;return}var x=_r.apply(this,arguments);try{organiza();var t=document.getElementById('cm_t');if(t&&S.cmDr)t.value=S.cmDr}catch(_){}return x};
+document.addEventListener('input',function(e){if(e.target&&e.target.id==='cm_t')S.cmDr=e.target.value},true);
+document.addEventListener('focusout',function(e){if(e.target&&e.target.id==='cm_t'&&CPEND)setTimeout(function(){var a=document.activeElement;if(CPEND&&!(a&&a.id==='cm_t')){CPEND=0;render()}},150)},true);
+document.addEventListener('click',async function(e){var b=e.target.closest&&e.target.closest('[data-cm],[data-cmall]');if(!b)return;e.preventDefault();e.stopPropagation();
+  if(b.dataset.cmall){S.cmAll=b.dataset.cmall;return render()}
+  var t=document.getElementById('cm_t'),er=document.getElementById('cm_e'),txt=String(t&&t.value||'').trim();if(!DB||!UID)return;
+  if(txt.length<3){er.textContent='Escreva o comentário.';return}if(BAD.test(txt)){er.textContent='Por segurança, não publique telefone nem link.';return}
+  try{if(typeof busy==='function'&&busy())return}catch(_){}
+  b.disabled=true;try{await updOwn('com',function(a){return a.concat([{id:nid('c'),k:'dica',pid:b.dataset.cm,txt:txt.slice(0,500),at:Date.now()}])},40);S.last=Date.now();t.value='';S.cmDr='';toast('Comentário publicado.');render()}catch(_){er.textContent='Não foi possível publicar agora. Tente de novo.';b.disabled=false}},true);
 })();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
