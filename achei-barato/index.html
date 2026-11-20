@@ -414,7 +414,7 @@ const putOff=async o=>{if(DB){await DB.collection('offers').doc(o.id).set(o)}els
 const delOff=async id=>{if(DB){await DB.collection('offers').doc(id).delete()}else{const k=own.findIndex(x=>x.id===id);if(k>=0)own.splice(k,1);save()}};
 const putLnk=async v=>{lnk=v;LS.s('ab_lnk',v);if(DB){await DB.collection('config').doc('links').set({v})}};
 if(home==='g'&&!pos)home=0;
-let mem={tab:'promo',cat:'',q:'',ord:'off',open:null,err:'',lt:(()=>{try{return localStorage.getItem('ab_lt')||''}catch(_){return ''}})()};
+let mem={tab:'plan',cat:'',q:'',ord:'off',open:null,err:'',lt:(()=>{try{return localStorage.getItem('ab_lt')||''}catch(_){return ''}})()};
 document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='lt'){mem.lt=t.value;try{localStorage.setItem('ab_lt',t.value)}catch(_){}}},true);
 const LKT={plan:['Roteiro de economia','Montar roteiro e salvar a sua lista de compras'],com:['Comunidade','Participar da comunidade'],tag:['Achei uma promoção','Enviar preços e promoções'],merch:['Sou comerciante','Cadastrar promoção e divulgar a sua loja']};
 const guestV=()=>AR&&!UID&&LKT[mem.tab]?`<div class="box" data-nc="1"><b>${LKT[mem.tab][0]}</b><span class="m">${LKT[mem.tab][1]} é só para quem entrou. Como visitante, você vê as promoções e pode mandar sugestão ou crítica.</span><button class="btn acc" type="button" data-entrar="1">Entrar</button></div>`:'';
@@ -2139,8 +2139,8 @@ try{pgFloat()}catch(e){}
 (function(){
 var C={
  loc:function(){return{tab:mem.tab}},
- rootLoc:{tab:'promo'},
- isRoot:function(l){return l.tab==='promo'},
+ rootLoc:{tab:'plan'},
+ isRoot:function(l){return l.tab==='plan'},
  mount:function(){return document.getElementById('v')},
  apply:function(l){mem.tab=l.tab;render()},
  extra:function(){try{return barMid()}catch(e){return ''}},
