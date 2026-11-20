@@ -371,12 +371,20 @@ function demoGoals(){const dm=k=>iso(new Date(Y,M+k,10)),pm=iso(new Date(Y,M-1,1
    {id:uid(),nome:'Reserva de emergência',tipo:'reserva',alvo:6000,guardado:2100,prazo:dm(12),aportes:[{d:pm,v:400}]},
    {id:uid(),nome:'Escada e furadeira novas',tipo:'negocio',alvo:1200,guardado:1200,prazo:dm(0),aportes:[{d:pm,v:600}]}]}
 function empty(){return{demo:false,mei:{act:'serv',open:'',nome:'',cnpj:'',cidade:'',rev:[],exp:[],das:{}},debts:[],budget:0,metodo:'rec',goals:[],orc:null}}
-function load(){try{const t=localStorage.getItem(K);if(t){const o=JSON.parse(t);if(o&&o.mei&&o.debts){if(!o.goals){if(o.demo)return null;o.goals=[]}if(o.demo&&(!o.orc||!o.orc.gastos))return null;if(o.orc===undefined)o.orc=null;if(o.orc&&!o.orc.gastos)o.orc.gastos=[];return o}}}catch(e){}return null}
+function semExemplo(o){if(!o||!o.demo)return o;try{
+  const CL=['Condomínio Residencial Aurora','Marcos (banheiro, Taguatinga)','Loja Via Norte','Dona Cleide (Águas Claras)','Padaria Pão Quente','Escritório Lago Sul','Rogério (apartamento, Asa Norte)','Clínica Sorriso'],RD=['Instalação elétrica','Manutenção','Troca de disjuntores'],ED=['Material elétrico','Combustível e deslocamento','Ferramentas','Celular e internet'],
+   DB=['Cartão Banco Azul','Cheque especial','Financiamento da moto','Loja de móveis Bom Lar','Conta de luz atrasada'],GN=['Viagem para Jericoacoara','Reserva de emergência','Escada e furadeira novas'],GG=[['Mercado do mês',382.4],['Combustível',210],['Farmácia',118.9],['Camisa',59.9],['Padaria',46.5],['Pizza com a família',92]];
+  const m=o.mei||{};m.rev=(m.rev||[]).filter(r=>!(CL.includes(r.cli)&&RD.includes(r.desc)));m.exp=(m.exp||[]).filter(r=>!ED.includes(r.desc));
+  if(m.nome==='Rafael Souza'){m.nome='';m.cidade=m.cidade==='Taguatinga, DF'?'':m.cidade;if(m.open==='2023-03')m.open='';m.das={}}
+  o.debts=(o.debts||[]).filter(d=>!DB.includes(d.cred));o.goals=(o.goals||[]).filter(g=>!GN.includes(g.nome));if(o.budget===1900)o.budget=0;
+  if(o.orc){o.orc.gastos=(o.orc.gastos||[]).filter(g=>!GG.some(x=>x[0]===g.t&&Math.abs(x[1]-g.v)<0.01));if(o.orc.renda===6800&&o.orc.pessoas===3&&o.orc.fix&&o.orc.fix.moradia===1500&&o.orc.fix.alim===1100){o.orc.renda=0;o.orc.fix={}}}
+  o.demo=false}catch(e){o.demo=false}return o}
+function load(){try{const t=localStorage.getItem(K);if(t){let o=JSON.parse(t);if(o&&o.mei&&o.debts){o=semExemplo(o);if(!o.goals)o.goals=[];if(o.orc===undefined)o.orc=null;if(o.orc&&!o.orc.gastos)o.orc.gastos=[];return o}}}catch(e){}return null}
 const GUEST=!!(window.IA_AUTH&&!IA_AUTH.logado());
-let S=(GUEST?null:load())||demo();
+let S=load()||empty();
 const SYNC={db:null,ref:null,st:'local',tm:null,warn:false,
   label(){return this.st==='cloud'?'Salvo na conta':this.st==='busy'?'Salvando…':''}};
-function save(){S.t=Date.now();if(GUEST)return;try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}cloudPush()}
+function save(){S.t=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}cloudPush()}
 function cloudPush(now){if(!SYNC.ref||S.demo)return;clearTimeout(SYNC.tm);SYNC.st='busy';paintWho();
   SYNC.tm=setTimeout(cloudFlush,now?0:1200)}
 async function cloudFlush(){if(!SYNC.ref||S.demo)return;let j;try{j=JSON.stringify(S)}catch(e){return}
@@ -387,7 +395,7 @@ async function cloudInit(){try{
   const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);if(!db||!user)return;
   const id=await user.id();if(!id)return;SYNC.ref=db.collection('data/users/'+id).doc('prumo');
   const snap=await SYNC.ref.get();let r=null;
-  if(snap.exists){try{const d=snap.data();const o=JSON.parse(d.json);if(o&&o.mei&&o.debts){o.t=o.t||d.t||0;r=o}}catch(e){}}
+  if(snap.exists){try{const d=snap.data();const o=JSON.parse(d.json);if(o&&o.mei&&o.debts){o.t=o.t||d.t||0;r=semExemplo(o)}}catch(e){}}
   if(r&&(S.demo||(r.t||0)>(S.t||0))){S=r;try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}SYNC.st='cloud';render(true);toast('Seus dados foram carregados da sua conta.');return}
   if(!S.demo){S.t=S.t||Date.now();await cloudFlush()}else{SYNC.st='cloud';paintWho()}
 }catch(e){}}
@@ -606,7 +614,7 @@ function vMais(){
   <div class="card"><h3>O que o Prumo não é</h3><ul class="steps"><li>Não é consultoria financeira, contábil nem jurídica.</li><li>Não negocia dívidas por você e não promete desconto ou resultado.</li><li>Não recomenda onde investir. As simulações usam só os números que você informa.</li><li>Não prevê o futuro. A projeção do orçamento mostra uma direção, com renda e gastos constantes.</li><li>Não emite nota fiscal nem gera a guia do MEI. Ele leva você ao Portal do Empreendedor.</li><li>Valores do MEI são de referência para ${REF.ano}. Confirme sempre no Portal.</li></ul></div>
   <div class="card"><h3><span aria-hidden="true" id="cmi-mais"></span>Comunidade</h3><p class="muted small">Troque experiências sobre dívidas, negócio e metas com outras pessoas, usando só um apelido.</p><button class="btn ghost sm" data-go="comunidade">Abrir a comunidade</button></div>
   <div class="card"><h3>Programa de pontos</h3><p class="muted small">Ganhe pontos usando o Prumo e troque por meses grátis quando houver mensalidade.</p><button class="btn ghost sm" data-go="pontos">Ver meus pontos</button></div>
-  <div class="card"><h3>Seus dados</h3><div class="row"><button class="btn ghost sm" data-copy-sum="1">Copiar resumo</button><button class="btn ghost sm" data-act="demo">Ver dados de exemplo</button><button class="btn danger sm" data-act="fresh">Apagar tudo e começar do zero</button></div></div>`;
+  <div class="card"><h3>Seus dados</h3><div class="row"><button class="btn ghost sm" data-copy-sum="1">Copiar resumo</button>${(()=>{try{return PT.adm}catch(_){return false}})()?'<button class="btn danger sm" data-act="fresh">Zerar o app (só administrador)</button>':''}</div></div>`;
 }
 
 
@@ -1740,8 +1748,8 @@ document.addEventListener('click',e=>{
   if(D.act==='gnew'){UI.gf={v:'',d:TODAYISO,t:'',c:'alim'};return render(true)}
   if(D.act==='gcancel'){UI.gf=null;return render(true)}
   if(D.act==='orcapply'){const pl=orcPlan();if(!pl)return;S.budget=Math.round(pl.mins+orcV(pl,'divida'));save();toast('Plano das dívidas atualizado para '+brl0(S.budget)+' por mês.');return}
-  if(D.act==='fresh'){S=empty();save();UI.neg='resumo';UI.div='visao';toast('Pronto. Comece pelas suas receitas ou dívidas.');return render()}
-  if(D.act==='demo'){S=demo();save();return render()}
+  if(D.act==='fresh'){if(!(typeof PT!=='undefined'&&PT.adm))return toast('Só o administrador pode zerar o app.');if(!confirm('Zerar o app? Todos os lançamentos deste aparelho e da conta serão apagados.'))return;S=empty();save();UI.neg='resumo';UI.div='visao';toast('Pronto. Comece pelas suas receitas ou dívidas.');return render()}
+  if(D.act==='demo'){return}
   if(D.copy){const el=$('#'+D.copy);return copy(el?el.textContent:'')}
   if(D.copySum){const c=meiCalc();return copy(`Prumo, resumo\nMEI ${Y}: ${brl(c.tot)} de ${brl(c.lim)} (${Math.round(c.pct)}%)\nDívidas: ${brl(S.debts.reduce((a,d)=>a+eff(d).saldo,0))} em ${S.debts.length}`)}
   if(D.acordo){const d=S.debts.find(x=>x.id===D.acordo);if(!d)return;if(d.acordo){d.acordo=null;save();return render(true)}UI.acordo=d.id;return render(true)}
