@@ -497,7 +497,7 @@ function syncUst(){
   const ua=ustAll();for(let k=S.length-1;k>=0;k--){if(String(S[k].id).startsWith('sh_')&&!ua.some(u=>u.id===S[k].id)){delete PRICE[S[k].id];S.splice(k,1)}}
   ua.forEach(u=>{let s=S.find(x=>x.id===u.id);if(!s){s={id:u.id,t:u.t||'mercado',end:u.sh?'Comércio cadastrado':'Local marcado por você',h:'confira no local',b:1,real:1};S.push(s)}s.t=u.t||'mercado';s.n=u.n;s.lat=u.lat;s.lng=u.lng;s.dl=u.dl||null;
     PRICE[u.id]={};Object.keys(u.pr).forEach(k=>{const x=u.pr[k];PRICE[u.id][k]={p:x.p,old:x.old,promo:true,ate:new Date(x.ate)}});
-    W.forEach(w=>{let b=null;(u.raw||[]).forEach(r=>{if(new Date(r.ate+'T23:59:59')<NOW)return;const nn=norm(r.n);if(w.k.every(t=>nn.includes(t))&&(!b||r.p<b.p))b=r});if(b)PRICE[u.id][w.id]={p:b.p,old:b.old||null,promo:true,ate:new Date(b.ate),via:b.n}})});
+    W.forEach(w=>{let b=null;(u.raw||[]).forEach(r=>{if(new Date(r.ate+'T23:59:59')<NOW)return;const nn=norm(r.n)+' '+szTok(r.n).join(' ');if(w.k.every(t=>nn.includes(t))&&(!b||r.p<b.p))b=r});if(b)PRICE[u.id][w.id]={p:b.p,old:b.old||null,promo:true,ate:new Date(b.ate),via:b.n}})});
   MER=S.filter(s=>s.t==='mercado'&&(real?s.real:!s.real))}
 syncUst();
 /* menor preço da cidade por produto */
@@ -843,8 +843,9 @@ const norm=t=>String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/
 const AL={i1:['arroz'],i2:['feijao'],i3:['oleo'],i4:['acucar'],i5:['cafe'],i6:['leite'],i7:['macarrao','espaguete'],i8:['frango'],i9:['carne','moida'],i10:['ovo'],i11:['banana'],i12:['tomate'],i13:['pao'],i14:['detergente'],i15:['papel','higienico'],i16:['sabao']};
 const NW={um:1,uma:1,dois:2,duas:2,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10};
 const STOP=new Set(['com','para','sem','por','das','dos','uma','uns','umas','mais','tipo','marca']);
+const szTok=x=>{const o=[];String(x||'').toLowerCase().replace(/(\d+(?:[.,]\d+)?)\s*(kg|g|gr|ml|l|lt|litros?)\b/g,(m,n,u)=>{let v=parseFloat(n.replace(',','.'));if(!(v>0))return m;let k='g';if(u==='kg')v*=1000;else if(u==='ml')k='ml';else if(/^l/.test(u)){v*=1000;k='ml'}o.push('sz'+Math.round(v)+k);return m});return o};
 const wantTok=line=>{const t=norm(line).replace(/[^a-z0-9\s]/g,' ').replace(/\d+([.,]\d+)?\s*(kg|g|ml|l|lt|litros?|un|rolos?)\b/g,' ');
-  const k=t.split(/\s+/).filter(w=>w.length>=3&&!STOP.has(w)&&!NW[w]&&!/^\d/.test(w));return k.length?k:null};
+  const k=t.split(/\s+/).filter(w=>w.length>=3&&!STOP.has(w)&&!NW[w]&&!/^\d/.test(w));return k.length?k.concat(szTok(line)):null};
 function mkWant(line){
   const k=wantTok(line);
   if(!k)return null;
@@ -856,7 +857,7 @@ function parseList(txt){
   String(txt).split(/\n|;|,(?=\s*\D)/).map(x=>x.trim()).filter(Boolean).forEach(line=>{
     let t=norm(line).replace(/[^a-z0-9\s.x]/g,' ');
     let id=Object.keys(AL).find(k=>AL[k].some(w=>new RegExp('\\b'+w+'s?\\b').test(t)));
-    const wk=wantTok(line);if(wk&&ustAll().some(u=>(u.raw||[]).some(r=>{const nn=norm(r.n);return wk.every(x=>nn.includes(x))})))id=null;
+    const wk=wantTok(line);if(wk&&ustAll().some(u=>(u.raw||[]).some(r=>{const nn=norm(r.n)+' '+szTok(r.n).join(' ');return wk.every(x=>nn.includes(x))})))id=null;
     if(!id){const n0=W.length,w=mkWant(line);if(!w){miss.push(line);return}if(W.length!==n0)made=1;id=w.id}
     t=t.replace(/\d+([.,]\d+)?\s*(kg|g|ml|l|lt|litros?|un|rolos?)\b/g,' ');
     let q=1,m=t.match(/(?:^|\s)(\d{1,2})\s*x?(?=\s|$)/)||t.match(/\bx\s*(\d{1,2})\b/);
@@ -906,7 +907,7 @@ function planV(){
   <label style="display:flex;gap:8px;align-items:center;font-size:14px"><input id="es" type="checkbox" style="width:auto"${fuel.est?' checked':''}> Incluir também descontos estimados por relatos de clientes (sem garantia)</label>
   <div class="line"><span>Custo por km rodado</span><b>${brl(ckmF())}</b></div><span class="m">${MD().fuel?`Combustível ${brl(fkm())} + desgaste ${brl(wearOf())} por km. Preço médio do litro em ${esc(FU[fuel.r].n)} segundo a ANP (gasolina: semana de 18 a 24/10/2026; etanol e diesel: média do Brasil, semana de 4 a 10/10/2026). O posto perto de você pode cobrar diferente: ajuste se quiser.`:'Sem gasto de combustível neste meio de transporte.'} Tempo estimado: ${String(MD().mpk).replace('.',',')} min por km, mais 12 min de compras em cada parada.</span></div>`;
   const goBtn=`<button class="btn acc" data-analisar="1" type="button" style="font-size:17px;min-height:52px">Analisar e montar rota</button>`;
-  const lbox=`  <div class="box" id="lbx"><b>Sua lista de compras</b><span class="m">Digite ou cole sua lista, um item por linha. Ex.: 2 arroz, leite x6, café, 3 detergente.</span><label for="lt" class="sr">Lista de compras</label><textarea id="lt" rows="5" placeholder="2 arroz&#10;feijão&#10;leite x6" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%;resize:vertical">${esc(mem.lt||'')}</textarea>
+  const lbox=`  <div class="box" id="lbx"><b>Sua lista de compras</b><span class="m">Digite ou cole sua lista, um item por linha. Ex.: 2 arroz, leite x6, café, 3 detergente.</span><label for="lt" class="sr">Lista de compras</label><textarea id="lt" rows="5" placeholder="2 arroz&#10;feijão&#10;leite x6" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%;resize:vertical">${esc(mem.lt||'')}</textarea>${window.lstEd?lstEd():''}
   <div class="row"><button class="btn acc" data-analisar="1" type="button" style="font-size:16.5px;min-height:50px">Analisar e montar rota</button>${pick('lfc','Tirar foto da lista',1)}${pick('lf','Foto da galeria')}<button type="button" class="chip" data-pick="lx">Arquivo .txt</button><input type="file" id="lx" accept=".txt,text/plain" hidden>
   </div>
   ${mem.lbusy?'<span class="m">Lendo a foto…</span>':''}${mem.lmsg?`<div class="err" role="alert" style="color:var(--ink)">${mem.lmsg}</div>`:''}
@@ -1276,7 +1277,7 @@ function attach(loja,arr){
   arr.forEach(o=>{u.raw=(u.raw||[]).filter(r=>r.n!==o.n);u.raw.push({n:o.n,p:o.p,old:o.old||null,ate:typeof o.ate==='string'?o.ate:new Date(o.ate).toISOString().slice(0,10)});const id=matchItem(o.n);if(!id)return;const cur=u.pr[id];if(!cur||o.p<cur.p){u.pr[id]={p:o.p,old:o.old||null,ate:typeof o.ate==='string'?o.ate:new Date(o.ate).toISOString().slice(0,10)}}n++});
   save();syncUst();return{n,tot:arr.length}}
 function brandC(id){const nt=norm(notes[id]||'');if(!nt)return null;const w=W.find(x=>x.id===id);let best=null;
-  ustAll().forEach(u=>{(u.raw||[]).forEach(r=>{if(new Date(r.ate+'T23:59:59')<NOW)return;const nn=norm(r.n);if(!(matchItem(r.n)===id||(w&&w.k.every(t=>nn.includes(t)))))return;if(!nn.includes(nt))return;if(!best||r.p<best.x.p){const st=S.find(x=>x.id===u.id);if(st)best={s:st,x:{p:r.p,old:r.old||null,promo:true,ate:new Date(r.ate),via:r.n}}}})});return best}
+  ustAll().forEach(u=>{(u.raw||[]).forEach(r=>{if(new Date(r.ate+'T23:59:59')<NOW)return;const nn=norm(r.n)+' '+szTok(r.n).join(' ');if(!(matchItem(r.n)===id||(w&&w.k.every(t=>nn.includes(t)))))return;if(!nn.includes(nt))return;if(!best||r.p<best.x.p){const st=S.find(x=>x.id===u.id);if(st)best={s:st,x:{p:r.p,old:r.old||null,promo:true,ate:new Date(r.ate),via:r.n}}}})});return best}
 function planReal(){
   const its=I.filter(i=>list[i.id]>0).map(i=>({i,q:list[i.id]})),priced=[],miss=[];
   const bm=[];its.forEach(r=>{const bc=brandC(r.i.id),c=bc||cheapest(r.i.id,r.q);if(notes[r.i.id]&&!bc)bm.push(r.i.n+' ('+notes[r.i.id]+')');c?priced.push({...r,c,brand:!!bc}):miss.push(r.i)});
@@ -1771,7 +1772,7 @@ async function listFromPhoto(f){
   mem.lbusy=1;render();
   try{
     const blob=await new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no(),'image/jpeg',.85)};im.onerror=no;im.src=URL.createObjectURL(f)});
-    const r=await sample.json('A imagem é uma lista de compras (manuscrita ou impressa). Transcreva cada item com a quantidade, como estiver escrito. Responda só JSON: {"linhas":["2 arroz","leite x6"]}. Não invente itens.',{images:[blob],modelTier:'default',cache:false});
+    const r=await sample.json('A imagem é uma lista de compras (manuscrita ou impressa). Transcreva cada item como estiver escrito, mantendo quantidade, produto, marca e peso ou volume quando aparecerem, nesta ordem. Responda só JSON: {"linhas":["2 Arroz Tio João 5kg","6 Leite integral Italac 1L","1 Café"]}. Não invente itens.',{images:[blob],modelTier:'default',cache:false});
     const L=(r&&r.linhas||[]).filter(x=>typeof x==='string').slice(0,60);
     mem.lt=(mem.lt?mem.lt.trim()+'\n':'')+L.join('\n');mem.lmsg=L.length?'Lista lida da foto. Confira o texto e toque em Montar minha lista.':'Não consegui ler itens na foto.';
   }catch(e){mem.lmsg='Não consegui ler a foto.'+(e&&e.code?' ('+e.code+')':'')}
@@ -3143,6 +3144,28 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   if(blocked()){e.preventDefault();e.stopImmediatePropagation();say()}},true);
 document.addEventListener('submit',e=>{const f=e.target;if(f&&(f.id==='mf'||f.id==='ff')&&blocked()){e.preventDefault();e.stopImmediatePropagation();say()}},true);
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.id==='sp_f'&&blocked()){e.stopImmediatePropagation();t.value='';say()}},true);
+})();
+</script>
+<script>
+/* ---- Lista de compras: inserir com quantidade, marca e peso, e corrigir o que o app entendeu ---- */
+(()=>{const UN=['kg','g','L','ml','un'];
+const pl=line=>{let t=String(line||'').trim(),q=1,med='';let m=t.match(/^(\d{1,3})\s*(?:x|un\.?|unid\.?)?\s+(.+)$/i);if(m){q=+m[1];t=m[2]}else{m=t.match(/^(.+?)\s*x\s*(\d{1,3})$/i);if(m){t=m[1];q=+m[2]}}
+  const z=t.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|gr|ml|l|lt|litros?|un)\b\.?/i);if(z){med=z[1]+(/^(l|lt|litros?)$/i.test(z[2])?'L':z[2].toLowerCase()==='gr'?'g':z[2].toLowerCase());t=(t.slice(0,z.index)+' '+t.slice(z.index+z[0].length)).replace(/\s+/g,' ').trim()}
+  return {q:Math.max(1,q||1),t,med}};
+const join=x=>[x.q>1?x.q:'1',x.t,x.med].filter(v=>String(v).trim()).join(' ').trim();
+const lines=()=>String(mem.lt||'').split('\n').map(x=>x.trim()).filter(Boolean);
+const put=L=>{mem.lt=L.join('\n');try{localStorage.setItem('ab_lt',mem.lt)}catch(_){}const ta=document.getElementById('lt');if(ta&&ta.value!==mem.lt)ta.value=mem.lt};
+window.lstEd=()=>{const L=lines().map(pl),op=window.__lstOp;
+  const add=`<div class="box" style="gap:6px;padding:10px"><b style="font-size:14.5px">➕ Adicionar item</b><div class="row" style="gap:6px;flex-wrap:wrap"><input id="la_q" inputmode="numeric" placeholder="Qtd" aria-label="Quantidade" value="1" style="width:56px"><input id="la_p" placeholder="Produto (ex.: Arroz tipo 1)" aria-label="Produto" style="flex:1;min-width:150px"><input id="la_m" placeholder="Marca (opcional)" aria-label="Marca" style="flex:1;min-width:120px"><input id="la_n" inputmode="decimal" placeholder="Peso" aria-label="Peso ou volume" style="width:70px"><select id="la_u" aria-label="Unidade">${UN.map(u=>`<option>${u}</option>`).join('')}</select><button type="button" class="btn acc" data-la="1" style="width:auto">Adicionar</button></div><span class="m">Com marca e peso o app procura exatamente esse produto nos encartes e promoções. Sem marca, procura o mais barato.</span></div>`;
+  const ed=L.length?`<details class="fold" data-lsted${op?' open':''}><summary>✏️ Conferir e corrigir a lista (${L.length})</summary><span class="m">Veja como o app entendeu cada item. Corrija o que ele leu errado.</span>${L.map((x,i)=>`<div class="row" style="gap:6px;flex-wrap:nowrap;align-items:center;margin-top:6px"><input data-le="${i}" data-f="q" inputmode="numeric" value="${x.q}" aria-label="Quantidade" style="width:48px"><input data-le="${i}" data-f="t" value="${esc(x.t)}" aria-label="Produto e marca" style="flex:1;min-width:0"><input data-le="${i}" data-f="med" value="${esc(x.med)}" placeholder="peso" aria-label="Peso ou volume" style="width:70px"><button type="button" class="chip" data-ldel="${i}" aria-label="Tirar ${esc(x.t)}">✖</button></div>`).join('')}</details>`:'';
+  return add+ed};
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('details[data-lsted]'))window.__lstOp=d.open},true);
+document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.le==null)return;const L=lines().map(pl),i=+t.dataset.le;if(!L[i])return;const f=t.dataset.f;L[i][f]=f==='q'?Math.max(1,parseInt(t.value)||1):t.value.trim();put(L.map(join))},true);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-la],[data-ldel]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  if(b.dataset.ldel!=null){const L=lines();L.splice(+b.dataset.ldel,1);put(L);window.__lstOp=true;return render()}
+  const g=id=>(document.getElementById(id)||{}).value||'',p=g('la_p').trim();if(p.length<2){const i=document.getElementById('la_p');if(i)i.focus();return}
+  const n=g('la_n').trim(),med=n?n.replace('.',',')+g('la_u'):'',it={q:Math.max(1,parseInt(g('la_q'))||1),t:[p,g('la_m').trim()].filter(Boolean).join(' '),med};
+  put(lines().concat([join(it)]));render();setTimeout(()=>{const i=document.getElementById('la_p');if(i)i.focus()},60)},true);
 })();
 </script>
 </body></html>
