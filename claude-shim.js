@@ -238,3 +238,19 @@
 (function(){try{var ic=new URL('icon-192.png',location.href).href;function fx(o){o=o||{};if(!o.icon)o.icon=ic;if(!o.image&&o.icon==='icon-192.png')o.icon=ic;return o}
   var N=window.Notification;if(N&&!N.__ic){var W=function(t,o){return new N(t,fx(o))};W.prototype=N.prototype;Object.defineProperty(W,'permission',{get:function(){return N.permission}});W.requestPermission=function(){return N.requestPermission.apply(N,arguments)};W.__ic=1;window.Notification=W}
   if(window.ServiceWorkerRegistration&&!ServiceWorkerRegistration.prototype.__ic){var sn=ServiceWorkerRegistration.prototype.showNotification;ServiceWorkerRegistration.prototype.showNotification=function(t,o){return sn.call(this,t,fx(o))};ServiceWorkerRegistration.prototype.__ic=1}}catch(e){}})();
+
+/* Campos de texto: não perder o que está sendo digitado quando a tela se atualiza sozinha */
+(function(){var lastAct=0;
+  document.addEventListener('click',function(){lastAct=Date.now()},true);
+  document.addEventListener('submit',function(){lastAct=Date.now()},true);
+  document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!(e.target&&e.target.tagName==='TEXTAREA'))lastAct=Date.now()},true);
+  function sel(a){if(a.id)return '#'+CSS.escape(a.id);var at=[].slice.call(a.attributes).filter(function(x){return /^data-|^name$/.test(x.name)});if(!at.length)return null;return a.tagName.toLowerCase()+at.map(function(x){return '['+x.name+'="'+CSS.escape(x.value)+'"]'}).join('')}
+  function txt(a){return a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|password|)$/.test(a.type||'')))}
+  function wrap(){var r=window.render;if(typeof r!=='function'||r.__keep)return;var w=function(){var a=document.activeElement,s=null,v,ss,se,y=window.scrollY;
+      if(txt(a)&&Date.now()-lastAct>400){s=sel(a);v=a.value;try{ss=a.selectionStart;se=a.selectionEnd}catch(e){}}
+      var out=r.apply(this,arguments);
+      if(s){try{var n=document.querySelector(s);if(n&&n!==a&&txt(n)){var ch=n.value!==v;if(ch)n.value=v;n.focus({preventScroll:true});try{n.setSelectionRange(ss,se)}catch(e){}window.scrollTo(0,y);if(ch)n.dispatchEvent(new Event('input',{bubbles:true}))}}catch(e){}}
+      return out};w.__keep=1;window.render=w}
+  if(document.readyState==='complete')setTimeout(wrap,0);else window.addEventListener('load',function(){setTimeout(wrap,0)});
+  setTimeout(wrap,4000);
+})();
