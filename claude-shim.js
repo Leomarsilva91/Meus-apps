@@ -90,6 +90,11 @@
         bs[1].onclick = function () { d.remove(); };
         var st = document.createElement('div'); st.style.cssText = 'font-size:14.5px;font-weight:700;padding:8px 10px;border-radius:10px;background:#f1f1f1'; st.textContent = 'Conferindo no Firebase…';
         i.parentNode.insertBefore(st, i.nextSibling);
+        var kb = document.createElement('div'); kb.style.cssText = 'display:grid;gap:6px;border-top:1px solid #ddd;padding-top:10px';
+        kb.innerHTML = '<span style="font-size:14px;color:#444">Trocou o código? Digite a <b>chave do administrador</b> e este aparelho se cadastra sozinho, sem precisar ir ao Firebase.</span><input type="password" autocomplete="off" placeholder="Chave do administrador" style="font:inherit;padding:10px;border:1.5px solid #bbb;border-radius:10px;width:100%"><button type="button" style="min-height:44px;border:0;border-radius:12px;background:#0f766e;color:#fff;font:inherit;font-weight:700">Cadastrar este aparelho</button>';
+        st.parentNode.insertBefore(kb, st.nextSibling);
+        kb.querySelector('button').onclick = function () { var kv = kb.querySelector('input').value.trim(); if (!kv) { kb.querySelector('input').focus(); return; } var bt = kb.querySelector('button'); bt.textContent = 'Cadastrando…';
+          firebase.firestore().collection('admins').doc(u).set({ k: kv, at: new Date().toISOString() }).then(function () { bt.textContent = 'Cadastrado ✓'; st.style.background = '#e3f4e6'; st.textContent = '✔ Este aparelho agora é administrador em todos os apps.'; }).catch(function (er) { bt.textContent = 'Cadastrar este aparelho'; st.style.background = '#fde8e6'; st.textContent = /permission/.test(String(er && er.code || '')) ? '✖ Chave errada, ou a chave ainda não foi criada no Firebase (coleção admkey, documento main, campo k).' : '⚠ Sem internet agora. Tente de novo.'; }); };
         try {
           firebase.firestore().collection('apps/' + appNome() + '/fb').limit(1).get().then(function () {
             st.style.background = '#e3f4e6'; st.textContent = '✔ Este aparelho já está cadastrado como administrador.';
@@ -183,7 +188,7 @@
     FBP = js(b + 'firebase-app-compat.js').then(function () { return Promise.all([js(b + 'firebase-auth-compat.js'), js(b + 'firebase-firestore-compat.js')]); }).then(function () {
       if (!firebase.apps.length) firebase.initializeApp(cfg);
       var au = firebase.auth();
-      return new Promise(function (ok) { var off = au.onAuthStateChanged(function (u) { if (u) { off(); ok(u); } }); au.signInAnonymously().catch(function () { off(); ok(null); }); });
+      return (au.setPersistence ? au.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () {}) : Promise.resolve()).then(function () { return new Promise(function (ok) { var first = true, off = au.onAuthStateChanged(function (u) { if (u) { off(); ok(u); return; } if (first) { first = false; au.signInAnonymously().catch(function () { off(); ok(null); }); } }); }); });
     }).then(function (u) {
       if (!u) { window.IA_SEM_NUVEM = true; return null; }
       FBU = u.uid; window.IA_NUVEM_UID = u.uid;

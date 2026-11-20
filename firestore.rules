@@ -5,6 +5,17 @@ service cloud.firestore {
     function entrou() { return request.auth != null; }
     function adm() { return entrou() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
 
+    // Administradores: o aparelho se cadastra sozinho digitando a chave guardada em admkey/main (campo k).
+    // A coleção admkey não pode ser lida por ninguém pelo app.
+    match /admins/{uid} {
+      allow get: if entrou() && request.auth.uid == uid;
+      allow create, update: if entrou() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['k', 'at'])
+        && request.resource.data.k is string
+        && exists(/databases/$(database)/documents/admkey/main)
+        && request.resource.data.k == get(/databases/$(database)/documents/admkey/main).data.k;
+    }
+
     // Dados pessoais de cada pessoa: só ela lê e grava.
     match /apps/{app}/data/users/{uid}/{doc=**} {
       allow read, write: if entrou() && request.auth.uid == uid;
