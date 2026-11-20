@@ -2884,7 +2884,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return
 document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.ccop)CC.op[t.dataset.ccop]=t.open},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&CC.open){CC.open=false;draw();rsMain();return}const t=e.target;if(e.key==='Enter'&&t&&t.dataset&&String(t.dataset.ccin||'').startsWith('t:')){e.preventDefault();const b=t.parentElement&&t.parentElement.querySelector('[data-cc="send"]');if(b)b.click()}});
 /* ---------- encaixe no app ---------- */
-try{const _p=promoV;promoV=function(){return entry()+_p.apply(this,arguments)}}catch(_){} try{const _pl=planV;planV=function(){return entry()+_pl.apply(this,arguments)}}catch(_){}
+try{const _pl=planV;planV=function(){return entry()+_pl.apply(this,arguments)}}catch(_){}
 try{const _a=adminV;adminV=function(){const h=_a.apply(this,arguments);if(!isAdm())return h;const s=admSec();return h.includes('<details class="adm" data-adm="mod"')?h.replace('<details class="adm" data-adm="mod"',s+'<details class="adm" data-adm="mod"'):h+s}}catch(_){}
 setTimeout(()=>{try{render()}catch(_){}},0);
 let started=0;const iv=setInterval(()=>{if(started)return;try{if(typeof HASCL==='undefined'||!HASCL){started=1;clearInterval(iv);return}}catch(_){started=1;clearInterval(iv);return}
