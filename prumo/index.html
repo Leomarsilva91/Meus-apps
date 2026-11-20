@@ -682,8 +682,8 @@ function gSum(){const r={};GR.forEach(x=>r[x[0]]=0);gMes().forEach(g=>{r[g.c]=(r
 function orcPlan(noG){
   const o=S.orc;if(!o)return null;
   const gs=noG?{}:gSum(),fx=k=>Math.max(+o.fix[k]||0,gs[k]||0),
-  ess=OR_F.reduce((a,x)=>a+fx(x[0]),0),D=S.debts.map(eff).filter(d=>d.saldo>0.005),mins=D.reduce((a,d)=>a+(d.min||0),0),livre=o.renda-ess-mins;
-  const out={renda:o.renda,pessoas:o.pessoas||1,ess,mins,livre,parts:[],D,gs};
+  ess=OR_F.reduce((a,x)=>a+fx(x[0]),0),D=S.debts.map(eff).filter(d=>d.saldo>0.005),mins=D.reduce((a,d)=>a+(d.min||0),0),ent=(()=>{try{return cEnt(MKEY)}catch(_){return 0}})(),livre=o.renda+ent-ess-mins;
+  const out={ent,renda:o.renda+ent,pessoas:o.pessoas||1,ess,mins,livre,parts:[],D,gs};
   if(livre<=0)return out;
   const costly=D.filter(d=>d.juros>=5).sort((a,b)=>b.juros-a.juros)[0],resG=S.goals.filter(g=>g.tipo==='reserva'),resOpen=!resG.length||resG.some(g=>g.guardado<g.alvo),oth=S.goals.filter(g=>g.tipo!=='reserva'&&g.guardado<g.alvo).sort((a,b)=>a.prazo.localeCompare(b.prazo));
   const w={divida:costly?35:D.length?10:0,reserva:resOpen?30:0,metas:oth.length?20:0,lazer:20,folga:10},ks=Object.keys(w).filter(k=>w[k]>0),sw=ks.reduce((a,k)=>a+w[k],0),q=livre<300?1:10;
@@ -2247,7 +2247,7 @@ function cEst(){
   let proj=0;const por=[];
   GR.forEach(([c,l])=>{const g=gs[c]||0,b=o?(+(o.fix||{})[c]||0):0,rt=GRITMO.includes(c)?g+(ws[c]||0)/W*restam:g,p=Math.max(b,rt);proj+=p;por.push({c,l,g,b,p})});
   const mins=o?S.debts.map(eff).filter(d=>d.saldo>0.005).reduce((a,d)=>a+(d.min||0),0):0;
-  const renda=o&&o.renda>0?cRendaM(MKEY)+cExtra(MKEY):null,saldo=renda==null?null:renda-(proj+mins);
+  const renda=o&&o.renda>0?cRendaM(MKEY)+cExtra(MKEY)+cEnt(MKEY):null,saldo=renda==null?null:renda-(proj+mins);
   const top=por.filter(x=>x.p>x.b*1.05&&x.p-x.b>=20).sort((a,b)=>(b.p-b.b)-(a.p-a.b)).slice(0,2);
   return{tot,proj,mins,renda,saldo,dias,restam,top,cedo:dias<4,W,cw,media:wt/W,big:big&&wt>0&&big.v/wt>.6&&big.v>=150&&W<dias?{t:big.t||big.desc||'Compra',v:big.v}:null};
 }
@@ -2287,14 +2287,14 @@ function assuntosCard(ym){
   let E=null;try{E=ym===MKEY?cEst():null}catch(_){}
   const box=GR.map(([k,l])=>{const it=L.filter(x=>x.c===k),gt=it.reduce((a,x)=>a+x.v,0),pn=k==='lazer'?lz:(+fix[k]||0),pct=pn>0?Math.min(100,gt/pn*100):0,over=pn>0&&gt>pn+0.5,cor=AS_C[k];
     const st=pn>0?(over?`<span style="color:var(--bad);font-weight:700">Passou ${brl0(gt-pn)} do planejado.</span>`:`Ainda cabem <b>${brl0(pn-gt)}</b> neste mês.`):(gt>0?'Sem valor planejado para este assunto.':'Nada lançado neste mês.');
-    const top=it.slice().sort((a,b)=>b.v-a.v).slice(0,3),pr=E&&E.restam>0&&gt>0?{p:E.tot>0?gt/E.tot*E.proj:gt}:null,prv=pr?Math.max(gt,GRITMO.includes(k)?pr.p:gt):0;
+    const top=it.slice().sort((a,b)=>String(b.d||'').localeCompare(String(a.d||''))),pr=E&&E.restam>0&&gt>0?{p:E.tot>0?gt/E.tot*E.proj:gt}:null,prv=pr?Math.max(gt,GRITMO.includes(k)?pr.p:gt):0;
     const prl=pr&&GRITMO.includes(k)&&prv>gt+0.5?`<div class="tip" style="border-left:4px solid ${cor}"><span class="small">📈 <b>Se continuar gastando assim</b>, você fecha o mês com <b class="num">${brl0(prv)}</b> em ${esc(l.toLowerCase())}${pn>0?(prv>pn+0.5?`, <b style="color:var(--bad)">${brl0(prv-pn)} acima</b> do planejado (${brl0(pn)}). Para caber, gaste até <b>${brl0(Math.max(0,pn-gt)/E.restam)}</b> por dia daqui pra frente.`:`, dentro do planejado (${brl0(pn)}).`):'.'}</span></div>`:'';
     return `<details class="card gbx" style="--bc:${cor}"><summary><span class="gbt"><b>${AS_I[k]} ${l}</b><span class="muted small">${brl0(gt)}${pn>0?' de '+brl0(pn):''} · ${it.length} ${it.length===1?'lançamento':'lançamentos'}</span></span></summary><div class="gbi">
      ${pn>0?`<div class="bar2"><i style="width:${pct.toFixed(1)}%;background:${over?'var(--bad)':cor}"></i></div>`:''}<span class="small">${st}</span>${prl}
      ${top.length?`<div class="list">${top.map(x=>`<div class="item"><div class="l"><b>${esc(x.t||'Gasto')}</b><span class="muted small">${x.d?fd(x.d):''}</span></div><b class="num r">${brl(x.v)}</b></div>`).join('')}</div>`:''}
      <div class="tip"><b class="small">Dicas para gastar menos</b><ul class="steps small" style="margin:4px 0 0">${AS_D[k].map(t=>'<li>'+t+'</li>').join('')}</ul></div>
-     <div class="row"><button class="btn ghost sm" data-cs="tab:lanc">Lançar gasto</button>${k==='lazer'||k==='roupa'?'':'<button class="btn ghost sm" data-cs="tab:orc">Mudar o planejado</button>'}</div></div></details>`}).join('');
-  return `${comportCard(ym,L)}<div class="card" style="border:0;background:transparent;padding:4px 0"><h3>Por assunto</h3><p class="muted small">Toque em um assunto para ver quanto gastou, quanto ainda cabe, como fecha o mês se continuar assim e dicas para economizar.</p></div>${box}`}
+     ${k==='lazer'||k==='roupa'?'':'<div class="row"><button class="btn ghost sm" data-cs="tab:orc">Mudar o planejado</button></div>'}</div></details>`}).join('');
+  return `${comportCard(ym,L)}<div class="card" style="border:0;background:transparent;padding:4px 0"><h3>Por assunto</h3><p class="muted small">Toque em um assunto para ver só os gastos dele no mês, quanto ainda cabe, como fecha o mês se continuar assim e dicas para economizar.</p><button class="btn" data-cs="tab:lanc" style="margin-top:8px">➕ Lançar gasto</button></div>${box}`}
 function comportCard(ym,L){
   if(ym!==MKEY||!L||L.length<3||DAYN<1)return '';
   const DS=['domingo','segunda','terça','quarta','quinta','sexta','sábado'],tot=L.reduce((a,x)=>a+x.v,0),n=L.length,ins=[];
@@ -2312,10 +2312,21 @@ function comportCard(ym,L){
 function cMs(){const c=cD();if(!c.meses||typeof c.meses!=='object')c.meses={};return c.meses}
 function cRendaM(k){const m=cMs()[k];return m&&+m.renda>0?+m.renda:(S.orc&&+S.orc.renda)||0}
 function cExtra(k){const m=cMs()[k];return m&&+m.extra>0?+m.extra:0}
+function cEntL(k){const m=cMs()[k];return m&&Array.isArray(m.ent)?m.ent:[]}
+function cEnt(k){return cEntL(k).reduce((a,x)=>a+(+x.v||0),0)}
+function entCard(){const ym=cMes(),L=cEntL(ym),r=cRendaM(ym),tot=cEnt(ym),o=UI.entF;
+  return `<details class="card fold"${o?' open':''}><summary>💵 Entradas do mês: ${brl0(r+tot)}</summary><div style="display:grid;gap:8px;margin-top:8px">
+  <div class="item"><div class="l"><b>Renda fixa</b><span class="muted small">Salário, pró-labore ou o que entra todo mês. Mude em Orçamento › Editar meu mês.</span></div><b class="num r">${brl(r)}</b></div>
+  ${L.slice().sort((a,b)=>String(b.d).localeCompare(String(a.d))).map(x=>`<div class="item"><div class="l"><b>${esc(x.t||'Entrada extra')}</b><span class="muted small">${x.d?fd(x.d):''}</span></div><b class="num r">${brl(+x.v||0)}</b><button class="btn ghost sm" data-ent="del:${x.id}" aria-label="Apagar entrada">Apagar</button></div>`).join('')}
+  <form id="f-ent" style="display:grid;gap:6px"><b class="small">➕ Lançar outra entrada neste mês</b><input id="en-t" maxlength="60" placeholder="De onde veio? Ex.: bico, venda, 13º, aluguel, reembolso" aria-label="De onde veio a entrada"><div class="row" style="flex-wrap:nowrap;gap:6px"><input id="en-v" inputmode="decimal" placeholder="Valor (R$)" aria-label="Valor da entrada" style="flex:1"><input id="en-d" type="date" value="${TODAYISO}" aria-label="Data da entrada" style="flex:1"></div><button class="btn" type="submit">Lançar entrada</button></form>
+  <p class="muted small">Pode lançar quantas entradas quiser no mesmo mês. Elas somam no que você tem para o mês e no saldo.</p></div></details>`}
+document.addEventListener('submit',e=>{if(!e.target||e.target.id!=='f-ent')return;e.preventDefault();e.stopImmediatePropagation();const v=num(($('#en-v')||{}).value||''),t=String(($('#en-t')||{}).value||'').trim().slice(0,60),d=($('#en-d')||{}).value||TODAYISO;
+  if(!(v>0)){toast('Digite o valor da entrada.');return}const ym=cMes(),m=cMs()[ym]=Object.assign(cMs()[ym]||{},{});if(!(+m.renda>0))m.renda=(S.orc&&+S.orc.renda)||0;m.ent=Array.isArray(m.ent)?m.ent:[];m.ent.push({id:'e'+Date.now().toString(36),t:t||'Entrada extra',v:Math.round(v*100)/100,d});UI.entF=1;save();render(true);toast('Entrada de '+brl0(v)+' lançada no mês.')},true);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ent]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const id=b.dataset.ent.slice(4),m=cMs()[cMes()];if(!m||!Array.isArray(m.ent))return;if(!confirm('Apagar esta entrada?'))return;m.ent=m.ent.filter(x=>x.id!==id);UI.entF=1;save();render(true)},true);
 function cGastosK(k){return cD().gastos.filter(g=>g.d&&cIn(g.d,k)).map(g=>({v:+g.v||0,c:g.cat||'outros'})).concat(((S.orc&&S.orc.gastos)||[]).filter(g=>g.d&&cIn(g.d,k)).map(g=>({v:+g.v||0,c:g.c||'outros'})))}
 function cHist(){if(!S.orc)return;const M0=cMs(),ks=new Set();cD().gastos.concat(S.orc.gastos||[]).forEach(g=>{if(g.d)ks.add(cKeyOf(g.d))});let ch=false;ks.forEach(k=>{if(k<MKEY&&k>=cAdd(MKEY,-12)&&!(M0[k]&&+M0[k].renda>0)){M0[k]=Object.assign(M0[k]||{},{renda:+S.orc.renda||0});ch=true}});if(ch)save()}
 function cRes(k){const o=S.orc,L=cGastosK(k),gs={};L.forEach(x=>gs[x.c]=(gs[x.c]||0)+x.v);let g=0;GR.forEach(([c])=>{g+=Math.max(o?(+(o.fix||{})[c]||0):0,gs[c]||0)});
-  const mins=o?S.debts.map(eff).filter(d=>d.saldo>0.005).reduce((a,d)=>a+(d.min||0),0):0,r=cRendaM(k),ex=cExtra(k);return{k,r,ex,n:L.length,g:g+mins,sobra:r+ex-(g+mins)}}
+  const mins=o?S.debts.map(eff).filter(d=>d.saldo>0.005).reduce((a,d)=>a+(d.min||0),0):0,r=cRendaM(k),ex=cExtra(k),en=cEnt(k);return{k,r,ex,en,n:L.length,g:g+mins,sobra:r+ex+en-(g+mins)}}
 function cClosed(){const M0=cMs();return Object.keys(M0).filter(k=>k<MKEY&&+M0[k].renda>0).sort()}
 function cPool(){let p=0;cClosed().forEach(k=>{p+=Math.max(0,cRes(k).sobra)});Object.keys(cMs()).forEach(k=>{p-=cExtra(k)});return Math.max(0,Math.round(p*100)/100)}
 function mesesCard(){cHist();const ks=cClosed().reverse(),pool=cPool(),ex=cExtra(MKEY);let e=null;try{e=cEst()}catch(_){}
@@ -2360,7 +2371,7 @@ function casaView(){const sub=UI.cs||'resumo',ym=cMes(),G=cD().gastos,GM=G.filte
   if(sub==='lanc'){const L=[...GM].sort((a,b)=>b.d.localeCompare(a.d));
     b=`${estCard()}<form class="card" id="f-cm"><h3>Lançar gasto à mão</h3><div class="grid2"><label>Data<input id="cm-d" type="date" value="${TODAYISO}" required></label><label>Valor (R$)<input id="cm-v" inputmode="decimal" placeholder="0,00" required></label></div><label>O que foi<input id="cm-s" maxlength="60" required></label><label>Categoria<select id="cm-c">${GR.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></label><div class="note" id="cm-e" hidden></div><button class="btn" type="submit">Salvar gasto</button></form>
     <div class="card"><h3>Lançamentos ${cDia()===1?'de '+MES[+ym.slice(5,7)-1]:'do mês'}</h3><div class="list">${L.map(g=>`<div class="item"><div class="l"><b>${esc(g.desc)}</b><span class="muted small">${fd(g.d)}${g.card?' · '+esc(g.card):''}</span><select data-ccg="${g.id}" aria-label="Categoria de ${esc(g.desc)}" style="font-size:13px;margin-top:4px">${GR.map(x=>`<option value="${x[0]}"${(g.cat||'outros')===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div><div class="r"><b class="num">${brl(g.v)}</b><br><button class="btn danger sm" data-cs="del:${g.id}" aria-label="Apagar ${esc(g.desc)}">Apagar</button></div></div>`).join('')||'<p class="muted">Nada lançado neste mês.</p>'}</div></div>`}
-  return `${demoBar()}<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Economia doméstica</h2></div>${casaTabs()}${sub==='resumo'?cicloCard()+mesesCard():''}${sub==='importar'||sub==='orc'?'':nav}${b}${sub==='resumo'?assuntosCard(ym):''}</div>`}
+  return `${demoBar()}<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Economia doméstica</h2></div>${casaTabs()}${sub==='resumo'||sub==='orc'?entCard():''}${sub==='resumo'?cicloCard()+mesesCard():''}${sub==='importar'||sub==='orc'?'':nav}${b}${sub==='resumo'?assuntosCard(ym):''}</div>`}
 VIEWS.casa=()=>casaView();
 async function cRun(file){
   const tv=($('#ci-t')||{}).value,tipo=tv==='cupom'?'cupom':tv==='comp'?'comp':'fatura',modo=tipo==='cupom'&&($('#ci-m')||{}).value==='total'?'total':'itens',cardIn=(($('#ci-c')||{}).value||'').trim().slice(0,30);
