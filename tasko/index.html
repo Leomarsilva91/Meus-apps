@@ -1556,6 +1556,9 @@ async function saveFile(kind){
   }catch(e){if(!e||e.code!=='declined')m.textContent='Não consegui baixar o arquivo. Tente de novo.'}
 }
 let FEE=990,PGFEE=1490,REPX=500,REPM=990;
+const REPRX=/faxin|diarist|limpez|limpar (a |o |minha |meu )?(casa|apartamento|ap |escritorio|escrit)|lavar (o |meu |a |minha )?(carro|moto)|lava[cç][aã]o|lavagem|jardin|grama|ro[cç]ad|podar|poda |piscin|passar roupa|lavar roupa|passadeira|cuidador|cuidar d|bab[aá]|aula|professor|personal|passear com|dog ?walker|adestr|manuten[cç][aã]o (mensal|preventiva|peri[oó]dica)|dedetiza|limpeza de caixa|marmita|cozinheir/i;
+const isRepServ=d=>REPRX.test(String(d||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/c\u0327/g,'c'))||REPRX.test(String(d||'').toLowerCase());
+const repOk=q=>!!q&&(!!q.rep||isRepServ(q.desc));
 function repX(){try{if(S.v==='unlock'||S.v==='expq'){const q=jget('ms_requests').find(x=>x&&x.id===S.payid);return q&&q.rep?REPX:0}return S.req&&S.req.rep&&['checkout','pay','request','review','confirm'].includes(S.v)?REPX:0}catch(e){return 0}}
 function repInfo(){return brl2(REPX/100)+' maior'}
 const brl2=n=>'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -3186,7 +3189,7 @@ function visitas(r,ate){const out=[],st=pd(r.start),fim=ate||new Date(Date.now()
 const vSt=(r,d)=>(r.v||{})[d]||'';
 const vinc=r=>r.f==='w'&&(r.dias||[]).length>2;
 function recLine(r){return `${FREQ[r.f]}${r.f==='m'?' (dia '+(r.dom||pd(r.start).getDate())+')':' · '+(r.dias||[]).map(i=>DOWN[i]).join(', ')}${r.hora?' às '+esc(r.hora):''} · ${brl2(+r.val||0)} por visita`}
-window.recBtn=(q,p,isCli)=>{if(q.acc!==p.id)return '';const ex=recs().find(r=>r.pid===p.id&&r.st!=='fim'&&r.st!=='no');return ex?'':`<button class="btn ghost" style="margin-top:8px" data-x="recnew" data-pid="${p.id}">🔁 Combinar serviço que se repete</button>`};
+window.recBtn=(q,p,isCli)=>{if(q.acc!==p.id)return '';const ex=recs().find(r=>r.pid===p.id&&r.st!=='fim'&&r.st!=='no');return ex?'':repOk(q)?`<button class="btn ghost" style="margin-top:8px" data-x="recnew" data-pid="${p.id}">🔁 Combinar serviço que se repete</button>`:(q.email===meE()?`<button class="chip" style="margin-top:8px" data-act="rehire" data-qid="${q.id}" data-em="${esc(p.email)}">🔄 Pedir de novo para ${esc(fnm(p.name)||'este profissional')}</button>`:'')};
 function recForm(p,q){const F=S.recF||{f:'w',dias:[new Date().getDay()],hora:'08:00',val:Number(p.agreed||p.price)||0,start:ymdOf(new Date(Date.now()+864e5)),forma:'aut',dom:new Date().getDate()},w=F.f!=='m';
   return `${head('Serviço que se repete','agenda')}<main>
 <div class="card"><b>${esc(dTit(q.desc,80))}</b><p class="muted" style="margin:4px 0 0">Entre ${esc(fnm((users().find(u=>u.email===q.email)||{}).name||q.cn||'contratante'))} e ${esc(fnm(p.name))}. Combine uma vez e o app organiza as visitas, os lembretes e o recibo do mês.</p></div>
@@ -3253,7 +3256,7 @@ V.agenda=()=>{const me=meE(),hoje=ymdOf(new Date()),lim=new Date(Date.now()+45*8
   jget('ms_proposals').forEach(p=>{if(!p||!p.sched||!p.sched.date)return;const q=reqOf(p.reqId);if(!q||q.acc!==p.id||(q.email!==me&&p.email!==me)||q.fin)return;if(p.sched.date>=hoje)ev.push({d:p.sched.date,h:p.sched.time||'',t:dTit(q.desc,60),com:q.email===me?p.name:((users().find(u=>u.email===q.email)||{}).name||q.cn||''),pid:p.id,k:'s'})});
   myRecs().filter(r=>r.st==='on').forEach(r=>visitas(r,lim).filter(d=>d>=hoje).forEach(d=>ev.push({d,h:r.hora||'',t:dTit(r.desc,60),com:r.cli===me?r.proN:r.cliN,pid:r.pid,k:'r'})));
   ev.sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
-  const acc=jget('ms_proposals').filter(p=>{if(!p)return false;const q=reqOf(p.reqId);return q&&q.acc===p.id&&(q.email===me||p.email===me)&&!q.sample}),semRec=acc.filter(p=>!recs().some(r=>r.pid===p.id&&r.st!=='fim'&&r.st!=='no'));
+  const acc=jget('ms_proposals').filter(p=>{if(!p)return false;const q=reqOf(p.reqId);return q&&q.acc===p.id&&(q.email===me||p.email===me)&&!q.sample}),semRec=acc.filter(p=>repOk(reqOf(p.reqId))&&!recs().some(r=>r.pid===p.id&&r.st!=='fim'&&r.st!=='no'));
   const pend=myRecs().filter(r=>r.st==='prop'),outros=myRecs().filter(r=>r.st!=='prop');
   return `${head('📅 Agenda','home')}<main>
 ${pend.length?`<div class="card" style="border-color:var(--acc)"><b>🔁 Convites de serviço que se repete</b></div>${pend.map(r=>recCard(r,true)).join('')}`:''}
@@ -3262,7 +3265,7 @@ ${pend.length?`<div class="card" style="border-color:var(--acc)"><b>🔁 Convite
 ${outros.length?`<div class="card"><b>Serviços que se repetem</b></div>${outros.map(r=>recCard(r,true)).join('')}`:''}
 ${formasCard()}</main>`};
 window.agN=()=>{try{return recPend()}catch(e){return 0}};
-window.recBtnQ=q=>{try{if(!q||!q.acc||!S.user)return '';const p=jget('ms_proposals').find(x=>x&&x.id===q.acc);if(!p||(q.email!==meE()&&p.email!==meE()))return '';const r=recs().find(x=>x.pid===p.id&&x.st!=='fim'&&x.st!=='no');return r?`<button class="chip" style="margin-top:8px" data-go="agenda">🔁 ${r.st==='on'?'Serviço que se repete: ver agenda':'Convite de serviço que se repete: ver'}</button>`:`<button class="chip" style="margin-top:8px" data-x="recnew" data-pid="${p.id}">🔁 Combinar serviço que se repete</button>`}catch(e){return ''}};
+window.recBtnQ=q=>{try{if(!q||!q.acc||!S.user)return '';const p=jget('ms_proposals').find(x=>x&&x.id===q.acc);if(!p||(q.email!==meE()&&p.email!==meE()))return '';const r=recs().find(x=>x.pid===p.id&&x.st!=='fim'&&x.st!=='no');return r?`<button class="chip" style="margin-top:8px" data-go="agenda">🔁 ${r.st==='on'?'Serviço que se repete: ver agenda':'Convite de serviço que se repete: ver'}</button>`:repOk(q)?`<button class="chip" style="margin-top:8px" data-x="recnew" data-pid="${p.id}">🔁 Combinar serviço que se repete</button>`:(q.email===meE()?`<button class="chip" style="margin-top:8px" data-act="rehire" data-qid="${q.id}" data-em="${esc(p.email)}">🔄 Pedir de novo para ${esc(fnm(p.name)||'este profissional')}</button>`:'')}catch(e){return ''}};
 /* ---------- 4. Lembretes no celular ---------- */
 const lmK=()=>'ms_lemb_'+meE();
 const lmOn=()=>{try{return 'Notification' in window&&Notification.permission==='granted'&&!pr0().noN}catch(e){return false}};
@@ -3733,7 +3736,7 @@ window.portf=email=>{const L=jget('ms_fotos').filter(f=>f&&f.pub&&f.by===email).
 <script>
 /* ---------- Serviço que se repete: taxa maior no pedido e mensalidade da conversa pelo app ---------- */
 (()=>{const ymdOf=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),pd=x=>{const a=String(x).split('-');return new Date(+a[0],+a[1]-1,+a[2])},nowIso=()=>new Date().toISOString(),hj=()=>ymdOf(new Date()),me=()=>S.user&&S.user.email,fd=d=>String(d||'').split('-').reverse().join('/');
-document.addEventListener('change',e=>{if(e.target&&e.target.id==='rrep'&&S.req){S.req.rep=e.target.checked?1:0}},true);
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='rrep'&&S.req){S.req.rep=e.target.checked?1:0;S.req.repQ=1}},true);
 const recOf=pid=>jget('ms_recor').find(r=>r&&r.pid===pid&&r.st==='on');
 window.repGate=pid=>{const r=recOf(pid);if(!r)return null;const pg=r.pg||hj();return pg<hj()?r:null};
 const box=(r,cli)=>`<div class="card" style="border-color:var(--acc)"><b>🔁 Conversa do serviço que se repete pausada</b><p class="muted" style="margin:6px 0 0">${cli?`Para continuar falando com ${esc(fnm(r.proN||'o profissional'))} pelo app, com agenda, lembretes e recibo do mês, pague a mensalidade de ${brl2(REPM/100)}.`:'A mensalidade do app venceu. Assim que o contratante pagar, a conversa volta. As visitas combinadas continuam valendo.'}</p>${cli?`<button class="btn" style="margin-top:8px" data-repay="${r.id}">Pagar ${brl2(REPM/100)} e liberar por 30 dias</button>`:''}</div>`;
@@ -3748,6 +3751,13 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   const base=(r.pg&&r.pg>hj())?pd(r.pg):new Date();base.setDate(base.getDate()+30);r.pg=ymdOf(base);r.pays=[...(r.pays||[]),{at:nowIso(),cents:REPM,method:payLabel()}];spSaveAll('ms_recor',L);
   try{addMsg(r.pid,(jget('ms_proposals').find(x=>x&&x.id===r.pid)||{}).reqId,'🔁 Mensalidade do serviço que se repete paga. Conversa liberada até '+fd(r.pg)+'.',true)}catch(_){}
   toast('Pago! Conversa liberada até '+fd(r.pg)+'.');render()},true);
+})();
+</script>
+<script>
+/* ---------- Serviço que costuma se repetir: perguntar na hora de pagar ---------- */
+(()=>{const _c=V.checkout;V.checkout=function(){const h=_c.apply(this,arguments),r=S.req;if(!r||r.repQ||r.rep||!isRepServ(r.desc))return h;
+  const i=h.indexOf('<main>')+6;return h.slice(0,i)+`<div class="card" style="border-color:var(--acc)"><b>🔁 Este serviço costuma se repetir</b><p class="muted" style="margin:6px 0 8px">Faxina, lavar carro, jardim e parecidos costumam ser toda semana, a cada 15 dias ou todo mês. Vai ser assim?</p><div class="row" style="gap:8px"><button class="btn" data-repq="1" style="flex:1">Sim, vai se repetir (+ ${brl2(REPX/100)})</button><button class="btn ghost" data-repq="0" style="flex:1">Não, é só uma vez</button></div><p class="muted" style="margin:8px 0 0;font-size:13px">Repetindo, já vem o primeiro mês de agenda, lembretes, recibos e conversa pelo app com o profissional.</p></div>`+h.slice(i)};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-repq]');if(!b||!S.req)return;e.preventDefault();e.stopImmediatePropagation();S.req.rep=b.dataset.repq==='1'?1:0;S.req.repQ=1;render();window.scrollTo(0,0)},true);
 })();
 </script>
 </body>
