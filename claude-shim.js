@@ -233,3 +233,8 @@
   };
   window.claude = { use: async function (n) { if (n === 'downloads') return downloads; if (n === 'assets') return (await assetsOn()) ? assets : null; return n === 'sample' ? sample : n === 'user' ? user : n === 'db' ? fbDb() : n === 'dbany' ? fbIni() : null; } };
 })();
+
+/* Notificações com o ícone do próprio app */
+(function(){try{var ic=new URL('icon-192.png',location.href).href;function fx(o){o=o||{};if(!o.icon)o.icon=ic;if(!o.image&&o.icon==='icon-192.png')o.icon=ic;return o}
+  var N=window.Notification;if(N&&!N.__ic){var W=function(t,o){return new N(t,fx(o))};W.prototype=N.prototype;Object.defineProperty(W,'permission',{get:function(){return N.permission}});W.requestPermission=function(){return N.requestPermission.apply(N,arguments)};W.__ic=1;window.Notification=W}
+  if(window.ServiceWorkerRegistration&&!ServiceWorkerRegistration.prototype.__ic){var sn=ServiceWorkerRegistration.prototype.showNotification;ServiceWorkerRegistration.prototype.showNotification=function(t,o){return sn.call(this,t,fx(o))};ServiceWorkerRegistration.prototype.__ic=1}}catch(e){}})();
