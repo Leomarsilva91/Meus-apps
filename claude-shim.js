@@ -259,3 +259,6 @@
   if(document.readyState==='complete')setTimeout(wrap,0);else window.addEventListener('load',function(){setTimeout(wrap,0)});
   setTimeout(wrap,4000);
 })();
+
+/* iPhone: campos com letra de 16px para o Safari não dar zoom e "estourar" a tela ao digitar */
+(function(){try{if(!/iP(hone|ad|od)/.test(navigator.userAgent)&&!(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))return;var st=document.createElement('style');st.textContent='input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px!important}html,body{max-width:100%;overflow-x:hidden}';(document.head||document.documentElement).appendChild(st)}catch(e){}})();
