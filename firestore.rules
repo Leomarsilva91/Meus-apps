@@ -51,6 +51,10 @@ service cloud.firestore {
         && request.resource.data.file is string && request.resource.data.file.size() <= 900000;
       allow delete: if entrou() && resource.data.ow == request.auth.uid;
     }
+    // Tasko (versão de teste): pedidos, propostas, conversas e agenda compartilhados entre os aparelhos.
+    match /apps/{app}/{col}/{id} {
+      allow read, write: if entrou() && col.matches('sync_ms_.*');
+    }
     // Áreas que só o administrador lê por inteiro (cada pessoa vê só o seu).
     match /apps/{app}/{col}/{uid} {
       allow read: if entrou() && (
