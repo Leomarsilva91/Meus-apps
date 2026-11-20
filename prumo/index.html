@@ -1522,7 +1522,7 @@ function printSpec(sp){const E=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&
 async function docAct(act,bar,kind2){
   const st=$('#dm-st'),say=t=>{if(st)st.textContent=t},k=kind2||bar.dataset.dk,id=bar.dataset.did||null,sp=docSpec(k,id);
   if(!sp){say('Não consegui montar este documento agora.');return}
-  const bytes=pdfBuild(sp),fname=sp.fname+'.pdf',blob=new Blob([bytes],{type:'application/pdf'}),txt=specText(sp);
+  const bytes=pdfBuild(sp),fname=sp.fname+'-'+(d=>String(d.getHours()).padStart(2,'0')+'h'+String(d.getMinutes()).padStart(2,'0'))(new Date())+'.pdf',blob=new Blob([bytes],{type:'application/pdf'}),txt=specText(sp);
   const saveFile=async()=>{let dl=null;try{dl=await claude.use('downloads')}catch(_){}
     if(dl){try{await dl.save({filename:fname,data:blob});return true}catch(e){if(e&&e.code==='declined')return false}}
     try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);return true}catch(e){return false}};
