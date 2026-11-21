@@ -18,6 +18,30 @@
 .cgrp>details.fold:first-child{border-top:0}
 .cgrp>details.fold>summary{min-height:54px;font-size:15.5px}
 .cgrp>details.fold[open]{padding-bottom:12px}
+
+/* ---- acabamento geral ---- */
+details.card:not([open]){gap:0;padding-top:12px;padding-bottom:12px}
+details.card>summary{min-height:44px}
+details.card>summary{display:flex;align-items:center;gap:8px}
+details.card>summary::after{margin-left:auto;flex:none;width:28px;height:28px;border-radius:99px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.seg.fit{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px;gap:4px}
+.seg.fit button{border:0;background:transparent;font-weight:700;border-radius:14px;min-height:42px}
+.seg.fit button[aria-pressed=true]{background:var(--mei);color:var(--on-mei)}
+.seg.fit.neg{grid-template-columns:repeat(4,minmax(0,1fr))}
+.dreamcard{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 16px;display:grid;grid-template-columns:44px 1fr;gap:4px 12px;align-items:center;box-shadow:var(--shadow)}
+.dreamcard .ico{grid-row:span 2;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--bg)}
+.dreamcard h3{font-size:16px}
+.dreamcard .row{grid-column:1/-1}
+.invcard{margin-top:10px}
+.sticker{justify-self:start;width:auto}
+.mlist{padding:4px 16px;gap:0}
+.mlist>*{border-top:1px solid var(--line)}
+.mlist>*:first-child{border-top:0}
+.mrow{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 0;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.mrow .ico{width:40px;height:40px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.mrow .tx{display:grid;gap:2px;flex:1;min-width:0}
+.mrow .tx b{font-size:15.5px}
+.mrow::after{content:'›';font-size:22px;color:var(--muted)}
 </style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Prumo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -523,7 +547,7 @@ function chart(c){
   c.byM.forEach((b,i)=>{const x=pl+i*bw;g+=`<rect x="${x+3}" y="${y(b.r)}" width="${bw/2-3}" height="${Math.max(0,H-pb-y(b.r))}" rx="2" fill="var(--mei)"/><rect x="${x+bw/2}" y="${y(b.e)}" width="${bw/2-3}" height="${Math.max(0,H-pb-y(b.e))}" rx="2" fill="var(--muted)" opacity=".55"/><text x="${x+bw/2}" y="${H-4}" text-anchor="middle">${MS[i][0].toUpperCase()}</text>`});
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Receitas e despesas por mês em ${Y}">${g}</svg><div class="row small muted"><span><b style="color:var(--mei)">■</b> Receitas</span><span><b style="color:var(--muted)">■</b> Despesas</span></div>`;
 }
-function negTabs(){return `<div class="seg fit" role="group" aria-label="Meu negócio">${[['resumo','Resumo'],['receitas','Receitas'],['despesas','Despesas'],['guia','Guia e prazos'],['recibo','Recibo'],['folha','Folha'],['retirada','Retirada']].map(([k,l])=>`<button data-sub="${k}" aria-pressed="${UI.neg===k}">${l}</button>`).join('')}</div>`}
+function negTabs(){return `<div class="seg fit neg" role="group" aria-label="Meu negócio">${[['resumo','Resumo'],['receitas','Receitas'],['despesas','Despesas'],['guia','Guia e prazos'],['recibo','Recibo'],['folha','Folha'],['retirada','Retirada']].map(([k,l])=>`<button data-sub="${k}" aria-pressed="${UI.neg===k}">${l}</button>`).join('')}</div>`}
 function vNegocio(){
   const c=meiCalc(),k=UI.neg;let b='';
   if(k==='resumo'){
@@ -609,7 +633,7 @@ function vDividas(){
     if(!sel)b=`<div class="note info debt">Cadastre uma dívida para gerar o roteiro.</div>`;
     else{UI.sel=sel.id;b=roteiro(sel)}
   }
-  return `${demoBar()}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Dívidas</h2></div>${divTabs()}${miniDiv()}${b}`;
+  return `${demoBar()}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Dívidas</h2></div>${divTabs()}${UI.div&&UI.div!=='visao'?miniDiv():''}${b}`;
 }
 const DICA={
   cartao:'Peça para trocar o saldo do rotativo por um parcelamento com juros menores e pergunte a taxa mensal do acordo.',
@@ -630,8 +654,8 @@ function roteiro(d){
 
 function vMais(){
   return `${demoBar()}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Mais</h2></div>
-  <div class="card"><h3>Sobre o Prumo</h3><p>Um app para quem trabalha por conta própria juntar dinheiro para os seus planos, organizar o negócio e sair das dívidas no mesmo lugar. Esta é uma versão de demonstração.</p><p class="muted small">Os dados ficam só neste aparelho. Nada é enviado para nenhum servidor. A IA só é usada quando você toca em "Melhorar com IA".</p></div>
-  <div class="card"><h3>O que o Prumo não é</h3><ul class="steps"><li>Não é consultoria financeira, contábil nem jurídica.</li><li>Não negocia dívidas por você e não promete desconto ou resultado.</li><li>Não recomenda onde investir. As simulações usam só os números que você informa.</li><li>Não prevê o futuro. A projeção do orçamento mostra uma direção, com renda e gastos constantes.</li><li>Não emite nota fiscal nem gera a guia do MEI. Ele leva você ao Portal do Empreendedor.</li><li>Valores do MEI são de referência para ${REF.ano}. Confirme sempre no Portal.</li></ul></div>
+  <details class="card fold"><summary>ℹ️ Sobre o Prumo</summary><p>Um app para quem trabalha por conta própria juntar dinheiro para os seus planos, organizar o negócio e sair das dívidas no mesmo lugar. Esta é uma versão de testes.</p><p class="muted small">Seus dados ficam guardados neste aparelho e na sua conta, para não se perderem. O Prumo não vende nem repassa seus dados. A IA só é usada quando você pede, por exemplo para ler um documento.</p></details>
+  <details class="card fold"><summary>🚫 O que o Prumo não é</summary><ul class="steps"><li>Não é consultoria financeira, contábil nem jurídica.</li><li>Não negocia dívidas por você e não promete desconto ou resultado.</li><li>Não recomenda onde investir. As simulações usam só os números que você informa.</li><li>Não prevê o futuro. A projeção do orçamento mostra uma direção, com renda e gastos constantes.</li><li>Não emite nota fiscal nem gera a guia do MEI. Ele leva você ao Portal do Empreendedor.</li><li>Valores do MEI são de referência para ${REF.ano}. Confirme sempre no Portal.</li></ul></details>
   <div class="card"><h3><span aria-hidden="true" id="cmi-mais"></span>Comunidade</h3><p class="muted small">Troque experiências sobre dívidas, negócio e metas com outras pessoas, usando só um apelido.</p><button class="btn ghost sm" data-go="comunidade">Abrir a comunidade</button></div>
   <div class="card"><h3>Programa de pontos</h3><p class="muted small">Ganhe pontos usando o Prumo e troque por meses grátis quando houver mensalidade.</p><button class="btn ghost sm" data-go="pontos">Ver meus pontos</button></div>
   <div class="card"><h3>Seus dados</h3><div class="row"><button class="btn ghost sm" data-copy-sum="1">Copiar resumo</button>${(()=>{try{return PT.adm}catch(_){return false}})()?'<button class="btn danger sm" data-act="fresh">Zerar o app (só administrador)</button>':''}</div></div>`;
@@ -767,7 +791,7 @@ function lineChart(series){
   series.forEach(s=>{g+=`<path class="ln" d="${s.v.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Yy(v).toFixed(1)).join(' ')}" stroke="${s.c}" ${s.d?'stroke-dasharray="5 4"':''}/><circle cx="${X(n)}" cy="${Yy(s.v[n])}" r="4" fill="${s.c}"/>`});
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.ariaLabel||'Projeção ao longo dos meses')}">${g}</svg>`;
 }
-function vMetas(){UI.met='lista';if(UI.plan&&S.goals.some(x=>x.id===UI.plan))return `${demoBar()}${vPlan()}`;UI.plan=null;return `${demoBar()}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Metas</h2></div>${miniMetas()}${vMetasLista()}<button class="btn ghost sm" data-go="casa" data-sub="orc" style="justify-self:start">O orçamento do mês agora fica na Economia doméstica →</button>`}
+function vMetas(){UI.met='lista';if(UI.plan&&S.goals.some(x=>x.id===UI.plan))return `${demoBar()}${vPlan()}`;UI.plan=null;return `${demoBar()}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Metas</h2></div>${vMetasLista()}<button class="btn ghost sm" data-go="casa" data-sub="orc" style="justify-self:start">O orçamento do mês agora fica na Economia doméstica →</button>`}
 function orcForm(embed){
   const o=S.orc,n=x=>x?String(x).replace('.',','):'';
   return `<form class="${embed?'':'card'}" id="f-orc"${embed?' data-noscan="1"':''} style="display:grid;gap:10px"><h3>Seu mês</h3><p class="muted small">Diga em que dia o seu mês começa (por exemplo, o dia em que o salário cai) e quanto você tem para o mês. O Prumo divide o resto. O mês termina na véspera do mesmo dia do mês seguinte.</p>
@@ -1573,7 +1597,7 @@ const DR_T=[['viagem','Viagem'],['reserva','Reserva de emergência'],['procedime
 function dreamHint(){try{if(soCofre())return 0}catch(_){}const pl=S.orc?orcPlan():null;return pl&&pl.livre>0?Math.max(0,orcV(pl,'metas')):0}
 function dreamCard(){
   const h=dreamHint();
-  return `<div class="dreamcard" id="dreamcard"><h3 style="margin:0">Quer usar parte do dinheiro para um sonho?</h3><p class="muted small" style="margin:0">Uma viagem, uma reserva, uma reforma ou um investimento. Diga o que quer e o Prumo já monta o plano de quanto guardar por mês${h?'. Seu orçamento reserva cerca de '+brl0(h)+' por mês para metas':''}.</p><div class="row"><button class="btn meta" data-act="dream">Planejar um sonho</button></div></div>`;
+  return `<div class="dreamcard" id="dreamcard"><span class="ico" aria-hidden="true">🌟</span><h3 style="margin:0">Quer realizar um sonho?</h3><p class="muted small" style="margin:0">Viagem, reserva, reforma ou investimento: o Prumo monta o plano de quanto guardar por mês${h?' (seu orçamento reserva cerca de '+brl0(h)+')':''}.</p><div class="row"><button class="btn meta sm" data-act="dream">Planejar um sonho</button></div></div>`;
 }
 function dreamSheet(){
   const D=UI.dream;if(!D)return '';
@@ -1664,7 +1688,7 @@ function invSheet(){
    <div class="note"><b>Aviso:</b> isto é informação geral e educativa, não recomendação de investimento personalizada. Investir envolve risco, e rentabilidade passada não garante resultado futuro. Se tiver dúvidas, converse com um profissional habilitado.</div>
    <div class="row"><button class="btn ghost" data-act="invx">Fechar</button></div></div></div>`;
 }
-function invCard(){return `<div class="dreamcard invcard" id="invcard"><h3 style="margin:0">Quer fazer o dinheiro render?</h3><p class="muted small" style="margin:0">Veja as opções de investimento, vantagens, taxas de hoje e simule quanto seu dinheiro rende.</p><div class="row"><button class="btn ghost" data-act="inv">Ver opções de investimento</button></div></div>`}
+function invCard(){return `<div class="dreamcard invcard" id="invcard"><span class="ico" aria-hidden="true">📈</span><h3 style="margin:0">Quer fazer o dinheiro render?</h3><p class="muted small" style="margin:0">Compare os investimentos com as taxas de hoje e simule quanto rende.</p><div class="row"><button class="btn ghost sm" data-act="inv">Ver opções de investimento</button></div></div>`}
 function injectInv(){
   const old=$('#inv');const keep=old&&old.querySelector('.sheet-p')?old.querySelector('.sheet-p').scrollTop:0;if(old)old.remove();const oc=$('#invcard');if(oc)oc.remove();
   const v=$('#v');if(v&&!UI.plan&&(['inicio','negocio','dividas'].includes(UI.tab)||(UI.tab==='casa'&&UI.cs==='orc')))v.insertAdjacentHTML('beforeend',invCard());
@@ -3555,7 +3579,7 @@ function cardOf(o,adm){return `<div class="card" style="gap:6px;padding:12px">${
 function quadro(g){if(!g||g.tipo!=='viagem'||g._sh)return '';const dest=doDestino(g);if(!dest)return '';const L=ativas().filter(o=>assOf(o)==='viagem'&&casa(o,dest)).sort((a,b)=>(a.ptipo==='org'?-1:0)-(b.ptipo==='org'?-1:0));
   return `<details class="card fold"><summary>🏖️ Ofertas para ${esc(dest)}${L.length?' ('+L.length+')':''}</summary>${L.length?L.map(o=>cardOf(o)).join(''):`<p class="muted small">Ainda não há ofertas para ${esc(dest)}.</p>`}<p class="muted small">O Prumo não recebe nem repassa seus dados: você só fala com o lugar se tocar no site ou no WhatsApp. Confira sempre as condições direto com ele.</p><button class="btn ghost sm" type="button" data-of="abrir" style="justify-self:start">É empresa ou órgão de turismo? Publique aqui</button></details>`}
 const _vm=VIEWS.metas;VIEWS.metas=function(){let h=_vm();try{if(UI.plan&&!UI.msv){const g=S.goals.find(x=>x.id===UI.plan);const q=quadro(g);if(q){const k='<div class="savebar';const i=h.indexOf(k);h=i>=0?h.slice(0,i)+q+h.slice(i):h+q}}}catch(_){}return h};
-const _vmais=VIEWS.mais;VIEWS.mais=function(){if(UI.pof)return pofView();if(UI.pofv)return ofView();const h=_vmais();const n=ativas().length;return `<button class="card" type="button" data-of="ver" style="text-align:left;cursor:pointer;display:grid;gap:4px;font:inherit;color:inherit"><b>📣 Ofertas e parceiros por assunto${n?' ('+n+')':''}</b><span class="muted small">Viagem, mercado, saúde, cursos, crédito e mais. Tudo conferido pela equipe.</span></button><button class="card" type="button" data-of="abrir" style="text-align:left;cursor:pointer;display:grid;gap:4px;font:inherit;color:inherit"><b>🏪 Anuncie no Prumo</b><span class="muted small">Empresas e órgãos públicos publicam ofertas no assunto certo.</span></button>`+h};
+const _vmais=VIEWS.mais;VIEWS.mais=function(){if(UI.pof)return pofView();if(UI.pofv)return ofView();const h=_vmais();const n=ativas().length;const cards=`<div class="card mlist"><button class="mrow" type="button" data-of="ver"><span class="ico" aria-hidden="true">📣</span><span class="tx"><b>Ofertas e parceiros${n?' ('+n+')':''}</b><span class="muted small">Viagem, mercado, saúde, cursos, crédito e mais</span></span></button><button class="mrow" type="button" data-of="abrir"><span class="ico" aria-hidden="true">🏪</span><span class="tx"><b>Anuncie no Prumo</b><span class="muted small">Para empresas e órgãos públicos</span></span></button></div>`;const mk='<h2>Mais</h2></div>';return h.includes(mk)?h.replace(mk,mk+cards):cards+h};
 function ofView(){const L=ativas(),sel=UI.pofa||'';const back=`<div class="row"><button class="btn ghost sm" type="button" data-of="vfechar">Voltar</button></div>`;
   const ks=Object.keys(ASS).filter(k=>L.some(o=>assOf(o)===k));
   return back+`<div class="card" style="gap:8px"><h3 style="margin:0">📣 Ofertas e parceiros por assunto</h3><p class="muted small">Anúncios de empresas e órgãos, separados por assunto e conferidos pela equipe. O Prumo não recebe nem repassa seus dados.</p><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn ${sel?'ghost':'meta'} sm" type="button" data-of="vass" data-v="">Todos (${L.length})</button>${ks.map(k=>`<button class="btn ${sel===k?'meta':'ghost'} sm" type="button" data-of="vass" data-v="${k}">${ASS[k]} (${L.filter(o=>assOf(o)===k).length})</button>`).join('')}</div></div>`+
