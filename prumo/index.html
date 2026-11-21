@@ -1,4 +1,24 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=21"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=21"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+.seg.fit.casa{grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px;gap:4px}
+.seg.fit.casa button{border:0;background:transparent;font-size:13px;font-weight:700;padding:6px 2px;min-height:42px;border-radius:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg.fit.casa button[aria-pressed=true]{background:var(--mei);color:var(--on-mei)}
+.mhero{gap:12px}
+.mhero .hnav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mhero .hnav b{font:700 17px var(--f-display);text-align:center;flex:1}
+.mhero .hnav button{width:40px;height:40px;min-height:0;padding:0;border-radius:12px}
+.mhero .prog{height:6px;border-radius:9px;background:color-mix(in srgb,var(--line) 80%,transparent);overflow:hidden}
+.mhero .prog i{display:block;height:100%;border-radius:9px;background:var(--mei)}
+.mhero .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mhero .tile{background:var(--bg);border-radius:14px;padding:10px 8px;display:grid;gap:2px;min-width:0}
+.mhero .tile span{font-size:12px;color:var(--muted);font-weight:600}
+.mhero .tile b{font:700 16.5px var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.cgrp{padding:4px 16px;gap:0}
+.cgrp>details.fold>summary::after{margin-left:auto;width:28px;height:28px;border-radius:99px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.cgrp>details.fold{border-top:1px solid var(--line);padding:0}
+.cgrp>details.fold:first-child{border-top:0}
+.cgrp>details.fold>summary{min-height:54px;font-size:15.5px}
+.cgrp>details.fold[open]{padding-bottom:12px}
+</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Prumo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,8 +156,8 @@ header.top .brand svg{color:var(--meta);animation:wob .9s cubic-bezier(.3,1.5,.5
 .ring circle[data-ring]{transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)}
 .sticker{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:4px 11px;font:700 12px var(--f-body);background:var(--sun);color:var(--on-sun);transform:rotate(-2deg)}
 .hero{border-radius:18px;padding:18px;background:var(--meta-grad);color:var(--on-meta);position:relative;overflow:hidden;display:grid;gap:6px}
-.hero .big{font-size:38px}
-.hero>*{position:relative;z-index:1}.hero>.blob{position:absolute;z-index:0}.hero .blob.b1{width:96px;height:96px;right:-24px;top:-30px}
+.mhero .big{font-size:38px}
+.hero>*{position:relative;z-index:1}.hero>.blob{position:absolute;z-index:0}.mhero .blob.b1{width:96px;height:96px;right:-24px;top:-30px}
 .steps2{display:grid;gap:10px;margin:0;padding:0;list-style:none}
 .steps2 li{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
 .steps2 .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 16px var(--f-display);color:#fff}
@@ -221,7 +241,7 @@ header.top .who:not(:empty){background:var(--sun-soft);color:var(--ink);border-r
 .entry>*{position:relative;z-index:1}
 .entry::before{content:"";position:absolute;right:-18%;bottom:-55%;width:78%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.24),transparent 66%);z-index:0}
 .entry::after{content:"›";position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font:600 24px/1 var(--f-body);z-index:1}
-.entry .blob,.hero .blob{display:none}
+.entry .blob,.mhero .blob{display:none}
 .entry h2{font-size:27px;letter-spacing:-.02em;padding-right:44px}
 .entry .in{border-radius:16px;padding:12px 14px;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .hero{border-radius:26px;padding:22px 20px;box-shadow:0 20px 34px -22px var(--meta)}
@@ -2252,8 +2272,16 @@ function cIn(t,key){return t>=cStart(key)&&t<=cEnd(key)}
 function cDays(a,b){return Math.round((Date.UTC(+b.slice(0,4),+b.slice(5,7)-1,+b.slice(8,10))-Date.UTC(+a.slice(0,4),+a.slice(5,7)-1,+a.slice(8,10)))/864e5)}
 function cycSync(){const cc=S&&S.casa,ini=cc&&cc.ini;if(ini&&ini>TODAYISO){MKEY=ini.slice(0,7)}else{if(cc&&cc.ini)delete cc.ini;MKEY=cKeyOf(TODAYISO)}const a=cStart(MKEY),b=cEnd(MKEY);DIM=cDays(a,b)+1;DAYN=cDays(a,TODAYISO)+1}
 function cShort(t){return t.slice(8,10)+'/'+t.slice(5,7)}
+function heroCard(ym,GM){let gs=GM.reduce((a,g)=>a+(+g.v||0),0);try{gs+=((S.orc&&S.orc.gastos)||[]).filter(g=>cIn(g.d||'',ym)).reduce((a,g)=>a+(+g.v||0),0)}catch(_){}
+  let en=0;try{en=(+cRendaM(ym)||0)+(+cEnt(ym)||0)+(+cExtra(ym)||0)}catch(_){}const sd=en-gs,cur=ym===MKEY&&DAYN>=1,pc=cur?Math.min(100,Math.round(DAYN/DIM*100)):0;
+  return `<div class="card mhero"><div class="hnav"><button class="btn ghost sm" data-cs="mes:-1" aria-label="Mês anterior">‹</button><b>${cMesN(ym)}</b><button class="btn ghost sm" data-cs="mes:1" aria-label="Próximo mês">›</button></div>
+  ${cur?`<div style="display:grid;gap:5px"><div class="row sp"><span class="muted small">Dia ${DAYN} de ${DIM}</span><span class="muted small">${DIM-DAYN===0?'último dia':'faltam '+(DIM-DAYN)+(DIM-DAYN===1?' dia':' dias')}</span></div><div class="prog" role="progressbar" aria-valuenow="${pc}" aria-valuemin="0" aria-valuemax="100" aria-label="Quanto do mês já passou"><i style="width:${pc}%"></i></div></div>`:''}
+  <div class="tiles"><div class="tile"><span>💵 Entrou</span><b style="color:var(--ok)">${brl0(en)}</b></div><div class="tile"><span>🛒 Gastou</span><b>${brl0(gs)}</b></div><div class="tile"><span>${sd>=0?'✅ Sobra':'⚠️ Falta'}</span><b style="color:${sd>=0?'var(--ok)':'var(--bad)'}">${brl0(Math.abs(sd))}</b></div></div>
+  ${en<=0?`<button class="btn ghost sm" data-cs="tab:orc" style="justify-self:start">Informar quanto entra no mês</button>`:''}</div>`}
+function grpCard(){const m=mesesCard(),strip=h=>h.replace('<details class="card fold"','<details class="fold"');const big=/^\s*<div/.test(m);
+  return `<div class="card cgrp">${strip(entCard())}${strip(cicloCard())}${big?'':strip(m)}</div>${big?m:''}`}
 function cicloCard(){const k=MKEY;
-  return `<details class="card fold"${S.orc?'':' open'}><summary>Editar meu mês: ${cShort(cStart(k))} a ${cShort(cEnd(k))} · ${DAYN<1?'começa em '+(1-DAYN)+(1-DAYN===1?' dia':' dias'):'dia '+DAYN+' de '+DIM}</summary><div style="margin-top:8px">${orcForm(true)}</div></details>`}
+  return `<details class="card fold"${S.orc?'':' open'}><summary>⚙️ Editar meu mês <span class="muted small" style="font-weight:500;margin-left:6px">${cShort(cStart(k))} a ${cShort(cEnd(k))}</span></summary><div style="margin-top:8px">${orcForm(true)}</div></details>`}
 
 function cAdd(m,k){const d=new Date(+m.slice(0,4),+m.slice(5,7)-1+k,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)}
 
@@ -2336,7 +2364,7 @@ function cExtra(k){const m=cMs()[k];return m&&+m.extra>0?+m.extra:0}
 function cEntL(k){const m=cMs()[k];return m&&Array.isArray(m.ent)?m.ent:[]}
 function cEnt(k){return cEntL(k).reduce((a,x)=>a+(+x.v||0),0)}
 function entCard(){const ym=cMes(),L=cEntL(ym),r=cRendaM(ym),tot=cEnt(ym),o=UI.entF;
-  return `<details class="card fold"${o?' open':''}><summary>💵 Entradas do mês: ${brl0(r+tot)}</summary><div style="display:grid;gap:8px;margin-top:8px">
+  return `<details class="card fold"${o?' open':''}><summary>💵 Entradas do mês <span class="muted small" style="font-weight:500;margin-left:6px">${brl0(r+tot)}</span></summary><div style="display:grid;gap:8px;margin-top:8px">
   <div class="item"><div class="l"><b>Renda fixa</b><span class="muted small">Salário, pró-labore ou o que entra todo mês. Mude em Orçamento › Editar meu mês.</span></div><b class="num r">${brl(r)}</b></div>
   ${L.slice().sort((a,b)=>String(b.d).localeCompare(String(a.d))).map(x=>`<div class="item"><div class="l"><b>${esc(x.t||'Entrada extra')}</b><span class="muted small">${x.d?fd(x.d):''}</span></div><b class="num r">${brl(+x.v||0)}</b><button class="btn ghost sm" data-ent="del:${x.id}" aria-label="Apagar entrada">Apagar</button></div>`).join('')}
   <form id="f-ent" style="display:grid;gap:6px"><b class="small">➕ Lançar outra entrada neste mês</b><input id="en-t" maxlength="60" placeholder="De onde veio? Ex.: bico, venda, 13º, aluguel, reembolso" aria-label="De onde veio a entrada"><div class="row" style="flex-wrap:nowrap;gap:6px"><input id="en-v" inputmode="decimal" placeholder="Valor (R$)" aria-label="Valor da entrada" style="flex:1"><input id="en-d" type="date" value="${TODAYISO}" aria-label="Data da entrada" style="flex:1"></div><button class="btn" type="submit">Lançar entrada</button></form>
@@ -2392,7 +2420,7 @@ function casaView(){const sub=UI.cs||'resumo',ym=cMes(),G=cD().gastos,GM=G.filte
   if(sub==='lanc'){const L=[...GM].sort((a,b)=>b.d.localeCompare(a.d));
     b=`${estCard()}<form class="card" id="f-cm"><h3>Lançar gasto à mão</h3><div class="grid2"><label>Data<input id="cm-d" type="date" value="${TODAYISO}" required></label><label>Valor (R$)<input id="cm-v" inputmode="decimal" placeholder="0,00" required></label></div><label>O que foi<input id="cm-s" maxlength="60" required></label><label>Categoria<select id="cm-c">${GR.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></label><div class="note" id="cm-e" hidden></div><button class="btn" type="submit">Salvar gasto</button></form>
     <div class="card"><h3>Lançamentos ${cDia()===1?'de '+MES[+ym.slice(5,7)-1]:'do mês'}</h3><div class="list">${L.map(g=>`<div class="item"><div class="l"><b>${esc(g.desc)}</b><span class="muted small">${fd(g.d)}${g.card?' · '+esc(g.card):''}</span><select data-ccg="${g.id}" aria-label="Categoria de ${esc(g.desc)}" style="font-size:13px;margin-top:4px">${GR.map(x=>`<option value="${x[0]}"${(g.cat||'outros')===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div><div class="r"><b class="num">${brl(g.v)}</b><br><button class="btn danger sm" data-cs="del:${g.id}" aria-label="Apagar ${esc(g.desc)}">Apagar</button></div></div>`).join('')||'<p class="muted">Nada lançado neste mês.</p>'}</div></div>`}
-  return `${demoBar()}<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Economia doméstica</h2></div>${casaTabs()}${sub==='resumo'||sub==='orc'?entCard():''}${sub==='resumo'?cicloCard()+mesesCard():''}${sub==='importar'||sub==='orc'?'':nav}${b}${sub==='resumo'?assuntosCard(ym):''}</div>`}
+  return `${demoBar()}<div style="display:grid;gap:12px;max-width:640px">${back}<div class="card" style="border:0;background:transparent;padding:4px 0"><h2>Economia doméstica</h2></div>${casaTabs()}${sub==='resumo'?heroCard(ym,GM)+grpCard():''}${sub==='orc'?entCard():''}${sub==='importar'||sub==='orc'||sub==='resumo'?'':nav}${b}${sub==='resumo'?assuntosCard(ym):''}</div>`}
 VIEWS.casa=()=>casaView();
 async function cRun(file){
   const tv=($('#ci-t')||{}).value,tipo=tv==='cupom'?'cupom':tv==='comp'?'comp':'fatura',modo=tipo==='cupom'&&($('#ci-m')||{}).value==='total'?'total':'itens',cardIn=(($('#ci-c')||{}).value||'').trim().slice(0,30);
