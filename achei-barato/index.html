@@ -1,5 +1,6 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=21"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=22"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 #v>div,#v .box,#v details>div{grid-template-columns:minmax(0,1fr)}#v .box,#v details,#v form{min-width:0;max-width:100%}#v input,#v select,#v textarea{max-width:100%;min-width:0;box-sizing:border-box}#v .row>*{min-width:0}#v .line>span{min-width:0;overflow-wrap:anywhere}
+details[data-stenc]>summary{cursor:pointer}
 </style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
 <title>Achei Barato</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap">
@@ -1589,6 +1590,7 @@ function storesAdmin(){
   <div class="row"><label for="st_dg" style="flex:1">Frete grátis acima de (R$)<input id="st_dg" inputmode="decimal"></label><label for="st_de" style="flex:1">Prazo<input id="st_de" placeholder="Ex.: 40 a 90 min" maxlength="30"></label></div>
   <span class="m">Só preencha a taxa se você conferiu com o comércio. A data de hoje fica registrada junto, e o app avisa quando a informação ficar antiga.</span>
   <div class="err" id="st_e" role="alert"></div><button class="btn acc" type="submit">Salvar comércio</button></form>
+  <details class="box fold" data-stenc${window.__stenc?' open':''}><summary><b>📄 Encartes e listas de preços</b></summary><span class="m">Depois de cadastrar o comércio, insira o encarte (foto ou PDF), o link da página de promoções ou uma planilha com os preços. Use o mesmo nome do comércio.</span>${flyBox()}${planBox()}</details>
   ${shStores.length?`<b>Ver e corrigir</b>`+shStores.map(u=>`<div class="line" style="align-items:flex-start"><span><b>${esc(u.n)}</b> <span class="m">· ${esc(TN[u.t]||'Comércio')}<br>${Number(u.lat).toFixed(5)}, ${Number(u.lng).toFixed(5)}${pos?' · '+km1(dist(hp(),u)):''}<br>${u.dl?(u.dl.ok?'Entrega'+(u.dl.fee==null?' (taxa não informada)':u.dl.fee===0?' grátis':' · '+brl(u.dl.fee)):'Não faz entrega'):'Entrega não informada'}</span></span><span class="row"><button class="chip" data-stedit="${esc(u.id)}" type="button">Corrigir</button><button class="chip" data-stdel="${esc(u.id)}" type="button">Remover</button></span></div>`).join(''):'<span class="m">Nenhum comércio cadastrado ainda.</span>'}`}
 const toList=()=>setTimeout(()=>{const b=document.querySelectorAll('.box[data-ins]'),e=b[b.length-1];if(e)e.scrollIntoView({block:'center',behavior:'smooth'})},120);
 function insList(){const L=DB?pubL.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id))).map(o=>({o,del:`data-mdel="${esc(o.id)}"`})):mine.map((o,k)=>({o,del:`data-del="${k}"`})).reverse();
@@ -3190,5 +3192,9 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||t.dataset.chkp==null)return;const l=lines()[+t.dataset.chkp];if(!l)return;const v=Number(String(t.value).replace(/\./g,'').replace(',','.'));(C[l]=C[l]||{}).p=v>0?Math.round(v*100)/100:0;sv()},true);
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.chkp!=null){window.__chkOp=true;render()}},true);
 })();
+</script>
+<script>
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('details[data-stenc]'))window.__stenc=d.open},true);
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='st_n'){mem.flLoja=t.value;const a=document.getElementById('fl'),b=document.getElementById('sp_l');if(a&&!a.matches(':focus'))a.value=t.value;if(b&&!b.matches(':focus'))b.value=t.value}},true);
 </script>
 </body></html>

@@ -268,3 +268,25 @@
   sw.getRegistration().then(function(reg){if(!reg)return;var up=function(){try{reg.update()}catch(e){}};up();document.addEventListener('visibilitychange',function(){if(!document.hidden)up()});setInterval(up,10*60*1000)}).catch(function(){});
   sw.addEventListener('controllerchange',function(){if(!had){had=true;return}if(done)return;done=true;var go=function(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.value){setTimeout(go,4000);return}location.reload()};go()});
 }catch(e){}})();
+
+/* Enquanto a pessoa digita, as atualizações que chegam em segundo plano esperam (o teclado do celular não perde o campo) */
+(function(){var last=0,evt=false,pend=false,tm=null;
+  ['pointerdown','click','change','submit'].forEach(function(t){document.addEventListener(t,function(){last=Date.now()},true)});
+  document.addEventListener('keydown',function(e){if(e.key==='Enter')last=Date.now()},true);
+  ['input','keyup','compositionend'].forEach(function(t){document.addEventListener(t,function(){evt=true;clearTimeout(tm);tm=setTimeout(function(){evt=false},0)},true)});
+  function typing(){var a=document.activeElement;return !!(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|range|file|color)$/.test(a.type||''))))}
+  function flush(){if(pend&&!typing()){pend=false;try{window.render()}catch(e){}}}
+  function wrap(){var r=window.render;if(typeof r!=='function'||r.__tg)return;var w=function(){if(typing()&&!evt&&Date.now()-last>900){pend=true;return}return r.apply(this,arguments)};w.__tg=1;w.__keep=r.__keep;window.render=w}
+  document.addEventListener('focusout',function(){setTimeout(flush,250)},true);setInterval(flush,1500);
+  if(document.readyState==='complete')setTimeout(wrap,0);else window.addEventListener('load',function(){setTimeout(wrap,0)});setTimeout(wrap,4500);
+})();
+
+/* Rascunho dos campos: se a tela for redesenhada, o que foi digitado volta para o campo (até salvar) */
+(function(){var D={};function ok(t){return t&&t.id&&(t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|range|file|color|password|hidden)$/.test(t.type||'')))}
+  document.addEventListener('input',function(e){var t=e.target;if(ok(t))D[t.id]=t.value},true);
+  function clr(root){if(!root)return;[].forEach.call(root.querySelectorAll('input[id],textarea[id]'),function(x){delete D[x.id]})}
+  document.addEventListener('submit',function(e){clr(e.target)},true);
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button');if(!b)return;var f=b.closest('form')||b.closest('.box')||b.closest('.card');if(f&&f.querySelector('input[id],textarea[id]'))setTimeout(function(){clr(f)},0)},true);
+  function wrap(){var r=window.render;if(typeof r!=='function'||r.__dr)return;var w=function(){var x=r.apply(this,arguments);try{for(var k in D){var el=document.getElementById(k);if(el&&el!==document.activeElement&&el.value===''&&D[k])el.value=D[k]}}catch(e){}return x};w.__dr=1;w.__tg=r.__tg;w.__keep=r.__keep;window.render=w}
+  if(document.readyState==='complete')setTimeout(wrap,10);else window.addEventListener('load',function(){setTimeout(wrap,10)});setTimeout(wrap,5000);
+})();
