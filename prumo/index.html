@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=22"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=23"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 .seg.fit.casa{grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px;gap:4px}
 .seg.fit.casa button{border:0;background:transparent;font-size:13px;font-weight:700;padding:6px 2px;min-height:42px;border-radius:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg.fit.casa button[aria-pressed=true]{background:var(--mei);color:var(--on-mei)}
@@ -3642,10 +3642,10 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
 <script>document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rect]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();UI.recTipo=b.dataset.rect;render(true)},true);</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script><script>
 /* ---- Janela aberta (ex.: Fazer o dinheiro render) não pisca quando chegam dados da conta em segundo plano ---- */
-(()=>{let last=0,pend=false;['pointerdown','click','change','submit'].forEach(t=>document.addEventListener(t,()=>{last=Date.now()},true));document.addEventListener('keydown',e=>{if(e.key==='Enter')last=Date.now()},true);let evt=false;['input','keyup','compositionend'].forEach(t=>document.addEventListener(t,()=>{evt=true;setTimeout(()=>{evt=false},0)},true));
+(()=>{let last=0,pend=false;['pointerdown','click','change','submit'].forEach(t=>document.addEventListener(t,()=>{last=Date.now()},true));document.addEventListener('keydown',e=>{if(e.key==='Enter')last=Date.now()},true);let evt=false,clk=false;['click','change','submit'].forEach(t=>document.addEventListener(t,()=>{clk=true;setTimeout(()=>{clk=false},0)},true));['input','keyup','compositionend'].forEach(t=>document.addEventListener(t,()=>{evt=true;setTimeout(()=>{evt=false},0)},true));
 const r0=window.render;if(typeof r0!=='function')return;
 const typing=()=>{const a=document.activeElement;return !!(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|range|file)$/.test(a.type||''))))};
-window.render=function(){const open=document.querySelector('.sheet'),ty=typing();if((open||ty)&&Date.now()-last>900&&!evt){pend=true;return}const x=r0.apply(this,arguments);if(open)document.querySelectorAll('.sheet-p').forEach(e=>{e.style.animation='none'});return x};
+window.render=function(){const open=document.querySelector('.sheet'),ty=typing();if(ty&&!evt&&!clk){pend=true;return}if(open&&!ty&&Date.now()-last>900){pend=true;return}const x=r0.apply(this,arguments);if(open)document.querySelectorAll('.sheet-p').forEach(e=>{e.style.animation='none'});return x};
 const flushP=()=>{if(pend&&!document.querySelector('.sheet')&&!typing()){pend=false;try{window.render(true)}catch(_){}}};setInterval(flushP,800);document.addEventListener('focusout',()=>setTimeout(flushP,250),true);
 })();
 </script>

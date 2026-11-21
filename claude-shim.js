@@ -271,12 +271,12 @@
 
 /* Enquanto a pessoa digita, as atualizações que chegam em segundo plano esperam (o teclado do celular não perde o campo) */
 (function(){var last=0,evt=false,pend=false,tm=null;
-  ['pointerdown','click','change','submit'].forEach(function(t){document.addEventListener(t,function(){last=Date.now()},true)});
-  document.addEventListener('keydown',function(e){if(e.key==='Enter')last=Date.now()},true);
+  var clk=false,ct=null;['click','change','submit'].forEach(function(t){document.addEventListener(t,function(){clk=true;clearTimeout(ct);ct=setTimeout(function(){clk=false},0)},true)});
+  document.addEventListener('keydown',function(e){if(e.key==='Enter'){clk=true;clearTimeout(ct);ct=setTimeout(function(){clk=false},0)}},true);
   ['input','keyup','compositionend'].forEach(function(t){document.addEventListener(t,function(){evt=true;clearTimeout(tm);tm=setTimeout(function(){evt=false},0)},true)});
   function typing(){var a=document.activeElement;return !!(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|range|file|color)$/.test(a.type||''))))}
   function flush(){if(pend&&!typing()){pend=false;try{window.render()}catch(e){}}}
-  function wrap(){var r=window.render;if(typeof r!=='function'||r.__tg)return;var w=function(){if(typing()&&!evt&&Date.now()-last>900){pend=true;return}return r.apply(this,arguments)};w.__tg=1;w.__keep=r.__keep;window.render=w}
+  function wrap(){var r=window.render;if(typeof r!=='function'||r.__tg)return;var w=function(){if(typing()&&!evt&&!clk){pend=true;return}return r.apply(this,arguments)};w.__tg=1;w.__keep=r.__keep;window.render=w}
   document.addEventListener('focusout',function(){setTimeout(flush,250)},true);setInterval(flush,1500);
   if(document.readyState==='complete')setTimeout(wrap,0);else window.addEventListener('load',function(){setTimeout(wrap,0)});setTimeout(wrap,4500);
 })();
