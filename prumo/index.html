@@ -3553,7 +3553,7 @@ function pofView(){const back=`<div class="row"><button class="btn ghost sm" typ
     ${OF.rep.length?`<details class="card fold"><summary>🚩 Denúncias de ofertas (${OF.rep.length})</summary><div class="list">${OF.rep.slice().reverse().map(r=>{const P2=OF.all[r.u]||{L:[]},o=P2.L.find(x=>x.id===r.i);return `<div class="item" style="display:grid;gap:4px"><span><b>${esc(o?o.tit:'(oferta apagada)')}</b> <span class="muted small">· ${esc(P2.nome||'')}</span></span><span class="small">${esc(r.why||'')}</span>${o&&aprov(o)?`<button class="btn danger sm" type="button" data-of="ano" data-i="${esc(o.id)}" data-t="${o.ts}" style="justify-self:start">Tirar do ar</button>`:''}</div>`}).join('')}</div></details>`:''}`}
   return back+adm+`<div class="card" style="gap:8px"><h3 style="margin:0">🏪 Anuncie no Prumo</h3><p class="muted small">Suas ofertas aparecem na tela de ofertas, no assunto que você escolher. As de viagem também aparecem para quem planeja ir para a sua cidade. Toda oferta passa pela aprovação da equipe antes de entrar no ar. Durante os testes, publicar é grátis.</p></div>
    <form class="card" id="pofp" style="display:grid;gap:10px"><h3 style="margin:0">Quem publica</h3>
-   <div class="row" style="gap:8px">${[['com','Comércio ou empresa'],['org','Órgão público de turismo']].map(([k,l])=>`<label class="row" style="gap:6px"><input type="radio" name="of-tipo" value="${k}"${P.tipo===k?' checked':''}> ${l}</label>`).join('')}</div>
+   <div class="row" style="gap:8px">${[['com','Comércio ou empresa'],['org','Órgão público de turismo']].map(([k,l])=>`<label class="row" style="gap:6px"><input type="radio" name="of-tipo" value="${k}"${P.tipo===k?' checked':''} style="width:20px;height:20px;min-height:0;flex:none;margin:0"> ${l}</label>`).join('')}</div>
    ${fld('of-nome','Nome do estabelecimento ou órgão',P.nome,'maxlength="60"')}${fld('of-wa','WhatsApp para clientes (opcional)',P.wa,'inputmode="tel" maxlength="16" placeholder="(73) 99999-0000"')}${fld('of-site','Site (opcional)',P.site,'maxlength="200" placeholder="https://..."')}
    <span class="muted small">Coloque pelo menos o WhatsApp ou o site, para as pessoas falarem com você. Esses contatos aparecem para quem vê a oferta.</span>
    <label class="row" style="gap:8px;align-items:flex-start"><input type="checkbox" id="of-ok"${P.nome?' checked':''} style="width:20px;height:20px;flex:none"><span class="small">As informações são verdadeiras e eu respondo por elas. Sei que o Prumo só divulga: não vende, não recebe pagamentos e não repassa dados de quem vê a oferta.</span></label>
@@ -3598,5 +3598,15 @@ setInterval(()=>{if(pend&&!document.querySelector('.sheet')){pend=false;try{wind
 </script>
 <script>
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.pofk){UI.pofo=UI.pofo||{};UI.pofo[d.dataset.pofk]=d.open}},true);
+</script>
+<script>
+/* ---- Formulários do anunciante: o que foi digitado não some quando a tela se atualiza ---- */
+(()=>{const DR={};const F='#pofp';
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.id&&t.closest&&t.closest(F))DR[t.id]=t.type==='checkbox'?t.checked:t.value},true);
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.closest&&t.closest(F)){if(t.type==='radio')DR['radio:'+t.name]=t.value;else if(t.id)DR[t.id]=t.type==='checkbox'?t.checked:t.value}},true);
+document.addEventListener('submit',e=>{if(e.target&&e.target.matches&&e.target.matches(F))setTimeout(()=>{for(const k in DR)delete DR[k]},1500)},true);
+const r0=window.render;if(typeof r0!=='function')return;
+window.render=function(){const x=r0.apply(this,arguments);try{const f=document.querySelector(F);if(f)for(const k in DR){if(k.startsWith('radio:')){const r=f.querySelector('input[name="'+k.slice(6)+'"][value="'+DR[k]+'"]');if(r)r.checked=true}else{const el=document.getElementById(k);if(el&&el!==document.activeElement){if(el.type==='checkbox')el.checked=DR[k];else el.value=DR[k]}}}}catch(_){}return x};
+})();
 </script>
 </body></html>
