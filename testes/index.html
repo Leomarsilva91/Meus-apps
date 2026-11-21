@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Testes das novidades</title>
+<style>
+:root{--bg:#f4f6f5;--card:#fff;--ink:#1b2420;--mut:#5d6a64;--line:#dfe5e2;--ok:#1f7a5c;--bad:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 14px 8px;border-bottom:1px solid var(--line)}
+.top .r{display:flex;gap:8px;align-items:center;justify-content:space-between;max-width:680px;margin:0 auto}
+.top a{text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px}
+main{max-width:680px;margin:0 auto;padding:12px 14px 40px;display:grid;gap:12px}
+h1{font-size:21px;margin:0}
+p{margin:0}
+.mut{color:var(--mut);font-size:14px}
+.bar{display:flex;gap:6px;flex-wrap:wrap}
+.bar button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font:600 14px system-ui;cursor:pointer;color:var(--ink);min-height:40px}
+.bar button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.prog{height:8px;border-radius:9px;background:#e3e8e5;overflow:hidden}.prog i{display:block;height:100%;background:var(--ok)}
+details.app{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+details.app>summary{list-style:none;cursor:pointer;padding:14px;display:flex;gap:10px;align-items:center;font-weight:700;font-size:17px}
+details.app>summary::-webkit-details-marker{display:none}
+details.app>summary .dot{width:12px;height:12px;border-radius:50%;background:var(--c)}
+details.app>summary .cnt{margin-left:auto;font-size:13px;color:var(--mut);font-weight:600}
+details.app>summary::after{content:'+';width:28px;height:28px;border-radius:50%;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+details.app[open]>summary::after{content:'−'}
+.it{border-top:1px solid var(--line);padding:12px 14px;display:grid;gap:6px}
+.it.ok{background:#f1faf5}.it.bad{background:#fdf2f1}
+.it .h{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.it .h b{font-size:15.5px}
+.it .d{font-size:12px;color:var(--mut);white-space:nowrap}
+.it ol{margin:0;padding-left:20px;font-size:14px;color:var(--mut)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.acts a,.acts button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font:600 14px system-ui;cursor:pointer;color:var(--ink);text-decoration:none;min-height:38px;display:inline-flex;align-items:center}
+.acts a{background:var(--c);color:#fff;border-color:var(--c)}
+.acts .y.on{background:var(--ok);color:#fff;border-color:var(--ok)}
+.acts .n.on{background:var(--bad);color:#fff;border-color:var(--bad)}
+textarea{width:100%;font:16px system-ui;border:1px solid var(--line);border-radius:10px;padding:8px;min-height:60px}
+.big{display:block;width:100%;border:0;border-radius:14px;padding:14px;font:700 16px system-ui;background:var(--ink);color:#fff;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1b2420;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:9;display:none}
+</style>
+</head>
+<body>
+<div class="top"><div class="r"><a href="../">⌂ Início</a><b>🧪 Testes</b><a href="#" id="topo">↑ Topo</a></div></div>
+<main>
+<h1>Novidades para testar</h1>
+<p class="mut">Toque em <b>Abrir</b>, siga os passos e marque <b>✅ Funcionou</b> ou <b>❌ Não funcionou</b>. Se der erro, escreva o que aconteceu. No fim, toque em <b>Copiar resultado</b> e cole na conversa com o Claude.</p>
+<div class="prog"><i id="pg"></i></div><p class="mut" id="pgt"></p>
+<div class="bar" id="flt"><button data-f="pend" class="on">Falta testar</button><button data-f="bad">Com erro</button><button data-f="all">Todas</button></div>
+<div id="list"></div>
+<button class="big" id="copy">📋 Copiar resultado para mandar ao Claude</button>
+<p class="mut">As marcações ficam guardadas só neste aparelho.</p>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const APPS={tasko:['Tasko','#2457d6','../tasko/'],prumo:['Prumo','#1f7a5c','../prumo/'],achei:['Achei Barato','#e08a00','../achei-barato/'],todos:['Todos os apps','#5b6570','../']};
+/* Cada novidade: id único, app, data, título e passos curtos. */
+const T=[
+{id:'t-papel-conversa',a:'tasko',d:'21/11 15:03',t:'Conversas mostram "Prestador Juca" / "Cliente Leomar"',p:['Abra Conversas como contratante: deve aparecer 🛠️ Prestador e o primeiro nome','Abra uma conversa: o topo mostra "Prestador Nome"','Entre como prestador: aparece 🏠 Cliente e o primeiro nome','Confira que não aparece nome completo nem contato']},
+{id:'t-mat-aviso',a:'tasko',d:'21/11 14:51',t:'Aviso quando os materiais não batem',p:['Num pedido com pregão e proposta "só o serviço", mude "Quem compra os materiais?" para "O profissional compra"','Contratante: aparece aviso e a proposta mostra ⚠️ Os materiais não batem','Prestador: chega mensagem na conversa e o alerta aparece ao abrir o pedido','Toque em "Mudar minha proposta" e reenvie: o aviso some']},
+{id:'p-perm-painel',a:'prumo',d:'21/11 14:36',t:'Painel 🔐 Permissões na meta compartilhada (dono)',p:['Abra a meta que você compartilhou','Em "Compartilhar com o grupo", veja 🔐 Permissões','Toque Valores / + Pessoas / Tudo para uma pessoa: o botão fica colorido','Toque Só vê: pergunta antes e tira a permissão']},
+{id:'p-receb-limpo',a:'prumo',d:'21/11 14:36',t:'Quem recebe não vê o histórico de permissões',p:['Abra a meta como quem recebeu','Topo mostra "Meta compartilhada por…"','Não aparece "Alterações e permissões"','Se alguém alterou, aparece "✏️ Alterada por…"']},
+{id:'p-calculos',a:'prumo',d:'21/11 14:27',t:'Como chegou a cada valor + ✋ Contestar',p:['Abra a meta como quem recebeu, em 📋 Valores da meta','Toque "🧮 Ver como chegou neste valor +": abre a conta','Veja "Quanto fica para cada um"','Toque ✋ Contestar: abre a conversa do grupo com a frase pronta']},
+{id:'p-notif-chat',a:'prumo',d:'21/11 14:20',t:'Notificação de mensagem na conversa da meta',p:['Abra a conversa do grupo e permita as notificações','Peça a outra pessoa mandar mensagem (app aberto ou em segundo plano)','Deve chegar aviso no celular']},
+{id:'p-cartao',a:'prumo',d:'21/11 11:35',t:'💳 Cartão de crédito na Economia doméstica',p:['Cadastre um cartão com limite e dia de fechamento','Lance uma compra à vista e uma parcelada','Veja a barra do limite','Lance o valor real da fatura: entra o ajuste']},
+{id:'x-digitar',a:'todos',d:'21/11 13:52',t:'Teclado não fecha enquanto digita',p:['Em qualquer app, toque num campo e digite devagar por uns 10 segundos','O teclado não pode fechar nem o texto sumir','Teste nome, e-mail e WhatsApp do cadastro']},
+{id:'a-encartes',a:'achei',d:'21/11 11:13',t:'Cadastro de comércio com encartes e planilha',p:['Abra o cadastro de comércio','Em "📄 Encartes e listas de preços", envie um encarte ou link','Digite no nome da loja: deve aceitar normalmente']},
+{id:'t-agenda-rec',a:'tasko',d:'21/11 08:50',t:'Agenda com serviços recolhidos (+ e −)',p:['Abra a Agenda','Cada serviço vem fechado com +','Tocar abre e mostra −; ao atualizar a tela, continua aberto','Lista mostra só 3 e o "Ver mais"']},
+{id:'p-visual',a:'prumo',d:'21/11 08:18',t:'Novo visual da Economia doméstica',p:['Abra Economia doméstica','Topo com mês, barra de progresso e Entrou / Gastou / Sobra','Recolhidos com + à direita']},
+{id:'p-sem-exemplo',a:'prumo',d:'20/11 20:45',t:'Sem dados de exemplo e lançamentos guardados',p:['Lance um gasto de teste','Feche e abra o app: o lançamento continua','Não voltam exemplos','"Zerar o app" só aparece para o administrador']},
+{id:'t-agenda-lados',a:'tasko',d:'20/11 19:42',t:'Agenda separada: "vou fazer" e "pedi"',p:['Prestador vê "✔ Aceito por Nome"','Contratante vê "📨 Solicitado por Nome"','Botão excluir some com item duplicado']},
+{id:'t-repete',a:'tasko',d:'20/11 18:10',t:'Serviço que se repete: aceitar ou negociar',p:['Contratante pede repetição num serviço concluído','Prestador vê Aceitar e Negociar','Negocie valor/dia e o contratante responde','Também dá para aceitar a proposta anterior']},
+{id:'t-pedir-novo',a:'tasko',d:'20/11 18:00',t:'"Pedir de novo" e serviços que se repetem',p:['Em faxina / lavar carro, o app pergunta na hora de pagar se repete','Em outros serviços concluídos, aparece 🔄 Pedir de novo só para o contratante']},
+{id:'a-na-hora',a:'achei',d:'20/11 16:49',t:'Lista "🛒 Na hora da compra"',p:['Abra uma compra compartilhada aceita','Marque comprei / não achei e digite o preço','Veja o total e envie o comprovante','Quem pediu vê quanto vai pagar']},
+{id:'a-lista-igual',a:'achei',d:'20/11 16:35',t:'Lista com quantidade, marca e peso',p:['Digite itens como "2 arroz Tio João 5kg"','A lista fica exatamente como foi digitada','Edite um item lido errado']},
+{id:'a-inicio',a:'achei',d:'20/11 16:20',t:'App abre no Roteiro com a Compra compartilhada',p:['Abra o Achei Barato: começa no Roteiro','O botão Compra compartilhada está só no Roteiro','Menu na ordem Roteiro, Todas as lojas, Físicas, Online']},
+{id:'x-iphone',a:'todos',d:'20/11 17:52',t:'iPhone: tela não estoura',p:['No iPhone, toque num campo: não pode dar zoom','No Achei Barato, aceite fazer uma compra compartilhada']},
+{id:'p-relatorios',a:'prumo',d:'20/11 15:38',t:'Relatórios completos no Baixar',p:['Baixe o PDF da economia doméstica','Deve vir completo: gastos, entradas, dinheiro do mês, gasto e quanto ainda tem','O nome do arquivo tem a hora']},
+{id:'x-firebase',a:'todos',d:'20/11 16:06',t:'Conta do aparelho não cai mais',p:['Use o app, feche e abra no dia seguinte','Os dados e o acesso continuam os mesmos']}
+];
+const K='testes_v1';let D={};try{D=JSON.parse(localStorage.getItem(K)||'{}')}catch(_){}
+const JUST=new Set();let F='pend',OPEN={};try{OPEN=JSON.parse(localStorage.getItem(K+'_o')||'{}')}catch(_){}
+const sv=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(_){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function draw(){
+  const tot=T.length,ok=T.filter(x=>(D[x.id]||{}).s==='ok').length,bad=T.filter(x=>(D[x.id]||{}).s==='bad').length;
+  document.getElementById('pg').style.width=(tot?(ok+bad)/tot*100:0)+'%';
+  document.getElementById('pgt').textContent=`${ok} funcionando · ${bad} com erro · ${tot-ok-bad} falta testar`;
+  document.querySelectorAll('#flt button').forEach(b=>b.classList.toggle('on',b.dataset.f===F));
+  const vis=x=>{const s=(D[x.id]||{}).s;return JUST.has(x.id)||F==='all'||(F==='pend'&&!s)||(F==='bad'&&s==='bad')};
+  document.getElementById('list').innerHTML=Object.keys(APPS).map(k=>{const L=T.filter(x=>x.a===k),V=L.filter(vis);if(!L.length)return'';const [n,c,u]=APPS[k],pend=L.filter(x=>!(D[x.id]||{}).s).length;
+    return `<details class="app" data-app="${k}" style="--c:${c}"${OPEN[k]?' open':''}><summary><span class="dot"></span>${n}<span class="cnt">${pend?pend+' para testar':'tudo testado ✔'}</span></summary>${V.length?V.map(x=>{const r=D[x.id]||{};return `<div class="it ${r.s||''}"><div class="h"><b>${esc(x.t)}</b><span class="d">${x.d}</span></div><ol>${x.p.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><div class="acts"><a href="${u}" target="_blank" rel="noopener">Abrir ${n==='Todos os apps'?'apps':n}</a><button class="y${r.s==='ok'?' on':''}" data-s="ok" data-id="${x.id}">✅ Funcionou</button><button class="n${r.s==='bad'?' on':''}" data-s="bad" data-id="${x.id}">❌ Não funcionou</button></div>${r.s==='bad'?`<textarea data-nt="${x.id}" placeholder="O que aconteceu? (ex.: o botão não abre, a tela pisca…)">${esc(r.n||'')}</textarea>`:''}</div>`}).join(''):`<p class="mut" style="padding:0 14px 14px">${F==='bad'?'Nenhum erro marcado aqui.':'Nada pendente aqui.'}</p>`}</details>`}).join('');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.f){F=b.dataset.f;JUST.clear();return draw()}
+  if(b.dataset.s){const id=b.dataset.id,r=D[id]||{};r.s=r.s===b.dataset.s?'':b.dataset.s;r.at=new Date().toISOString();D[id]=r;sv();JUST.add(id);draw();if(r.s==='bad'){const t=document.querySelector(`[data-nt="${id}"]`);if(t)t.focus()}return}
+  if(b.id==='copy'){const L=T.filter(x=>(D[x.id]||{}).s);if(!L.length){toast('Marque pelo menos um teste antes.');return}
+    const txt='Resultado dos testes:\n'+L.map(x=>{const r=D[x.id];return `${r.s==='ok'?'✅':'❌'} ${APPS[x.a][0]}: ${x.t}${r.s==='bad'&&r.n?' — '+r.n:''}`}).join('\n');
+    (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Copiado! Cole na conversa com o Claude.')).catch(()=>{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');toast('Copiado!')}catch(_){prompt('Copie o texto:',txt)}t.remove()})}
+});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.nt){const r=D[t.dataset.nt]||{};r.n=t.value;D[t.dataset.nt]=r;sv()}});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.app){OPEN[d.dataset.app]=d.open;try{localStorage.setItem(K+'_o',JSON.stringify(OPEN))}catch(_){}}},true);
+document.getElementById('topo').onclick=e=>{e.preventDefault();scrollTo({top:0,behavior:'smooth'})};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2500)}
+draw();
+</script>
+</body>
+</html>
