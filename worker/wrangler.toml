@@ -4,9 +4,9 @@ compatibility_date = "2025-01-01"
 
 # Opcional (limite por pessoa): crie um KV no painel e descomente as linhas abaixo,
 # trocando o id pelo que o Cloudflare mostrar.
-# [[kv_namespaces]]
-# binding = "LIMITES"
-# id = "COLE_O_ID_AQUI"
+[[kv_namespaces]]
+binding = "LIMITES"
+id = "d051df9ef59f43718f2d81c3b0423ad1"
 
 # Vídeos dos apps (Tasko): crie um bucket R2 chamado "meus-apps-videos" e ligue com o nome VIDEOS.
 # [[r2_buckets]]
