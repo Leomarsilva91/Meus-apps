@@ -3010,7 +3010,14 @@ document.addEventListener('keydown',ev=>{if(ev.target&&ev.target.id==='dmx_t'&&e
 
 function start(){if(SUB)return;const d=db();if(!d||!me())return;SUB=true;
   try{d.collection('dm').onSnapshot(sn=>{ALL=sn.docs.map(x=>{const v=x.data()||{};return {uid:x.id,nick:typeof v.nick==='string'?v.nick.slice(0,20):'',m:Array.isArray(v.m)?v.m.filter(m=>m&&typeof m.txt==='string'&&typeof m.to==='string').map(m=>({id:String(m.id||''),to:m.to,txt:m.txt.slice(0,300),ts:String(m.ts||'')})):[],g:Array.isArray(v.g)?v.g.filter(g=>g&&typeof g.id==='string').map(g=>({id:g.id,name:String(g.name||'Grupo').slice(0,30),mem:Array.isArray(g.mem)?g.mem.filter(x=>typeof x==='string').slice(0,30):[],ts:String(g.ts||'')})):[],left:Array.isArray(v.left)?v.left.filter(x=>typeof x==='string'):[]}});LOADED=true;
-    if(V)draw(false);else badge()},()=>{SUB=false})}catch(_){SUB=false}}
+    if(V)draw(false);else badge();try{ntf()}catch(_){}},()=>{SUB=false})}catch(_){SUB=false}}
+function ntf(){const u=me();if(!u)return;let N={};try{N=JSON.parse(localStorage.getItem(P()+'_ntf')||'{}')||{}}catch(_){}const first=!N.__i;N.__i=1;
+  convs().forEach(c=>{const L=msgs(c.k).filter(x=>x.from!==u),l=L[L.length-1];if(!l)return;const ts=String(l.ts||'');if(first||ts<=String(N[c.k]||'')){N[c.k]=N[c.k]&&String(N[c.k])>ts?N[c.k]:ts;return}N[c.k]=ts;if(!(c.un>0))return;if(V==='chat'&&CUR===c.k&&!document.hidden)return;
+    const t=(c.k.startsWith('g:')?'💬 '+title(c.k):'💬 '+title(c.k)),who=c.k.startsWith('g:')?(nickOf(l.from)||'Alguém')+': ':'',b=who+String(l.txt||'').slice(0,120);
+    try{if(window.Notification&&Notification.permission==='granted'){const opt={body:b,tag:c.k,icon:'icon-192.png',badge:'icon-192.png',data:{k:c.k}};if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(r=>{if(r)r.showNotification(t,opt);else new Notification(t,opt)}).catch(()=>{try{new Notification(t,opt)}catch(_){}});else new Notification(t,opt)}else if(!document.hidden)toast(t+': '+b.slice(0,60))}catch(_){}
+    try{if(navigator.vibrate)navigator.vibrate(120)}catch(_){}});
+  try{localStorage.setItem(P()+'_ntf',JSON.stringify(N))}catch(_){}}
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-dml],[data-dmo],[data-ms="chat"]');if(!b)return;try{if(window.Notification&&Notification.permission==='default'&&!localStorage.getItem(P()+'_npq')){localStorage.setItem(P()+'_npq','1');Notification.requestPermission().then(r=>{if(r==='granted')toast('Pronto! Você vai ser avisado quando chegar mensagem.')})}}catch(_){}},true);
 const iv=setInterval(()=>{start();if(SUB)clearInterval(iv)},1200);
 
 window.DM={
