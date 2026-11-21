@@ -1966,8 +1966,8 @@ const mineMsg=m=>m.from===S.user.email&&(!isTester()||!m.side||m.side===S.user.r
 const viaTag=p=>p?(p.pg?' <span class="tag" style="background:var(--acc);color:#14213D;font-weight:700">🔨 Fechado pelo pregão</span>':' <span class="tag">🤝 Fechado na negociação direta</span>'):'';
 const negP=(q,p)=>!!q&&(!!q.em||((!!q.fee||!!q.sample)&&!!p&&(!!p.neg||(!p.interest&&!p.pg))));
 const chatOK=(q,p)=>negP(q,p);
-const roleName=(p,q,isCli)=>{const n=oName(p,q,isCli),r=isCli?'Prestador':'Cliente';return n&&!['Cliente','Profissional'].includes(n)?r+' '+n:r};
-const oName=(p,q,isCli)=>isCli?fnm(p.name||'Profissional'):fnm((q.contact&&q.contact.name)||'Cliente');
+const roleName=(p,q,isCli)=>{const n=oName(p,q,isCli),ok=n&&!['Cliente','Profissional'].includes(n);return isCli?(ok?'Prestador '+n:'Prestador'):(ok?'Pedido por '+n:'Pedido de cliente')};
+const oName=(p,q,isCli)=>{if(isCli)return fnm(p.name||(((typeof users==='function'?users():[]).find(u=>u&&u.email===p.email)||{}).name)||'Profissional');let n=(q.contact&&q.contact.name)||q.name||'';if(!n){try{n=(users().find(u=>u&&u.email===q.email)||{}).name||''}catch(e){}}return fnm(n||'Cliente')};
 const tmFmt=at=>{const d=new Date(at);return isNaN(d)?'':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
 function myThreads(){const me=S.user.email,Rq=jget('ms_requests'),M=msgs(),out=[];
   jget('ms_proposals').forEach(p=>{if(!p||!p.id)return;const q=Rq.find(x=>x&&x.id===p.reqId);if(!q||!chatOK(q,p)||jobQ(q))return;const isCli=isCliSide(q);if(!isCli&&p.email!==me)return;
