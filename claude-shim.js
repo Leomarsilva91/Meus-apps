@@ -262,3 +262,9 @@
 
 /* iPhone: campos com letra de 16px para o Safari não dar zoom e "estourar" a tela ao digitar */
 (function(){try{if(!/iP(hone|ad|od)/.test(navigator.userAgent)&&!(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))return;var st=document.createElement('style');st.textContent='input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px!important}html,body{max-width:100%;overflow-x:hidden}';(document.head||document.documentElement).appendChild(st)}catch(e){}})();
+
+/* Atualização automática: quando sai versão nova, o app recarrega sozinho (sem precisar fechar e abrir várias vezes) */
+(function(){try{if(!('serviceWorker' in navigator))return;var sw=navigator.serviceWorker,had=!!sw.controller,done=false;
+  sw.getRegistration().then(function(reg){if(!reg)return;var up=function(){try{reg.update()}catch(e){}};up();document.addEventListener('visibilitychange',function(){if(!document.hidden)up()});setInterval(up,10*60*1000)}).catch(function(){});
+  sw.addEventListener('controllerchange',function(){if(!had){had=true;return}if(done)return;done=true;var go=function(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.value){setTimeout(go,4000);return}location.reload()};go()});
+}catch(e){}})();
