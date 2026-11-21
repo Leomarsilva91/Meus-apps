@@ -3531,7 +3531,7 @@ const _vmais=VIEWS.mais;VIEWS.mais=function(){if(UI.pof)return pofView();if(UI.p
 function ofView(){const L=ativas(),sel=UI.pofa||'';const back=`<div class="row"><button class="btn ghost sm" type="button" data-of="vfechar">Voltar</button></div>`;
   const ks=Object.keys(ASS).filter(k=>L.some(o=>assOf(o)===k));
   return back+`<div class="card" style="gap:8px"><h3 style="margin:0">📣 Ofertas e parceiros por assunto</h3><p class="muted small">Anúncios de empresas e órgãos, separados por assunto e conferidos pela equipe. O Prumo não recebe nem repassa seus dados.</p><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn ${sel?'ghost':'meta'} sm" type="button" data-of="vass" data-v="">Todos (${L.length})</button>${ks.map(k=>`<button class="btn ${sel===k?'meta':'ghost'} sm" type="button" data-of="vass" data-v="${k}">${ASS[k]} (${L.filter(o=>assOf(o)===k).length})</button>`).join('')}</div></div>`+
-  (L.length?Object.keys(ASS).filter(k=>(!sel||sel===k)&&L.some(o=>assOf(o)===k)).map(k=>`<details class="card fold"${sel?' open':''}><summary>${ASS[k]} (${L.filter(o=>assOf(o)===k).length})</summary>${L.filter(o=>assOf(o)===k).sort((a,b)=>(a.ptipo==='org'?-1:0)-(b.ptipo==='org'?-1:0)).map(o=>cardOf(o)).join('')}</details>`).join(''):'<div class="card"><p class="muted">Ainda não há ofertas no ar.</p></div>')+`<button class="btn ghost sm" type="button" data-of="abrir" style="justify-self:start">É empresa ou órgão? Anuncie aqui</button>`}
+  (L.length?Object.keys(ASS).filter(k=>(!sel||sel===k)&&L.some(o=>assOf(o)===k)).map(k=>`<details class="card fold" data-pofk="${k}"${sel||(UI.pofo&&UI.pofo[k]!==undefined?UI.pofo[k]:L.length<=8)?' open':''}><summary>${ASS[k]} (${L.filter(o=>assOf(o)===k).length})</summary>${L.filter(o=>assOf(o)===k).sort((a,b)=>(a.ptipo==='org'?-1:0)-(b.ptipo==='org'?-1:0)).map(o=>cardOf(o)).join('')}</details>`).join(''):'<div class="card"><p class="muted">Ainda não há ofertas no ar.</p></div>')+`<button class="btn ghost sm" type="button" data-of="abrir" style="justify-self:start">É empresa ou órgão? Anuncie aqui</button>`}
 function fld(id,l,v,at){return `<label style="display:grid;gap:4px">${l}<input id="${id}" value="${esc(v||'')}" ${at||''}></label>`}
 function pofView(){const back=`<div class="row"><button class="btn ghost sm" type="button" data-of="fechar">Voltar</button></div>`;
   if(GUEST||!uid())return back+`<div class="card"><h3>Empresas e órgãos de turismo</h3><p class="muted">Entre com a sua conta para publicar ofertas.</p></div>`;
@@ -3576,7 +3576,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   if(a==='fechar'){UI.pof=false;return render()}
   if(a==='ver'){UI.pofv=true;UI.pof=false;UI.tab='mais';UI.pofa='';try{start()}catch(_){}render();scrollTo(0,0);return}
   if(a==='vfechar'){UI.pofv=false;return render()}
-  if(a==='vass'){UI.pofa=b.dataset.v||'';return render(true)}
+  if(a==='vass'){UI.pofa=b.dataset.v||'';if(!UI.pofa)UI.pofo={};return render(true)}
   if(a==='cancel'){ED=null;IMG='';return render(true)}
   if(a==='edit'){ED=b.dataset.i;IMG='';render(true);const f=document.getElementById('poff');if(f)f.scrollIntoView({behavior:'smooth'});return}
   if(a==='del'){if(!confirm('Apagar esta oferta?'))return;salva({...OF.mine,L:OF.mine.L.filter(x=>x.id!==b.dataset.i)}).then(()=>toast('Oferta apagada.')).catch(()=>toast('Não foi possível apagar agora.'));return render(true)}
@@ -3595,5 +3595,8 @@ const r0=window.render;if(typeof r0!=='function')return;
 window.render=function(){const open=document.querySelector('.sheet');if(open&&Date.now()-last>900){pend=true;return}const x=r0.apply(this,arguments);if(open)document.querySelectorAll('.sheet-p').forEach(e=>{e.style.animation='none'});return x};
 setInterval(()=>{if(pend&&!document.querySelector('.sheet')){pend=false;try{window.render(true)}catch(_){}}},800);
 })();
+</script>
+<script>
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.pofk){UI.pofo=UI.pofo||{};UI.pofo[d.dataset.pofk]=d.open}},true);
 </script>
 </body></html>
