@@ -13,7 +13,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['k', 'at'])
         && request.resource.data.k is string
         && exists(/databases/$(database)/documents/admkey/main)
-        && request.resource.data.k == get(/databases/$(database)/documents/admkey/main).data.k;
+        && request.resource.data.k == string(get(/databases/$(database)/documents/admkey/main).data.k);
     }
 
     // Dados pessoais de cada pessoa: só ela lê e grava.
