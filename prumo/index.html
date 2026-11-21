@@ -3588,4 +3588,12 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
 })();
 </script>
 <script>document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rect]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();UI.recTipo=b.dataset.rect;render(true)},true);</script>
-<script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
+<script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script><script>
+/* ---- Janela aberta (ex.: Fazer o dinheiro render) não pisca quando chegam dados da conta em segundo plano ---- */
+(()=>{let last=0,pend=false;['pointerdown','click','input','keydown','change','submit'].forEach(t=>document.addEventListener(t,()=>{last=Date.now()},true));
+const r0=window.render;if(typeof r0!=='function')return;
+window.render=function(){const open=document.querySelector('.sheet');if(open&&Date.now()-last>900){pend=true;return}const x=r0.apply(this,arguments);if(open)document.querySelectorAll('.sheet-p').forEach(e=>{e.style.animation='none'});return x};
+setInterval(()=>{if(pend&&!document.querySelector('.sheet')){pend=false;try{window.render(true)}catch(_){}}},800);
+})();
+</script>
+</body></html>
