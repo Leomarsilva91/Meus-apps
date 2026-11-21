@@ -55,9 +55,11 @@ textarea{width:100%;font:16px system-ui;border:1px solid var(--line);border-radi
 </main>
 <div class="toast" id="toast"></div>
 <script>
-const APPS={tasko:['Tasko','#2457d6','../tasko/'],prumo:['Prumo','#1f7a5c','../prumo/'],achei:['Achei Barato','#e08a00','../achei-barato/'],todos:['Todos os apps','#5b6570','../']};
+const APPS={tasko:['Tasko','#2457d6','../tasko/'],prumo:['Prumo','#1f7a5c','../prumo/'],achei:['Achei Barato','#e08a00','../achei-barato/'],respiro:['Respiro','#3a8f5c','../respiro/'],todos:['Todos os apps','#5b6570','../']};
 /* Cada novidade: id único, app, data, título e passos curtos. */
 const T=[
+{id:'r-ia-passeio',a:'respiro',d:'21/11 20:10',t:'✨ Monte seu passeio com a IA',p:['Depois de guardar a chave no Cloudflare, abra o Respiro e escolha onde procurar','Abra "✨ Monte seu passeio com a IA +" e escreva o que quer','Toque "Sugerir lugares": aparecem até 4 lugares do mapa com o motivo','Toque num lugar para abrir os detalhes']},
+{id:'r-ia-folheto',a:'respiro',d:'21/11 20:10',t:'✨ Cadastro do lugar preenchido pela IA',p:['Entre na conta e abra Cadastre seu lugar','Em "✨ Preencher com a IA", escolha a foto de um folheto ou tabela de preços','Os campos da empresa e do lugar são preenchidos','Confira preços, dias e horário antes de enviar']},
 {id:'a-cc-feitas',a:'achei',d:'21/11 17:30',t:'Botão "✅ Compras que já fiz" do comprador',p:['Com a conta do comprador, abra a Compra compartilhada','Depois de entregar uma compra, aparece o botão ✅ Compras que já fiz','Mostra quantas foram entregues e quanto ganhou em taxas','"Compras que vou fazer" fica só com as que faltam entregar']},
 {id:'a-cc-nota',a:'achei',d:'21/11 16:58',t:'Valor da nota puxado da lista',p:['Em Compras que vou fazer, marque Peguei e o preço de cada item','O "Valor total da nota" já vem com o total da lista','Se a nota deu diferente, toque "A nota deu diferente? Corrigir" e digite','Lista sem preço no app não trava mais em "R$ 0,00"']},
 {id:'a-cc-aceitar',a:'achei',d:'21/11 16:40',t:'Compra compartilhada: aceitar pedidos e ver pedidos de outro celular',p:['No celular B (outra conta), abra Compra compartilhada › Pedidos para comprar','Os pedidos do celular A devem aparecer (Públicos ou Particulares)','Cada pedido tem "✅ Aceitar este pedido por R$ X"','Marque ☑ dois pedidos e toque "Aceitar os 2 pedidos marcados"']},

@@ -1356,4 +1356,50 @@ document.addEventListener('click',async function(e){var b=e.target.closest&&e.ta
   b.disabled=true;try{await updOwn('com',function(a){return a.concat([{id:nid('c'),k:'dica',pid:b.dataset.cm,txt:txt.slice(0,500),at:Date.now()}])},40);S.last=Date.now();t.value='';S.cmDr='';toast('Comentário publicado.');render()}catch(_){er.textContent='Não foi possível publicar agora. Tente de novo.';b.disabled=false}},true);
 })();
 </script>
+<script>
+/* ---------- IA do Respiro: ler folheto no cadastro e montar passeio ---------- */
+(function(){
+ const IAOFF='A IA ainda não está ligada nesta versão. Tente mais tarde.';
+ const MZ={busy:'',err:'',res:null,q:''};
+ async function samp(){try{return await claude.use('sample')}catch(_){return null}}
+ function shrink(f,max){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?ok(b):no(),'image/jpeg',.85)};im.onerror=()=>{URL.revokeObjectURL(u);no()};im.src=u})}
+ const setV=(id,v)=>{const el=document.getElementById(id);if(!el||v==null||v==='')return 0;if(el.type==='checkbox')el.checked=!!v;else el.value=String(v);try{el.dispatchEvent(new Event('input',{bubbles:true}))}catch(_){}return 1};
+ /* 1) folheto -> cadastro */
+ function boxCad(){return `<div class="card" id="iacad" style="border:2px solid var(--acc,#2a7);gap:8px"><b>✨ Preencher com a IA</b><p class="m" style="margin:0">Tire uma foto do folheto, da tabela de preços ou de um post do lugar (até 3 fotos). A IA lê e preenche a empresa e o lugar. Depois é só conferir.</p><label class="btn" style="justify-content:center;cursor:pointer">📸 Escolher fotos<input id="iacadf" type="file" accept="image/*" multiple style="display:none"></label><p class="m" id="iacadm" role="status" style="margin:0"></p></div>`}
+ async function lerFolheto(files){const m=document.getElementById('iacadm');const say=t=>{if(m)m.textContent=t};
+  const sp=await samp();if(!sp)return say(IAOFF);say('Preparando as fotos…');let imgs=[];
+  try{for(const f of [...files].slice(0,3))imgs.push(await shrink(f,1600))}catch(_){return say('Não consegui abrir a foto. Tente outra.')}
+  say('A IA está lendo… (alguns segundos)');let r;
+  try{r=await sp.json('As imagens são de um folheto, tabela de preços ou post de um lugar de lazer no Brasil (parque, cachoeira, hotel fazenda, clube, sítio com day use, pesqueiro ou camping). Extraia o que estiver escrito, sem inventar. Devolva JSON com as chaves: "empresa" (razão social ou nome fantasia), "lugar" (nome do lugar), "tipo" (uma destas: parque, cachoeira, hotel, clube, dayuse, pesqueiro, camping), "cidade" (ex.: "Brasília - DF"), "endereco", "site" (URL ou @instagram), "preco_min" e "preco_max" (números em reais por pessoa, adulto; se só houver um preço, use o mesmo nos dois), "day_use" (true/false), "dias" (lista de números dos dias que abre: 0=domingo ... 6=sábado), "horario" (ex.: "9h às 17h"), "telefone", "crianca" (true/false), "pet" (true/false), "resumo" (até 140 letras com o que o lugar oferece). Use null no que não aparecer.',{images:imgs})}
+  catch(e){return say(/rate|limit/.test(String(e&&e.code))?'Limite de uso da IA de hoje atingido. Tente amanhã.':/guest/.test(String(e&&e.code))?'Entre na sua conta para usar a IA.':'A IA não conseguiu ler agora. Tente de novo ou preencha à mão.')}
+  if(!r||typeof r!=='object')return say('Não entendi o folheto. Preencha à mão.');
+  let n=0;n+=setV('e_n',r.empresa);n+=setV('e_cid',r.cidade);n+=setV('e_end',r.endereco);n+=setV('e_site',r.site&&/^https?:/.test(r.site)?r.site:(r.site&&r.site[0]==='@'?'https://instagram.com/'+r.site.slice(1):''));
+  n+=setV('c_n',String(r.lugar||r.empresa||'').slice(0,50));if(r.tipo&&TIPOS[r.tipo])n+=setV('c_t',r.tipo);
+  if(+r.preco_min>=0&&r.preco_min!=null)n+=setV('c_p1',Math.round(+r.preco_min));if(+r.preco_max>0)n+=setV('c_p2',Math.round(+r.preco_max));
+  if(r.day_use!=null)n+=setV('c_du',r.day_use?'1':'0');n+=setV('c_h',String(r.horario||'').slice(0,24));n+=setV('c_tel',String(r.telefone||'').slice(0,20));
+  if(r.crianca!=null)n+=setV('c_k',r.crianca);if(r.pet!=null)n+=setV('c_pet',r.pet);
+  if(Array.isArray(r.dias)&&r.dias.length){const d=[...new Set(r.dias.map(Number).filter(x=>x>=0&&x<=6))];if(d.length){S.cd=d;document.querySelectorAll('#cf [data-cd]').forEach(b=>b.setAttribute('aria-pressed',String(d.includes(+b.dataset.cd))));n++}}
+  document.querySelectorAll('#cf details[data-k="cf2"],#cf details[data-k="cf3"]').forEach(d=>d.open=true);
+  say(n?'✔ Preenchi '+n+' campos. Confira tudo antes de enviar, principalmente preços e horários.'+(r.resumo?' Resumo lido: '+r.resumo:''):'Não achei dados no folheto. Tente uma foto mais nítida.')}
+ /* 2) montar passeio */
+ function boxEx(){const R=MZ.res,byId=id=>all().find(p=>p.id===id);
+  return `<div class="card" id="iaex" style="gap:8px"><details ${MZ.op?'open':''} data-iaop><summary><b>✨ Monte seu passeio com a IA</b></summary><div class="dbody f" style="gap:8px"><p class="m" style="margin:0">Conte o que você quer. Ex.: “cachoeira a até 1 hora, com criança, gastando pouco” ou “hotel fazenda com piscina para o fim de semana”.</p><textarea id="iaq" rows="3" maxlength="300" placeholder="O que você procura?" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px;font:inherit">${esc(MZ.q)}</textarea><button class="btn" type="button" data-iago ${MZ.busy?'disabled':''}>${MZ.busy?esc(MZ.busy):'✨ Sugerir lugares'}</button>${MZ.err?`<p class="m" role="alert" style="margin:0">${esc(MZ.err)}</p>`:''}${R?`${R.dica?`<p class="m" style="margin:0">💡 ${esc(R.dica)}</p>`:''}${(R.sug||[]).map(x=>{const p=byId(x.id);if(!p)return '';return `<button type="button" class="card" data-open="${esc(p.id)}" style="text-align:left;gap:4px;cursor:pointer;border:1.5px solid var(--line)"><b>${esc(p.n)}</b><span class="m">${esc((TIPOS[p.t]||[''])[0])} ${isFinite(dist(p))?' · '+Math.round(dist(p))+' km':''}${p.pr&&p.pr[1]?' · R$ '+p.pr[0]+'–'+p.pr[1]:p.pr&&p.pr[0]===0?' · grátis':''}</span><span class="m" style="color:var(--ink)">${esc(x.motivo||'')}</span></button>`}).join('')}<p class="m" style="margin:0">Sugestões feitas pela IA com os lugares do mapa. Confirme preço e horário antes de ir.</p>`:''}</div></details></div>`}
+ async function sugerir(){const q=(document.getElementById('iaq')||{}).value||'';MZ.q=q.trim();MZ.err='';if(MZ.q.length<4){MZ.err='Escreva um pouco do que você procura.';return render()}
+  const sp=await samp();if(!sp){MZ.err=IAOFF;return render()}
+  const L=all().map(p=>({p,d:dist(p)})).sort((a,b)=>(isFinite(a.d)?a.d:1e9)-(isFinite(b.d)?b.d:1e9)).slice(0,45).map(({p,d})=>({id:p.id,n:p.n,tipo:p.t,km:isFinite(d)?Math.round(d):null,preco:p.pr,dayuse:!!p.du,dias:(p.dias||[]).map(i=>DN[i]).join(','),hor:p.hor||'',crianca:!!p.k,pet:!!p.pet,piscina:!!p.pis,trilha:!!p.tri,obs:String(p.ob||'').slice(0,120)}));
+  if(!L.length){MZ.err='Ainda não há lugares no mapa perto de você. Escolha onde procurar acima.';return render()}
+  MZ.busy='A IA está pensando…';render();
+  try{const r=await sp.json('Você ajuda a escolher passeios de natureza e descanso. Pedido da pessoa: "'+MZ.q.replace(/"/g,"'")+'". Lugares disponíveis (km = distância de carro aproximada em linha reta; considere 1 hora ≈ 60 km): '+JSON.stringify(L)+'. Escolha de 1 a 4 lugares DESTA LISTA que melhor atendem o pedido. Não invente lugares. Devolva JSON: {"sug":[{"id":"id do lugar","motivo":"uma frase curta em português explicando por que combina"}],"dica":"uma dica curta para o passeio (opcional)"}. Se nada combinar bem, devolva os mais próximos do pedido e diga isso na dica.');
+    MZ.res={sug:(r&&Array.isArray(r.sug)?r.sug:[]).filter(x=>x&&x.id).slice(0,4),dica:r&&r.dica?String(r.dica).slice(0,200):''};if(!MZ.res.sug.length)MZ.err='A IA não achou lugares para esse pedido. Tente explicar de outro jeito.'}
+  catch(e){MZ.err=/rate|limit/.test(String(e&&e.code))?'Limite de uso da IA de hoje atingido. Tente amanhã.':/guest/.test(String(e&&e.code))?'Entre na sua conta para usar a IA.':'A IA não respondeu agora. Tente de novo.'}
+  MZ.busy='';render()}
+ /* encaixe */
+ try{const _ex=viewEx;viewEx=function(){const h=_ex.apply(this,arguments);let b='';try{b=boxEx()}catch(_){}const i=h.indexOf('<div class="card pop">');return i>=0?h.slice(0,i)+b+h.slice(i):b+h}}catch(_){}
+ try{const _cd=viewCad;viewCad=function(){const h=_cd.apply(this,arguments);let b='';try{b=UID?boxCad():''}catch(_){}const i=h.indexOf('<form class="f" id="cf"');return i>=0?h.slice(0,i)+b+h.slice(i):h}}catch(_){}
+ document.addEventListener('change',e=>{const t=e.target;if(t&&t.id==='iacadf'&&t.files&&t.files.length){lerFolheto(t.files);t.value=''}});
+ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-iago]');if(!b)return;e.preventDefault();e.stopPropagation();if(!MZ.busy)sugerir()},true);
+ document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('[data-iaop]'))MZ.op=d.open},true);
+ document.addEventListener('input',e=>{if(e.target&&e.target.id==='iaq')MZ.q=e.target.value});
+})();
+</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script></body></html>
