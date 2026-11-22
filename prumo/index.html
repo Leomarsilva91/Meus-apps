@@ -2321,7 +2321,7 @@ function resumoTxt(ym){const G=cD().gastos,GM=G.filter(g=>cIn(g.d||'',ym)),O=((S
   if(en>0)t+='\n📈 Gastou '+Math.round(gs/en*100)+'% do que entrou';
   if(cl.length)t+='\n\nGastos por categoria:\n'+cl.map(([k,v])=>'• '+nm(k)+': '+brl(v)+(gs>0?' ('+Math.round(v/gs*100)+'%)':'')).join('\n');
   if(pv>0)t+='\n\n'+(gs>pv?'🔺 ':'🔻 ')+(gs>pv?'Gastou ':'Gastou ')+brl(Math.abs(gs-pv))+(gs>pv?' a mais':' a menos')+' que no mês anterior ('+brl(pv)+').';
-  return t+'\n\nSó os totais: os lançamentos não aparecem. Feito no Prumo.'}
+  return t}
 function heroCard(ym,GM){let gs=GM.reduce((a,g)=>a+(+g.v||0),0);try{gs+=((S.orc&&S.orc.gastos)||[]).filter(g=>cIn(g.d||'',ym)).reduce((a,g)=>a+(+g.v||0),0)}catch(_){}
   let en=0;try{en=(+cRendaM(ym)||0)+(+cEnt(ym)||0)+(+cExtra(ym)||0)}catch(_){}const sd=en-gs,cur=ym===MKEY&&DAYN>=1,pc=cur?Math.min(100,Math.round(DAYN/DIM*100)):0;
   return `<div class="card mhero"><div class="hnav"><button class="btn ghost sm" data-cs="mes:-1" aria-label="Mês anterior">‹</button><b>${cMesN(ym)}</b><button class="btn ghost sm" data-cs="mes:1" aria-label="Próximo mês">›</button></div>
