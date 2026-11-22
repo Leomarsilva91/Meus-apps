@@ -446,6 +446,11 @@ async function cloudInit(){try{
   if(!S.demo){S.t=S.t||Date.now();await cloudFlush()}else{SYNC.st='cloud';paintWho()}
 }catch(e){}}
 addEventListener('visibilitychange',()=>{if(document.hidden&&SYNC.st==='busy')cloudPush(true)});
+/* Mais de uma aba/janela do Prumo aberta: a que estava parada não pode apagar o que a outra salvou */
+function syncAbas(raw){try{const o=JSON.parse(raw);if(o&&o.mei&&o.debts&&(o.t||0)>(S.t||0)){S=o;if(!S.goals)S.goals=[];if(S.orc===undefined)S.orc=null;if(S.orc&&!S.orc.gastos)S.orc.gastos=[];try{render(true)}catch(_){}}}catch(_){}}
+addEventListener('storage',e=>{if(e.key===K&&e.newValue)syncAbas(e.newValue)});
+addEventListener('visibilitychange',()=>{if(!document.hidden){try{const t=localStorage.getItem(K);if(t)syncAbas(t)}catch(_){}}});
+addEventListener('pageshow',()=>{try{const t=localStorage.getItem(K);if(t)syncAbas(t)}catch(_){}});
 const UI={tab:'inicio',neg:'resumo',div:'visao',met:'lista',plan:null,dream:null,gf:null,gb:false,sel:null,ai:{}};
 
 /* ---------- cálculos do MEI ---------- */
