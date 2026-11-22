@@ -321,7 +321,7 @@ ${projPickHtml(r)}
 ${cedHtml()}
 <div><button class="chip" data-act="getloc">${r.loc?'Localização obtida':'Usar minha localização'}</button><span id="locmsg" class="muted" style="display:block;margin-top:4px">${r.loc?'Ela só é enviada se você pedir ajuda de emergência.':'Opcional. Ajuda o app a perceber se é uma emergência.'}</span></div>
 <input class="sr" type="file" id="rvcam" accept="video/*" capture="environment" tabindex="-1" aria-label="Gravar vídeo do serviço"><input class="sr" type="file" id="rvgal" accept="video/*" tabindex="-1" aria-label="Escolher vídeo da galeria"><div id="rvbox">${rvBox(r)}</div>
-<button class="btn ghost" id="an" data-act="analyze">Analisar descrição com IA (opcional)</button>
+<div class="row" style="gap:8px"><button class="btn ghost" id="an" data-act="analyze" style="flex:1 1 180px">✨ Analisar com IA</button><button class="btn ghost" id="anq" data-act="analyzeq" style="flex:1 1 180px">⚡ Análise rápida (sem IA)</button></div><span class="muted small" style="margin-top:-6px">Análise rápida: estimativa simples feita pelo próprio app, boa para serviços pequenos (tomada, torneira, faxina, pintura de um cômodo). Para obras e serviços maiores, use a IA.</span>
 <div id="ai" aria-live="polite" style="display:flex;flex-direction:column;gap:14px">${aiHtml()}</div>
 ${prefBanner()}${hotCard()}<p class="muted" style="margin:0">Taxa da plataforma: <b>${fee()}</b>. Você publica agora e paga quando algum profissional quiser negociar. A conversa só abre depois do pagamento.</p>
 <button class="btn" id="pub" data-act="publish">Publicar pedido</button></main>`},
@@ -927,7 +927,7 @@ function aiHtml(){
   if(a.src==='none')return`<div class="card"><b>Sem análise por IA</b><p class="muted" style="margin:6px 0 0">O valor fica <b>a combinar</b> com os profissionais, que veem a sua descrição e propõem o preço.</p></div><div class="card"><b>Categoria do serviço</b><p class="muted" style="margin:4px 0 10px">Escolha onde o pedido aparece.</p><div class="row">${a.cats.map(c=>`<button class="chip" data-pick="${esc(c)}" aria-pressed="${r.sel.includes(c)}">${esc(c)}</button>`).join('')}</div></div>`;
   if(a.invalid)return`<div class="card"><b>Não consegui identificar o serviço</b><p class="muted" style="margin:6px 0 0">${esc(a.reason)}</p></div>`;
   return`${r.stale?'<div class="alert" role="alert">Você alterou o pedido. Analise de novo para atualizar.</div>':''}
-<div class="est"><span class="muted"><b>Análise preditiva</b> ${a.src==='ia'?'(feita por IA)':'(estimativa local: a IA não respondeu'+(S.req&&S.req.aiErr?' · '+esc(S.req.aiErr):'')+'. Toque em “Analisar novamente”)'}</span><strong>${brl(a.min)} – ${brl(a.max)}</strong><span>Total estimado (mão de obra + material)</span><span class="muted" style="display:block;margin-top:4px">Mão de obra: ${brl(a.lab[0])} – ${brl(a.lab[1])} · Material: ${brl(a.matTotal)}</span><span style="display:block;margin-top:4px">Prazo sugerido: ${esc(a.days)}</span><span class="muted" style="display:block;margin-top:6px">Só você vê esta estimativa. Os profissionais não veem o valor, para a negociação ficar livre.</span></div>
+<div class="est"><span class="muted"><b>Análise preditiva</b> ${a.src==='ia'?'(feita por IA)':a.quick?'(análise rápida do app, sem IA: valores aproximados)':'(estimativa local: a IA não respondeu'+(S.req&&S.req.aiErr?' · '+esc(S.req.aiErr):'')+'. Toque em “Analisar novamente”)'}</span><strong>${brl(a.min)} – ${brl(a.max)}</strong><span>Total estimado (mão de obra + material)</span><span class="muted" style="display:block;margin-top:4px">Mão de obra: ${brl(a.lab[0])} – ${brl(a.lab[1])} · Material: ${brl(a.matTotal)}</span><span style="display:block;margin-top:4px">Prazo sugerido: ${esc(a.days)}</span><span class="muted" style="display:block;margin-top:6px">Só você vê esta estimativa. Os profissionais não veem o valor, para a negociação ficar livre.</span></div>
 ${visHtml()}
 ${a.porte==='grande'?'<div class="card" style="border-color:var(--acc)"><b>Obra de grande porte</b><p class="muted" style="margin:6px 0 0">O valor é só uma referência. Obras assim pedem visita técnica e orçamento detalhado, e podem exigir projeto, responsável técnico (engenheiro ou arquiteto) e licenças da prefeitura. Peça propostas e compare.</p></div>':''}
 ${aiNote()}
@@ -940,7 +940,7 @@ ${a.clarify.length?`<div class="card"><b>Para um orçamento mais preciso</b><p c
 }
 function sync(){
   const r=S.req,a=$('#an'),p=$('#pub');
-  if(a){a.disabled=r.busy;a.textContent=r.busy?'Analisando…':(r.ai&&!r.stale?'Analisar novamente':'Analisar descrição com IA')}
+  if(a){a.disabled=r.busy;a.textContent=r.busy?'Analisando…':(r.ai&&!r.stale&&r.ai.src==='ia'?'✨ Analisar de novo com IA':'✨ Analisar com IA')}const aq=$('#anq');if(aq)aq.disabled=!!r.busy;
   if(p)p.disabled=!!r.busy;
 }
 function lastCity(){try{const L=jget('ms_requests').filter(q=>q&&q.email===S.user.email&&q.city);return L.length?L[L.length-1].city:(S.user.city||'')}catch(e){return''}}
@@ -955,6 +955,11 @@ function skipAI(){
   r.sel=g&&!g.invalid&&g.cats&&g.cats[0]&&g.cats[0]!=='Outros serviços'&&CATS.includes(g.cats[0])?[g.cats[0]]:[];r.stale=false;r.busy=false;
   $('#ai').innerHTML=aiHtml();sync();
 }
+function quickAnalyze(){const r=S.req,d=r.desc.trim();
+  if(showErrors(d.length<15?{rdesc:'Descreva com mais detalhes (mínimo de 15 caracteres).'}:{}))return;
+  S.aid++;let a=localAnalysis(d,r.urg);r.aiErr='';
+  if(a&&!a.invalid&&a.cats&&(a.cats[0]==='Construção e reformas'||/cal[cç]ada|contrapiso|piso|muro|reboco|laje|concreto|alvenaria|azulejo|porcelanato/.test(d.toLowerCase()))&&!(a.mats&&a.mats.length)){const lm=obraMats(d);if(lm.length){a.mats=lm;a.matTotal=lm.reduce((x,m)=>x+m.v,0);a.min=a.lab[0]+a.matTotal;a.max=a.lab[1]+a.matTotal}}
+  if(a&&!a.invalid)a.quick=1;r.ai=a;r.sel=a.invalid?[]:a.cats.slice(0,1);r.busy=false;r.stale=false;$('#ai').innerHTML=aiHtml();sync()}
 async function analyze(){
   const r=S.req,d=r.desc.trim();
   if(showErrors(d.length<15?{rdesc:'Descreva com mais detalhes (mínimo de 15 caracteres).'}:{}))return;
@@ -2849,6 +2854,7 @@ document.addEventListener('click',e=>{
   if(D.act==='pdel'){if(!S.pdel){S.pdel=1;t.textContent='Toque de novo para apagar tudo';return}return delAccount()}
   if(D.go)return go(D.go);
   if(D.act==='analyze')return analyze();
+  if(D.act==='analyzeq')return quickAnalyze();
   if(D.act==='skipai')return skipAI();
   if(D.act==='qanalyze')return qanalyze();
   if(D.act==='qsend')return qsend();
