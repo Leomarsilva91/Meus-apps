@@ -48,12 +48,13 @@
     if (document.getElementById('ia-entrar')) return;
     var d = document.createElement('div'); d.id = 'ia-entrar';
     d.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;font:16px system-ui,sans-serif';
-    d.innerHTML = '<form style="background:#fff;color:#111;border-radius:16px;padding:18px;max-width:360px;width:100%;display:grid;gap:10px;max-height:90vh;overflow:auto"><b style="font-size:18px">Entrar</b><span class="m" style="font-size:14px;color:#444"></span><label style="display:grid;gap:4px;font-weight:600;font-size:14px">Apelido (aparece para os outros)<input id="ia-ap" maxlength="20" autocomplete="nickname" style="font:inherit;border:1.5px solid #bbb;border-radius:10px;padding:10px"></label><label style="display:grid;gap:4px;font-weight:600;font-size:14px">E-mail (para a equipe responder você)<input id="ia-em" type="email" maxlength="80" autocomplete="email" style="font:inherit;border:1.5px solid #bbb;border-radius:10px;padding:10px"></label><span style="font-size:13px;color:#555">Nesta versão de teste, a conta fica só neste aparelho. O login definitivo chega no lançamento.</span><span class="e" style="color:#b3261e;font-size:13px;min-height:1px"></span><button style="min-height:46px;border:0;border-radius:12px;background:#222;color:#fff;font:inherit;font-weight:700">Entrar</button><button type="button" style="min-height:46px;border:1.5px solid #bbb;border-radius:12px;background:#fff;color:#111;font:inherit;font-weight:700">Fechar</button></form>';
+    d.innerHTML = '<form style="background:#fff;color:#111;border-radius:16px;padding:18px;max-width:360px;width:100%;display:grid;gap:10px;max-height:90vh;overflow:auto"><b style="font-size:18px">Entrar</b><span class="m" style="font-size:14px;color:#444"></span><button type="button" id="ia-g" style="min-height:52px;border:1.5px solid #bbb;border-radius:12px;background:#fff;color:#111;font:inherit;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>Entrar com Google</button><span style="font-size:13px;color:#2e6b4f">Recomendado: seus dados ficam guardados na sua conta Google e voltam mesmo se o celular apagar tudo ou se você trocar de aparelho.</span><span style="font-size:13px;color:#777;text-align:center">— ou, só neste aparelho —</span><label style="display:grid;gap:4px;font-weight:600;font-size:14px">Apelido (aparece para os outros)<input id="ia-ap" maxlength="20" autocomplete="nickname" style="font:inherit;border:1.5px solid #bbb;border-radius:10px;padding:10px"></label><label style="display:grid;gap:4px;font-weight:600;font-size:14px">E-mail (para a equipe responder você)<input id="ia-em" type="email" maxlength="80" autocomplete="email" style="font:inherit;border:1.5px solid #bbb;border-radius:10px;padding:10px"></label><span style="font-size:13px;color:#555">Assim, a conta fica só neste aparelho: se o celular apagar os dados, ela some.</span><span class="e" style="color:#b3261e;font-size:13px;min-height:1px"></span><button style="min-height:46px;border:0;border-radius:12px;background:#222;color:#fff;font:inherit;font-weight:700">Entrar</button><button type="button" style="min-height:46px;border:1.5px solid #bbb;border-radius:12px;background:#fff;color:#111;font:inherit;font-weight:700">Fechar</button></form>';
     d.querySelector('.m').textContent = msg || 'Entre para salvar seus dados e participar.';
     document.body.appendChild(d);
     var f = d.querySelector('form'), ap = f.querySelector('#ia-ap'), em = f.querySelector('#ia-em'), e = f.querySelector('.e');
     ap.value = ls('g', 'ia_nome') || ''; em.value = ls('g', 'ia_email') || ''; ap.focus();
-    f.querySelectorAll('button')[1].onclick = function () { d.remove(); };
+    f.querySelectorAll('button')[2].onclick = function () { d.remove(); };
+    f.querySelector('#ia-g').onclick = function () { var b = this; b.disabled = true; b.lastChild.textContent = 'Abrindo o Google…'; e.textContent = ''; google().catch(function (er) { b.disabled = false; b.lastChild.textContent = 'Entrar com Google'; var c = String(er && er.code || ''); e.textContent = /unauthorized-domain/.test(c) ? 'O endereço do app ainda não foi autorizado no Firebase (Authentication › Configurações › Domínios autorizados).' : /operation-not-allowed/.test(c) ? 'O login com Google ainda não foi ligado no Firebase (Authentication › Sign-in method › Google).' : /popup-closed|cancelled/.test(c) ? 'Login cancelado.' : 'Não consegui entrar com o Google agora (' + (c || 'erro') + ').'; }); };
     f.onsubmit = function (ev) {
       ev.preventDefault();
       var a = ap.value.trim(), m = em.value.trim();
@@ -62,7 +63,19 @@
       ls('s', 'ia_nome', a); ls('s', 'ia_email', m); ls('s', 'ia_conta', '1'); uid(); location.reload();
     };
   }
-  function sair() { ls('s', 'ia_conta', '0'); location.reload(); }
+  function sair() { ls('s', 'ia_conta', '0'); if (ls('g', 'ia_google') === '1') { ls('r', 'ia_google'); try { if (window.firebase && firebase.auth) return firebase.auth().signOut().then(function () { location.reload(); }, function () { location.reload(); }); } catch (_) {} } location.reload(); }
+  function gOk(u) { if (!u) return; var nm = String(u.displayName || '').trim().split(/\s+/)[0] || ''; if (!ls('g', 'ia_nome') && nm) ls('s', 'ia_nome', nm.slice(0, 20)); if (u.email) ls('s', 'ia_email', u.email); ls('s', 'ia_conta', '1'); ls('s', 'ia_google', '1'); }
+  function google() {
+    return fbIni().then(function () {
+      if (!window.firebase || !firebase.auth) throw { code: 'sem-firebase' };
+      var au = firebase.auth(), pv = new firebase.auth.GoogleAuthProvider(); pv.setCustomParameters({ prompt: 'select_account' });
+      var cu = au.currentUser, troca = function (er) { if (er && er.code === 'auth/credential-already-in-use' && er.credential) return au.signInWithCredential(er.credential); throw er; };
+      var p = cu && cu.isAnonymous ? cu.linkWithPopup(pv).catch(troca) : au.signInWithPopup(pv);
+      return p.catch(function (er) { var c = String(er && er.code || ''); if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(c)) { ls('s', 'ia_gredir', '1'); return cu && cu.isAnonymous ? cu.linkWithRedirect(pv) : au.signInWithRedirect(pv); } throw er; })
+        .then(function (r) { var u = (r && r.user) || au.currentUser; if (u && !u.isAnonymous) { gOk(u); location.reload(); } });
+    });
+  }
+  window.IA_GOOGLE = google;
   function chip() {
     if (window.IA_LOGIN_PROPRIO || window.IA_SEM_CHIP || document.getElementById('ia-chip')) return;
     var b = document.createElement('button'); b.id = 'ia-chip'; b.type = 'button';
@@ -164,7 +177,7 @@
     if (document.getElementById('ia-admlink')) return;
     var a = document.createElement('div'); a.id = 'ia-admlink';
     a.style.cssText = 'text-align:center;padding:18px 12px 90px;font:13px system-ui,sans-serif';
-    a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>'+'<br><br><a href="#memoria" data-lsmem="1" style="color:inherit;opacity:.6">Memória do app neste aparelho</a>';
+    a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>'+'<br><br>'+(ls('g','ia_google')==='1'?'<span style="opacity:.7">✔ Dados guardados na conta Google'+(ls('g','ia_email')?' ('+ls('g','ia_email').replace(/[<>"&]/g,'')+')':'')+'</span>':'<a href="#google" data-iagoogle="1" style="color:inherit;font-weight:700">🔐 Entrar com Google para não perder seus dados</a>')+'<br><br><a href="#memoria" data-lsmem="1" style="color:inherit;opacity:.6">Memória do app neste aparelho</a>';
     var q = a.querySelector('a'); q.onclick = function (ev) { ev.preventDefault(); logado() ? sair() : entrar(); };
     document.body.appendChild(a);
   }
@@ -188,6 +201,7 @@
     FBP = js(b + 'firebase-app-compat.js').then(function () { return Promise.all([js(b + 'firebase-auth-compat.js'), js(b + 'firebase-firestore-compat.js')]); }).then(function () {
       if (!firebase.apps.length) firebase.initializeApp(cfg);
       var au = firebase.auth();
+      if (ls('g', 'ia_gredir') === '1') { ls('r', 'ia_gredir'); au.getRedirectResult().then(function (r) { if (r && r.user && !r.user.isAnonymous) { gOk(r.user); location.reload(); } }).catch(function (er) { if (er && er.code === 'auth/credential-already-in-use' && er.credential) au.signInWithCredential(er.credential).then(function (r) { gOk(r.user); location.reload(); }); }); }
       return (au.setPersistence ? au.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () {}) : Promise.resolve()).then(function () { return new Promise(function (ok) { var first = true, off = au.onAuthStateChanged(function (u) { if (u) { off(); ok(u); return; } if (first) { first = false; au.signInAnonymously().catch(function () { off(); ok(null); }); } }); }); });
     }).then(function (u) {
       if (!u) { window.IA_SEM_NUVEM = true; return null; }
@@ -320,3 +334,5 @@
 
 /* Pede ao navegador para não apagar os dados dos apps sozinho (limpeza automática quando falta espaço) */
 (function(){try{if(navigator.storage&&navigator.storage.persist){navigator.storage.persisted().then(function(p){window.__lsPers=p;if(!p)navigator.storage.persist().then(function(ok){window.__lsPers=ok}).catch(function(){})}).catch(function(){})}}catch(e){}})();
+
+document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-iagoogle]');if(!t)return;e.preventDefault();e.stopPropagation();if(!window.IA_GOOGLE)return;t.textContent='Abrindo o Google…';IA_GOOGLE().catch(function(er){var c=String(er&&er.code||'');t.textContent='🔐 Entrar com Google para não perder seus dados';alert(/unauthorized-domain/.test(c)?'O endereço do app ainda não foi autorizado no Firebase (Authentication › Configurações › Domínios autorizados).':/operation-not-allowed/.test(c)?'O login com Google ainda não foi ligado no Firebase (Authentication › Sign-in method › Google).':/popup-closed|cancelled/.test(c)?'Login cancelado.':'Não consegui entrar com o Google agora ('+(c||'erro')+').')})},true);

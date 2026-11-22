@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=25"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=26"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 .seg.fit.casa{grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px;gap:4px}
 .seg.fit.casa button{border:0;background:transparent;font-size:13px;font-weight:700;padding:6px 2px;min-height:42px;border-radius:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg.fit.casa button[aria-pressed=true]{background:var(--mei);color:var(--on-mei)}
@@ -449,7 +449,8 @@ async function cloudInit(){try{
   const id=await user.id();if(!id)return;SYNC.ref=db.collection('data/users/'+id).doc('prumo');
   const snap=await SYNC.ref.get();let r=null;
   if(snap.exists){try{const d=snap.data();const o=JSON.parse(d.json);if(o&&o.mei&&o.debts){o.t=o.t||d.t||0;r=semExemplo(o)}}catch(e){}}
-  if(r&&(S.demo||(r.t||0)>(S.t||0))){S=r;try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}SYNC.st='cloud';render(true);toast('Seus dados foram carregados da sua conta.');return}
+  const nIt=o=>{try{const m=o.mei||{};return (m.rev||[]).length+(m.exp||[]).length+(o.debts||[]).length+(o.goals||[]).length+((o.orc&&o.orc.gastos)||[]).length+((o.casa&&o.casa.gastos)||[]).length}catch(_){return 0}};
+  if(r&&(S.demo||(r.t||0)>(S.t||0)||(nIt(S)===0&&nIt(r)>0))){S=r;try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}SYNC.st='cloud';render(true);toast('Seus dados foram carregados da sua conta.');return}
   if(!S.demo){S.t=S.t||Date.now();await cloudFlush()}else{SYNC.st='cloud';paintWho()}
 }catch(e){}}
 addEventListener('visibilitychange',()=>{if(document.hidden&&SYNC.st==='busy')cloudPush(true)});
