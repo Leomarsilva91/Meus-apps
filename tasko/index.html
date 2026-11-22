@@ -956,7 +956,7 @@ function skipAI(){
   $('#ai').innerHTML=aiHtml();sync();
 }
 /* ===== Calculadora de obra pela medida (sem IA): conta simples, sem gastar crédito ===== */
-const CALC_T={muro:{n:'🧱 Muro de blocos',f:[['alt','Altura (m)','2,5'],['comp','Comprimento (m)','5']],ck:[['reb','Com reboco dos dois lados',1],['fund','Com fundação e colunas',1]]},
+const CALC_T={casa:{n:'🏠 Casa (construção)',f:[['area','Área construída (m²)','70'],['quartos','Quartos','2'],['banh','Banheiros','1']],ck:[['laje','Com laje',1],['acab','Com acabamento (reboco, piso e pintura)',1]]},muro:{n:'🧱 Muro de blocos',f:[['alt','Altura (m)','2,5'],['comp','Comprimento (m)','5']],ck:[['reb','Com reboco dos dois lados',1],['fund','Com fundação e colunas',1]]},
   calcada:{n:'🟫 Calçada ou contrapiso',f:[['comp','Comprimento (m)','5'],['larg','Largura (m)','1,5'],['esp','Espessura (cm)','7']],ck:[['tela','Com tela soldada',1]]},
   reboco:{n:'🧰 Reboco de parede',f:[['alt','Altura (m)','2,6'],['comp','Comprimento da parede (m)','4']],ck:[['lados','Os dois lados da parede',0]]},
   piso:{n:'🔲 Piso ou revestimento',f:[['comp','Comprimento (m)','4'],['larg','Largura (m)','3']],ck:[['rodape','Com rodapé',0]]},
@@ -978,6 +978,18 @@ function calcRun(){const c=S.req.calc,T=CALC_T[c.t];if(!T)return;const V=k=>cN(c
     add('Cimento (saco 50 kg)',cim,'saco',38);add('Areia média'+cam(are),are,'m³',150);if(bri)add('Brita 1'+cam(bri),bri,'m³',170);if(cal)add('Cal hidratada (saco 20 kg)',cal,'saco',22);
     lab=[A*60+(K('reb')?A*2*30:0)+(K('fund')?cp*40:0),A*90+(K('reb')?A*2*45:0)+(K('fund')?cp*60:0)];dias=Math.max(1,Math.ceil(A/8+(K('reb')?A*2/20:0)+(K('fund')?2:0)));if(A>25)team=[{t:'Pedreiro',n:2},{t:'Ajudante',n:2}];
     sum='Muro de '+h+' m de altura por '+cp+' m de comprimento ('+r2(A)+' m²) com blocos de concreto'+(K('fund')?', fundação e colunas':'')+(K('reb')?', rebocado dos dois lados':'')+'.'}
+  else if(c.t==='casa'){const A=V('area'),Q=Math.round(V('quartos')),B=Math.max(1,Math.round(V('banh'))),W=A*2.8,lj=K('laje'),ac=K('acab');
+    add('Bloco de concreto 14x19x39',W*13*1.05,'un',4.2);let cim=A*1.3+(lj?A*0.5:0),are=A*0.3,bri=A*0.15+(lj?A*0.1:0),cal=0;
+    if(ac){cim+=W*2*0.1;cal+=W*2*0.15;are+=W*2*0.025}
+    add('Cimento (saco 50 kg)',cim,'saco',38);add('Areia média'+cam(are),are,'m³',150);add('Brita 1'+cam(bri),bri,'m³',170);if(cal)add('Cal hidratada (saco 20 kg)',cal,'saco',22);
+    add('Aço (vergalhões e estribos)',A*6+(lj?A*4:0),'kg',9);if(lj)add('Laje treliçada com tavelas',A,'m²',75);
+    add('Madeiramento do telhado',A*1.25,'m²',60);add('Telha cerâmica',A*1.25*16,'un',2.6);
+    add('Material elétrico (fios, tomadas, quadro)',1,'verba',Math.round(A*45));add('Material hidráulico e louças',1,'verba',1500+B*1800);
+    add('Portas com batente e fechadura',Q+B+2,'un',480);add('Janelas',Q+B+2,'un',650);
+    if(ac){add('Piso cerâmico',A*1.1,'m²',45);add('Argamassa AC-II (saco 20 kg)',A*4/20,'saco',30);add('Rejunte',Math.max(1,A*0.3),'kg',12);add('Tinta acrílica (2 demãos)',W*2*2/10,'L',25)}
+    lab=[A*(lj?850:750)+(ac?A*250:0),A*(lj?1250:1100)+(ac?A*350:0)];dias=Math.max(30,Math.ceil(A*1.6));
+    team=[{t:'Mestre de obras',n:1},{t:'Pedreiro',n:Math.max(2,Math.ceil(A/40))},{t:'Servente',n:Math.max(2,Math.ceil(A/40))},{t:'Eletricista',n:1},{t:'Encanador',n:1},{t:'Engenheiro ou arquiteto (responsável técnico)',n:1}];
+    sum='Construção de casa de '+r2(A)+' m² com '+Q+' quarto'+(Q===1?'':'s')+' e '+B+' banheiro'+(B===1?'':'s')+(lj?', com laje':'')+(ac?', com acabamento':'')+'.'}
   else if(c.t==='calcada'){const cp=V('comp'),lg=V('larg'),e=V('esp')/100,A=cp*lg,Vv=A*e*1.05;add('Cimento (saco 50 kg)',Vv*7,'saco',38);add('Areia média'+cam(Vv*0.6),Vv*0.6,'m³',150);add('Brita 1'+cam(Vv*0.8),Vv*0.8,'m³',170);if(K('tela'))add('Tela soldada (painel 2 x 3 m)',A/6*1.1,'un',95);
     lab=[A*50,A*80];dias=Math.max(1,Math.ceil(A/15));sum='Calçada ou contrapiso de '+cp+' m x '+lg+' m ('+r2(A)+' m²) com '+V('esp')+' cm de concreto'+(K('tela')?' e tela soldada':'')+'.'}
   else if(c.t==='reboco'){const A=V('alt')*V('comp')*(K('lados')?2:1);add('Cimento (saco 50 kg)',A*0.1,'saco',38);add('Cal hidratada (saco 20 kg)',A*0.15,'saco',22);add('Areia fina'+cam(A*0.025),A*0.025,'m³',160);
@@ -987,7 +999,7 @@ function calcRun(){const c=S.req.calc,T=CALC_T[c.t];if(!T)return;const V=k=>cN(c
   else if(c.t==='pintura'){const A=V('alt')*V('comp');cat='Pintura';add('Tinta acrílica (2 demãos)',A*2/10,'L',25);add('Selador acrílico',A/8,'L',20);if(K('massa'))add('Massa corrida',A*0.8,'kg',10);add('Rolos, pincéis, lixa e fita crepe',1,'kit',45);
     lab=[A*15+(K('massa')?A*12:0),A*25+(K('massa')?A*18:0)];dias=Math.max(1,Math.ceil(A/(K('massa')?20:40)));team=[{t:'Pintor',n:1}];sum='Pintura de '+r2(A)+' m² de parede ('+V('alt')+' m x '+V('comp')+' m), 2 demãos'+(K('massa')?', com massa corrida':'')+'.'}
   lab=lab.map(x=>Math.max(300,Math.round(x/10)*10));if(lab[1]<lab[0]*1.2)lab[1]=Math.round(lab[0]*1.3/10)*10;const mt=L.reduce((a,m)=>a+m.v,0);
-  const r=S.req;S.aid++;r.aiErr='';r.ai={src:'local',quick:1,calc:1,team,maq:[],func:team.reduce((a,x)=>a+x.n,0),lab,mats:L,matTotal:mt,min:lab[0]+mt,max:lab[1]+mt,days:dias===1?'1 dia útil':dias+' dias úteis',summary:sum,cats:[cat],pros:team.map(x=>x.t),clarify:['O terreno ou a parede já estão prontos para o serviço?','Tem fácil acesso para descarregar o material?']};
+  const r=S.req;S.aid++;r.aiErr='';r.ai={src:'local',quick:1,calc:1,porte:c.t==='casa'?'grande':'',team,maq:[],func:team.reduce((a,x)=>a+x.n,0),lab,mats:L,matTotal:mt,min:lab[0]+mt,max:lab[1]+mt,days:dias===1?'1 dia útil':dias>=40?'cerca de '+Math.round(dias/22)+' meses':dias+' dias úteis',summary:sum,cats:[cat],pros:team.map(x=>x.t),clarify:['O terreno ou a parede já estão prontos para o serviço?','Tem fácil acesso para descarregar o material?']};
   r.sel=[cat];r.stale=false;r.busy=false;if(!r.desc||r.desc.trim().length<15){r.desc=sum;const d=$('#rdesc');if(d)d.value=sum}
   $('#ai').innerHTML=aiHtml();sync();try{document.getElementById('ai').scrollIntoView({behavior:'smooth',block:'start'})}catch(_){}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-calct],[data-act="calcgo"]');if(!b||S.v!=='request')return;e.preventDefault();e.stopPropagation();const c=S.req.calc||(S.req.calc={t:'',v:{},k:{}});

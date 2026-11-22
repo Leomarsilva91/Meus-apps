@@ -1346,8 +1346,13 @@ async function rotaSim(btn){
     if(!items.length)throw {};UI.simRes={gid:g.id,items};btn.disabled=false;btn.textContent=old;render(true);toast('Confira os valores da IA e escolha o que usar.');
   }catch(e){btn.textContent=old;btn.disabled=false;toast(e&&e.code==='not_granted'?'Permissão da IA negada.':'Não consegui simular agora. Preencha os valores.')}
 }
+/* Distância pelo mapa (OpenStreetMap), grátis e sem IA */
+const GEOC={};
+async function geoc(q){q=String(q||'').trim();if(!q)return null;if(GEOC[q])return GEOC[q];try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&accept-language=pt-BR&q='+encodeURIComponent(q));const j=await r.json();if(j&&j[0]){GEOC[q]=[+j[0].lon,+j[0].lat];return GEOC[q]}}catch(_){}return null}
+async function rotaGratis(pts){try{const P=[];for(const p of pts){const c=await geoc(p);if(!c)return null;P.push(c)}if(P.length<2)return null;const u='https://router.project-osrm.org/route/v1/driving/'+P.map(c=>c[0].toFixed(5)+','+c[1].toFixed(5)).join(';')+'?overview=false';const ac=new AbortController(),t=setTimeout(()=>ac.abort(),12000);const r=await fetch(u,{signal:ac.signal});clearTimeout(t);const j=await r.json();const m=j&&j.routes&&j.routes[0]&&j.routes[0].distance;return m>0?Math.round(m/1000):null}catch(_){return null}}
 async function rotaKmV(btn){const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;const r=rotaDef(g);if(!r.orig||!r.dest){toast('Preencha de onde sai e para onde vai.');return}
-  let sample=null;try{sample=await claude.use('sample')}catch(_){}if(!sample){toast('A IA não está disponível aqui. Digite a distância da volta.');return}
+  {const old0=btn.textContent;btn.textContent='Calculando no mapa…';btn.disabled=true;const km=await rotaGratis([r.dest,r.viaV,r.orig].filter(Boolean));btn.textContent=old0;btn.disabled=false;if(km){r.kmV=km;planSync(g);save();render(true);toast('Volta pelo mapa: '+km+' km.');return}}
+  let sample=null;try{sample=await claude.use('sample')}catch(_){}if(!sample){toast('Não achei a rota no mapa. Digite a distância da volta.');return}
   const old=btn.textContent;btn.textContent='Calculando…';btn.disabled=true;
   try{const x=await sample.json('Estime a distância rodoviária aproximada, em km, de "'+r.dest+'" até "'+r.orig+'"'+(r.viaV?', passando por "'+r.viaV+'"':'')+', de carro. Responda SOMENTE um JSON: {"km":número inteiro ou null se não souber}.',{modelTier:'quick'});
     if(x&&+x.km>0){r.kmV=Math.round(+x.km);planSync(g);save();render(true);toast('Volta estimada em '+r.kmV+' km. Confira no mapa.')}else{btn.textContent=old;btn.disabled=false;toast('Não consegui estimar. Digite a distância da volta.')}
@@ -1355,7 +1360,8 @@ async function rotaKmV(btn){const g=S.goals.find(x=>x.id===UI.plan);if(!g)return
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act=plankmv]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();rotaKmV(b)},true);
 async function rotaKm(btn){
   const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;const r=rotaDef(g);if(!r.orig||!r.dest){toast('Preencha de onde sai e para onde vai.');return}
-  let sample=null;try{sample=await claude.use('sample')}catch(_){}if(!sample){toast('A IA não está disponível aqui. Digite a distância.');return}
+  {const old0=btn.textContent;btn.textContent='Calculando no mapa…';btn.disabled=true;const km=await rotaGratis([r.orig,r.dest]);btn.textContent=old0;btn.disabled=false;if(km){r.km=km;r.sim.km=true;planSync(g);save();render(true);toast('Distância pelo mapa: '+km+' km.');return}}
+  let sample=null;try{sample=await claude.use('sample')}catch(_){}if(!sample){toast('Não achei a rota no mapa. Digite a distância.');return}
   const old=btn.textContent;btn.textContent='Calculando…';btn.disabled=true;
   try{const x=await sample.json('Estime a distância rodoviária aproximada, em km, entre "'+r.orig+'" e "'+r.dest+'", considerando o trajeto de carro mais comum. Responda SOMENTE um JSON: {"km":número inteiro ou null se não souber}.',{modelTier:'quick'});
     if(x&&+x.km>0){r.km=Math.round(+x.km);r.sim.km=true;planSync(g);save();render(true);toast('Distância estimada em '+r.km+' km. Confira no mapa.')}else{btn.textContent=old;btn.disabled=false;toast('Não consegui estimar. Digite a distância.')}
