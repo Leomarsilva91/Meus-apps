@@ -2311,12 +2311,27 @@ function cIn(t,key){return t>=cStart(key)&&t<=cEnd(key)}
 function cDays(a,b){return Math.round((Date.UTC(+b.slice(0,4),+b.slice(5,7)-1,+b.slice(8,10))-Date.UTC(+a.slice(0,4),+a.slice(5,7)-1,+a.slice(8,10)))/864e5)}
 function cycSync(){const cc=S&&S.casa,ini=cc&&cc.ini;if(ini&&ini>TODAYISO){MKEY=ini.slice(0,7)}else{if(cc&&cc.ini)delete cc.ini;MKEY=cKeyOf(TODAYISO)}const a=cStart(MKEY),b=cEnd(MKEY);DIM=cDays(a,b)+1;DAYN=cDays(a,TODAYISO)+1}
 function cShort(t){return t.slice(8,10)+'/'+t.slice(5,7)}
+function resumoTxt(ym){const G=cD().gastos,GM=G.filter(g=>cIn(g.d||'',ym)),O=((S.orc&&S.orc.gastos)||[]).filter(g=>cIn(g.d||'',ym));
+  const gs=GM.reduce((a,g)=>a+(+g.v||0),0)+O.reduce((a,g)=>a+(+g.v||0),0);let en=0;try{en=(+cRendaM(ym)||0)+(+cEnt(ym)||0)+(+cExtra(ym)||0)}catch(_){}const sd=en-gs;
+  const cat={};GM.forEach(g=>{const k=g.cat||'outros';cat[k]=(cat[k]||0)+(+g.v||0)});O.forEach(g=>{const k=g.c||'outros';cat[k]=(cat[k]||0)+(+g.v||0)});
+  const cl=Object.keys(cat).map(k=>[k,cat[k]]).filter(x=>Math.abs(x[1])>=.01).sort((a,b)=>b[1]-a[1]);
+  const pa=cAdd(ym,-1),pv=G.filter(g=>cIn(g.d||'',pa)).reduce((a,g)=>a+(+g.v||0),0)+((S.orc&&S.orc.gastos)||[]).filter(g=>cIn(g.d||'',pa)).reduce((a,g)=>a+(+g.v||0),0);
+  const nm=(()=>{try{return cCat}catch(_){return k=>k}})();
+  let t='📊 Resumo do mês · '+cMesN(ym)+'\n\n💵 Entrou: '+brl(en)+'\n🛒 Gastou: '+brl(gs)+'\n'+(sd>=0?'✅ Sobrou: ':'⚠️ Faltou: ')+brl(Math.abs(sd));
+  if(en>0)t+='\n📈 Gastou '+Math.round(gs/en*100)+'% do que entrou';
+  if(cl.length)t+='\n\nGastos por categoria:\n'+cl.map(([k,v])=>'• '+nm(k)+': '+brl(v)+(gs>0?' ('+Math.round(v/gs*100)+'%)':'')).join('\n');
+  if(pv>0)t+='\n\n'+(gs>pv?'🔺 ':'🔻 ')+(gs>pv?'Gastou ':'Gastou ')+brl(Math.abs(gs-pv))+(gs>pv?' a mais':' a menos')+' que no mês anterior ('+brl(pv)+').';
+  return t+'\n\nSó os totais: os lançamentos não aparecem. Feito no Prumo.'}
 function heroCard(ym,GM){let gs=GM.reduce((a,g)=>a+(+g.v||0),0);try{gs+=((S.orc&&S.orc.gastos)||[]).filter(g=>cIn(g.d||'',ym)).reduce((a,g)=>a+(+g.v||0),0)}catch(_){}
   let en=0;try{en=(+cRendaM(ym)||0)+(+cEnt(ym)||0)+(+cExtra(ym)||0)}catch(_){}const sd=en-gs,cur=ym===MKEY&&DAYN>=1,pc=cur?Math.min(100,Math.round(DAYN/DIM*100)):0;
   return `<div class="card mhero"><div class="hnav"><button class="btn ghost sm" data-cs="mes:-1" aria-label="Mês anterior">‹</button><b>${cMesN(ym)}</b><button class="btn ghost sm" data-cs="mes:1" aria-label="Próximo mês">›</button></div>
   ${cur?`<div style="display:grid;gap:5px"><div class="row sp"><span class="muted small">Dia ${DAYN} de ${DIM}</span><span class="muted small">${DIM-DAYN===0?'último dia':'faltam '+(DIM-DAYN)+(DIM-DAYN===1?' dia':' dias')}</span></div><div class="prog" role="progressbar" aria-valuenow="${pc}" aria-valuemin="0" aria-valuemax="100" aria-label="Quanto do mês já passou"><i style="width:${pc}%"></i></div></div>`:''}
   <div class="tiles"><div class="tile"><span>💵 Entrou</span><b style="color:var(--ok)">${brl0(en)}</b></div><div class="tile"><span>🛒 Gastou</span><b>${brl0(gs)}</b></div><div class="tile"><span>${sd>=0?'✅ Sobra':'⚠️ Falta'}</span><b style="color:${sd>=0?'var(--ok)':'var(--bad)'}">${brl0(Math.abs(sd))}</b></div></div>
-  ${en<=0?`<button class="btn ghost sm" data-cs="tab:orc" style="justify-self:start">Informar quanto entra no mês</button>`:''}</div>`}
+  ${en<=0?`<button class="btn ghost sm" data-cs="tab:orc" style="justify-self:start">Informar quanto entra no mês</button>`:''}<div class="row" style="gap:8px"><button class="btn sm" data-rsm="share" data-ym="${ym}">📤 Enviar resumo do mês</button><button class="btn ghost sm" data-rsm="copy" data-ym="${ym}">Copiar</button></div><span class="muted small">Manda só os totais e as categorias, sem mostrar cada lançamento.</span></div>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rsm]');if(!b)return;e.preventDefault();e.stopPropagation();const t=resumoTxt(b.dataset.ym||cMes());
+  const cp=()=>{(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Resumo copiado. É só colar no WhatsApp.')).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('Resumo copiado.')}catch(_){}a.remove()})};
+  if(b.dataset.rsm==='copy')return cp();
+  if(navigator.share)navigator.share({title:'Resumo do mês',text:t}).catch(er=>{if(!er||er.name!=='AbortError')window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')});else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')},true);
 function grpCard(){const m=mesesCard(),strip=h=>h.replace('<details class="card fold"','<details class="fold"');const big=/^\s*<div/.test(m);
   return `<div class="card cgrp">${strip(entCard())}${strip(cicloCard())}${big?'':strip(m)}</div>${big?m:''}`}
 function cicloCard(){const k=MKEY;
