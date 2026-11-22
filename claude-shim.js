@@ -164,7 +164,7 @@
     if (document.getElementById('ia-admlink')) return;
     var a = document.createElement('div'); a.id = 'ia-admlink';
     a.style.cssText = 'text-align:center;padding:18px 12px 90px;font:13px system-ui,sans-serif';
-    a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>';
+    a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>'+'<br><br><a href="#memoria" data-lsmem="1" style="color:inherit;opacity:.6">Memória do app neste aparelho</a>';
     var q = a.querySelector('a'); q.onclick = function (ev) { ev.preventDefault(); logado() ? sair() : entrar(); };
     document.body.appendChild(a);
   }
@@ -289,4 +289,31 @@
   document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button');if(!b)return;var f=b.closest('form')||b.closest('.box')||b.closest('.card');if(f&&f.querySelector('input[id],textarea[id]'))setTimeout(function(){clr(f)},0)},true);
   function wrap(){var r=window.render;if(typeof r!=='function'||r.__dr)return;var w=function(){var x=r.apply(this,arguments);try{for(var k in D){var el=document.getElementById(k);if(el&&el!==document.activeElement&&el.value===''&&D[k])el.value=D[k]}}catch(e){}return x};w.__dr=1;w.__tg=r.__tg;w.__keep=r.__keep;window.render=w}
   if(document.readyState==='complete')setTimeout(wrap,10);else window.addEventListener('load',function(){setTimeout(wrap,10)});setTimeout(wrap,5000);
+})();
+
+/* Memória do aparelho: avisa quando enche (aí os dados novos não ficam salvos) e mostra o que ocupa */
+(function(){
+  var NOMES=[[/^ms_|^_t$/,'Tasko'],[/^prumo|^pr_|^dm_|^pt_/,'Prumo'],[/^ab_|^stx|^achei/,'Achei Barato'],[/^rs_/,'Respiro'],[/^ia_|^fb_|^firebase/,'Conta']];
+  var ESS=/^(prumo_proto_v1|ms_users|ms_requests|ms_proposals|ms_msgs|rs_s|ab_lists|ia_conta|ia_nome|ia_email)$/;
+  function app(k){for(var i=0;i<NOMES.length;i++)if(NOMES[i][0].test(k))return NOMES[i][1];return 'Outro'}
+  function tam(){var L=[],t=0;try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k)||'',n=k.length+v.length;t+=n;L.push({k:k,n:n,img:/data:(image|application\/pdf)/.test(v.slice(0,300))||v.indexOf('data:image')>=0})}}catch(e){}L.sort(function(a,b){return b.n-a.n});return {L:L,t:t}}
+  function kb(n){return n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(n/1024))+' KB'}
+  function esc(x){return String(x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function painel(){var o=document.getElementById('lsmem');if(o)o.remove();var r=tam(),lim=5*1048576,pc=Math.min(100,Math.round(r.t/lim*100));o=document.createElement('div');o.id='lsmem';
+    o.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;font:15px system-ui,sans-serif';
+    o.innerHTML='<div style="background:#fff;color:#1b2420;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px;display:grid;gap:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:18px">Memória dos apps neste aparelho</b><button data-lsx="1" style="min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #ccc;background:#fff;font:inherit;font-weight:700">Fechar</button></div>'+
+    '<div style="height:12px;border-radius:9px;background:#e6ebe8;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+(pc>85?'#c0392b':'#1f7a5c')+'"></i></div><span style="font-size:14px;color:#5d6a64">Usado: <b>'+kb(r.t)+'</b> de uns 5 MB ('+pc+'%). Os quatro apps dividem este espaço. '+(pc>85?'<b style="color:#c0392b">Está quase cheio: o que você lançar pode não ficar salvo.</b>':'Tem espaço sobrando.')+'</span>'+
+    '<span style="font-size:13px;color:#5d6a64">Os itens com 📎 são fotos ou arquivos. Apagar um deles libera bastante espaço. Itens marcados como dados principais não devem ser apagados.</span>'+
+    r.L.slice(0,25).map(function(x){var es=ESS.test(x.k);return '<div style="display:flex;align-items:center;gap:8px;border-top:1px solid #e6ebe8;padding-top:8px"><span style="flex:1;min-width:0;font-size:14px"><b>'+app(x.k)+'</b> · '+(x.img?'📎 ':'')+esc(x.k.slice(0,40))+'<br><span style="color:#5d6a64">'+kb(x.n)+(es?' · dados principais':'')+'</span></span>'+(es?'':'<button data-lsdel="'+esc(x.k)+'" style="min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid #c0392b;color:#c0392b;background:#fff;font:inherit;font-weight:700">Apagar</button>')+'</div>'}).join('')+'</div>';
+    document.body.appendChild(o)}
+  function aviso(){if(document.getElementById('lsfull'))return;var b=document.createElement('div');b.id='lsfull';b.setAttribute('role','alert');
+    b.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:2147482999;background:#c0392b;color:#fff;border-radius:14px;padding:12px 14px;font:600 15px system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center';
+    b.innerHTML='<span style="flex:1">⚠️ A memória dos apps neste aparelho está cheia. O que você lançou agora pode não ficar salvo.</span><button data-lsmem="1" style="min-height:40px;padding:0 12px;border-radius:999px;border:0;background:#fff;color:#c0392b;font:inherit;font-weight:800">Liberar espaço</button><button data-lsxf="1" aria-label="Fechar aviso" style="min-height:40px;min-width:40px;border-radius:999px;border:0;background:rgba(255,255,255,.2);color:#fff;font:inherit">✕</button>';
+    (document.body||document.documentElement).appendChild(b)}
+  try{var P=Storage.prototype,orig=P.setItem;if(!orig.__ls){var w=function(k,v){try{return orig.call(this,k,v)}catch(e){if(e&&(/quota/i.test(e.name||'')||e.code===22||e.code===1014)){window.__lsFull=Date.now();try{if(document.body)aviso();else addEventListener('DOMContentLoaded',aviso)}catch(_){}}throw e}};w.__ls=1;P.setItem=w}}catch(e){}
+  document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-lsmem],[data-lsx],[data-lsdel],[data-lsxf]');if(!t)return;e.preventDefault();e.stopPropagation();
+    if(t.hasAttribute('data-lsmem')){var f=document.getElementById('lsfull');if(f)f.remove();painel();return}
+    if(t.hasAttribute('data-lsxf')){var g=document.getElementById('lsfull');if(g)g.remove();return}
+    if(t.hasAttribute('data-lsx')){var o=document.getElementById('lsmem');if(o)o.remove();return}
+    var k=t.getAttribute('data-lsdel');if(k&&confirm('Apagar “'+k+'” deste aparelho? Se for foto ou arquivo, ele some daqui.')){try{localStorage.removeItem(k)}catch(_){}painel()}},true);
 })();
