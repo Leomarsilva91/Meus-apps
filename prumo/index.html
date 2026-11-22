@@ -1859,6 +1859,7 @@ async function gaiRun(T,sig,gg){UI.gai={sig,st:'busy'};gaiShow(T,gg);let sample=
   catch(e){if(UI.gai&&UI.gai.sig===sig){UI.gai={sig,st:'err',code:e&&e.code};gaiShow(T,gg)}}}
 function gaiShow(T,gg){const box=$('#g-ai');if(!box)return;const G=UI.gai;if(!G){box.innerHTML='';return}
   const skip='<button class="btn ghost sm" type="button" data-act="gaiskip">Criar sem a IA</button>';
+  if(G.st==='ask'){box.innerHTML=`<div class="card" style="gap:8px"><b>Quer uma estimativa dos custos da viagem?</b><p class="muted small" style="margin:0">A IA estima hotel, comida, passeios e transporte no destino. Você também pode criar a meta e preencher os valores depois.</p><div class="row"><button class="btn sm" type="button" data-act="gaiai">✨ Estimar custos com IA</button>${skip.replace('Criar sem a IA','Criar sem estimativa')}</div></div>`;return}
   if(G.st==='busy'){box.innerHTML='<div class="note info">🤖 Analisando a viagem com IA… leva alguns segundos.</div>';return}
   if(G.st!=='ok'){box.innerHTML=`<div class="note">${G.code==='not_granted'?'A permissão da IA foi negada.':G.st==='off'?'A IA não está disponível aqui agora.':'Não consegui analisar agora.'} Você pode criar a meta e preencher os valores à mão.</div><div class="row">${skip}<button class="btn ghost sm" type="button" data-act="gaiagain">Tentar de novo</button></div>`;return}
   const x=G.x,ms=Math.max(1,Math.ceil(daysTo(T.data)/30.44)),modes=T.modo?[T.modo]:['carro','aviao'];
@@ -1870,8 +1871,8 @@ function gaiShow(T,gg){const box=$('#g-ai');if(!box)return;const G=UI.gai;if(!G)
    <p class="muted small" style="margin:0">Estimativas com preços médios, não é pesquisa em tempo real. Depois de criar, você ajusta qualquer valor nos quadros da viagem.</p>
    <div class="row"><button class="btn meta" type="button" data-act="gaiuse">Criar a meta com esses valores</button>${skip}</div></div>`;
   box.scrollIntoView({block:'nearest',behavior:'smooth'})}
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act=gaiuse],[data-act=gaiskip],[data-act=gaiagain]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const f=$('#f-goal');if(!f)return;
-  if(b.dataset.act==='gaiagain'){UI.gai=null;UI.gaiGo=null}else UI.gaiGo=b.dataset.act==='gaiuse'?'use':'skip';
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act=gaiuse],[data-act=gaiskip],[data-act=gaiagain],[data-act=gaiai]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const f=$('#f-goal');if(!f)return;
+  if(b.dataset.act==='gaiagain'){UI.gai=null;UI.gaiGo='ai'}else if(b.dataset.act==='gaiai')UI.gaiGo='ai';else UI.gaiGo=b.dataset.act==='gaiuse'?'use':'skip';
   if(f.requestSubmit)f.requestSubmit();else f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}))},true);
 document.addEventListener('input',e=>{const t=e.target;if(!t||!/^g-p[tpn]$/.test(t.id))return;const n=id=>{const x=parseInt((($('#'+id)||{}).value||''),10);return isNaN(x)?0:Math.max(0,x)},st=(id,v)=>{const el=$('#'+id);if(el&&el!==t)el.value=String(v)};
   if(t.id==='g-pt'){const tot=n('g-pt');let p=n('g-pp');if(p>tot){p=tot;st('g-pp',p)}st('g-pn',Math.max(0,tot-p))}
@@ -1890,7 +1891,7 @@ document.addEventListener('submit',e=>{
     if(trip){if(!T.dest)return err('g-e','Diga para onde vai a viagem.');if(!(T.tot>=1))return err('g-e','Informe o total de pessoas na viagem.');if(!(T.pag>=1)||T.pag>T.tot)return err('g-e','Confira as pessoas pagantes: pelo menos 1 e no máximo o total.');if(!prazo||daysTo(prazo)<0)return err('g-e','Escolha a data da viagem, a partir de hoje.')}
     else if(!prazo||daysTo(prazo)<0)return err('g-e','Escolha uma data a partir de hoje.');
     const eg=UI.ed&&UI.ed.w==='goal'&&S.goals.find(x=>x.id===UI.ed.id);if(eg){const df=gg-eg.guardado;eg.nome=g('g-n');eg.tipo=g('g-t');if(trip){gTripSet(rotaDef(eg),T);if(!eg.alvo)eg.alvo=0;planSync(eg)}else eg.alvo=a;eg.prazo=prazo;if(df>0)(eg.aportes=eg.aportes||[]).unshift({d:TODAYISO,v:df});eg.guardado=gg;UI.ed=null;save();render(true);toast('Meta atualizada.');return}
-    if(trip){const sig=JSON.stringify([g('g-n'),T,gg]);if(!UI.gaiGo||!UI.gai||UI.gai.sig!==sig||UI.gai.st==='busy'){UI.gaiGo=null;if(!UI.gai||UI.gai.sig!==sig||UI.gai.st!=='busy')gaiRun(T,sig,gg);return}}
+    if(trip){const sig=JSON.stringify([g('g-n'),T,gg]);if(UI.gaiGo==='ai'){UI.gaiGo=null;gaiRun(T,sig,gg);return}if(!UI.gaiGo||!UI.gai||UI.gai.sig!==sig||UI.gai.st==='busy'||(UI.gai.st==='ask'&&UI.gaiGo!=='skip')){UI.gaiGo=null;if(!UI.gai||UI.gai.sig!==sig){UI.gai={sig,st:'ask'};gaiShow(T,gg)}return}}
     const ng={id:uid(),nome:g('g-n'),tipo:g('g-t'),alvo:a,guardado:gg,prazo,aportes:gg>0?[{d:TODAYISO,v:gg}]:[]};S.goals.push(ng);
     if(trip){const r=rotaDef(ng);gTripSet(r,T);if(UI.gaiGo==='use'&&UI.gai&&UI.gai.x){gaiApply(r,T.modo,UI.gai.x);ng.detalhe=String(UI.gai.x.obs||'').slice(0,160)}UI.plan=ng.id;planSync(ng);r.simSig=simSig(r)}
     const usedAI=trip&&UI.gaiGo==='use';UI.gai=null;UI.gaiGo=null;save();render(true);burst(innerWidth/2,innerHeight/2,60);toast(trip?(usedAI?'Viagem criada com os valores da IA. Confira cada quadro.':'Viagem criada. Preencha os valores em cada quadro.'):'Meta criada! Agora é só guardar.');return}
