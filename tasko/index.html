@@ -88,7 +88,7 @@ input[aria-invalid=true],textarea[aria-invalid=true]{border:2px solid var(--bad)
 .alert:empty{display:none}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 button,a,select,summary,label.chk{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.card{content-visibility:auto;contain-intrinsic-size:auto 140px}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 @media (max-width:350px){header.top{gap:2px;padding-left:10px;padding-right:8px}header.top h1{font-size:20px}header.top .hb{min-width:38px;padding:2px 1px}header.top .hb span{font-size:9px}header.top .hb svg{width:22px;height:22px}header.top .gear{min-width:38px;padding:0 4px}}
 @media (max-width:430px){header.top.pro{padding-left:12px;padding-right:8px;gap:4px}header.top.pro .gear{min-width:38px;padding:0 3px}header.top.pro .hb{min-width:36px}header.top.pro .hb span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
@@ -2727,7 +2727,7 @@ function doRefund(id){
 }
 const aiNote=()=>`<p class="muted" style="margin:0;font-size:13px">Estimativa de referência feita por IA ou por regras do app, não é orçamento. Não inclua dados pessoais nas descrições. ${dlk('privacy','Privacidade')}</p>`;
 const lfoot=()=>`<p class="muted" style="text-align:center;margin:0;font-size:14px">${dlk('terms','Termos de Uso')} · ${dlk('privacy','Política de Privacidade')}</p>`;
-function render(){try{if(window.xappsShow)xappsShow(['welcome','home'].includes(S.v))}catch(e){}try{autoFinSweep()}catch(e){}try{expSweep()}catch(e){}setTimeout(()=>{try{entryAlert()}catch(e){}try{propAlert()}catch(e){}},400);applyTheme();$('#app').innerHTML=V[S.v]();window.scrollTo(0,S.v==='chat'&&S.chat&&S.chat.keep?document.body.scrollHeight:0);if(S.v==='request')sync();try{vidSweep()}catch(e){}}
+function render(){try{if(window.xappsShow)xappsShow(['welcome','home'].includes(S.v))}catch(e){}try{autoFinSweep()}catch(e){}try{expSweep()}catch(e){}setTimeout(()=>{try{entryAlert()}catch(e){}try{propAlert()}catch(e){}},400);applyTheme();const y0=window.scrollY,sg=S.v+'|'+((S.chat&&S.chat.pid)||'')+'|'+((S.q&&S.q.rid)||'')+'|'+(S.reqId||'')+'|'+(S.adm||'');$('#app').innerHTML=V[S.v]();if(S.v==='chat'&&S.chat&&S.chat.keep)window.scrollTo(0,document.body.scrollHeight);else if(S._top||sg!==window.__rsg)window.scrollTo(0,0);else window.scrollTo(0,y0);window.__rsg=sg;S._top=0;if(S.v==='request')sync();try{vidSweep()}catch(e){}}
 window.addEventListener('storage',e=>syncNotify(e.key));
 const pr0=()=>(plRec().prefs||{});
 function notifCard(){const ok=typeof Notification!=='undefined',p=ok?Notification.permission:'none';
@@ -2812,7 +2812,7 @@ function syncNotify(key){if(key==='ms_cfg')cfgApply();if(key==='ms_users'&&!S.us
   try{const un=unreadTotal();document.title=(un?'('+un+') ':'')+'Tasko'}catch(e){}
   const n=unreadTotal();if(n>(S.unN||0)){const pr=(plRec().prefs||{});if(!pr.off)playSnd(pr.snd||'tasko')}S.unN=n;
   if(['chat','chats','home','mine','inbox','tax'].includes(S.v)&&!(S.v==='tax'&&S.rc)){const d=S.chat&&S.chat.draft;try{render()}catch(er){}}}
-function go(v,nop){try{if(S.v==='inbox'&&v!=='inbox'&&S.user&&S.inbShown&&S.inbShown.length){markSeenQ(S.inbShown);S.inbShown=[]}}catch(e){}try{dictStop();if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}if(v!=='emerg')S.emAllow=false;S.plsel=null;S.plmsg='';S.rwc=null;if(v==='feedmenu'||v==='workers')S.fw=null;if(v==='feedmenu')S.fq='';if(S.v==='record'&&v!=='record'){if(S.rec.url)URL.revokeObjectURL(S.rec.url);S.rec=newRec()}if(nop!==true&&S.v&&S.v!==v){(S.hist=S.hist||[]).push(S.v);if(S.hist.length>40)S.hist.shift()}if(['home','welcome','login','minedone','psent','sent','emsent'].includes(v))S.hist=[];S.v=v;render()}
+function go(v,nop){S._top=1;try{if(S.v==='inbox'&&v!=='inbox'&&S.user&&S.inbShown&&S.inbShown.length){markSeenQ(S.inbShown);S.inbShown=[]}}catch(e){}try{dictStop();if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}if(v!=='emerg')S.emAllow=false;S.plsel=null;S.plmsg='';S.rwc=null;if(v==='feedmenu'||v==='workers')S.fw=null;if(v==='feedmenu')S.fq='';if(S.v==='record'&&v!=='record'){if(S.rec.url)URL.revokeObjectURL(S.rec.url);S.rec=newRec()}if(nop!==true&&S.v&&S.v!==v){(S.hist=S.hist||[]).push(S.v);if(S.hist.length>40)S.hist.shift()}if(['home','welcome','login','minedone','psent','sent','emsent'].includes(v))S.hist=[];S.v=v;render()}
 function goBack(fb){const h=S.hist||[];let v=null;while(h.length){const c=h.pop();if(c&&c!==S.v&&V[c]&&!['welcome','login','signup'].includes(c)){v=c;break}}go(v||fb||'home',true)}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act=back]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();goBack(b.dataset.bk)},true);
 let SAIR_OK=false;

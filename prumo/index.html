@@ -1745,6 +1745,7 @@ function render(keepScroll){
   cycSync();const y=scrollY;
   $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}"${k==='casa'?' aria-label="Economia doméstica" title="Economia doméstica"':''} ${UI.tab===k?'aria-current="page"':''}>${ico(k)}<span>${l}</span></button>`).join('')+(window.IA_AUTH?`<button type="button" data-iaauth="1" aria-label="${IA_AUTH.logado()?'Sair da conta':'Entrar na conta'}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>${IA_AUTH.logado()?'Sair':'Entrar'}</span></button>`:'');
   $('#who').textContent=S.demo?'Exemplo':SYNC.label();
+  const sg=[UI.tab,UI.neg,UI.div,UI.met,UI.cs,UI.sel].join('|'),same=sg===window.__psg;window.__psg=sg;if(same)keepScroll=true;
   $('#v').className=keepScroll?'wrap noanim':'wrap';
   $('#v').innerHTML=VIEWS[UI.tab]();
   try{if(location.hash.slice(1)!==UI.tab)history.replaceState(null,'','#'+UI.tab)}catch(e){}
