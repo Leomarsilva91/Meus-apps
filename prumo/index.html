@@ -539,7 +539,7 @@ const demoBar=()=>S.demo?`<div class="demo"><span>Você está vendo dados de exe
 function vInicio(){
   const c=meiCalc(),al=meiAlerts(),L=dasList(),nx=L.filter(x=>!x.paid&&x.d>=0).sort((a,b)=>a.d-b.d)[0];
   const tot=S.debts.reduce((a,d)=>a+eff(d).saldo,0),ord=order(S.debts,S.metodo),neg=S.debts.filter(d=>d.neg).length;
-  const tasks=[...goalTasks(),...al.map(a=>({...a,area:'negocio'}))];
+  const tasks=[...evTasks(),...goalTasks(),...al.map(a=>({...a,area:'negocio'}))];
   if(ord[0])tasks.push({k:'info debt',t:'Dívida para tratar primeiro: '+ord[0].cred,d:why(ord[0]),go:['dividas','roteiro',ord[0].id]});
   return `${demoBar()}
   <div class="card" style="border:0;background:transparent;padding:4px 0"><h2>${S.mei.nome?'Oi, '+esc(S.mei.nome.split(' ')[0])+'!':'Oi!'}</h2><p class="muted">Suas metas, seu negócio e suas contas num só lugar.</p></div>
@@ -687,6 +687,15 @@ function metaEntry(){
   const G=S.goals,tot=G.reduce((a,g)=>a+g.guardado,0),n=G.filter(gOpen).sort((a,b)=>a.prazo.localeCompare(b.prazo))[0],c=n?gcalc(n):null;
   return `<button class="entry meta" data-go="metas"><span class="blob b1"></span><span class="blob b2"></span><div><h2>Minhas metas</h2><span class="sub">Viagem, reserva, sonhos e o que mais você quiser juntar.</span></div>
    <div class="in"><span class="num"><b>${brl0(tot)}</b> já guardados${G.length?' em '+G.length+(G.length>1?' metas':' meta'):''}</span>${c?`<div class="bar" style="background:rgba(255,255,255,.3)"><i style="width:${c.pct}%;background:#fff"></i></div>`:''}<span class="small">${n?esc(n.nome)+': faltam '+brl0(c.falta):G.length?'Todas as metas alcançadas. Que tal uma nova?':'Crie a primeira meta e comece pequeno.'}</span></div></button>`}
+/* Avisos automáticos: feirões de dívidas, prazos de metas (aparecem no Início e no celular) */
+function evTasks(){const out=[],fdm=x=>String(x||'').split('-').reverse().slice(0,2).join('/');
+  try{const ds=S.debts.filter(d=>eff(d).saldo>0.005),tp=new Set(ds.map(d=>d.tipo));if(ds.length&&typeof FEIROES!=='undefined')FEIROES.forEach(f=>{if(!f||!f.ini||!f.ate)return;const ok=!f.tipos||!f.tipos.length||f.tipos.some(t=>tp.has(t));if(!ok)return;const d0=daysTo(f.ini),d1=daysTo(f.ate),per='De '+fdm(f.ini)+' a '+fdm(f.ate)+'. Negocie só pelos canais oficiais.';
+    if(d0>0&&d0<=7)out.push({k:'info debt',t:'🗓️ '+f.nome+' começa '+(d0===1?'amanhã':'em '+d0+' dias'),d:per,go:['dividas','visao'],key:'fz:'+f.id+':ini',nt:1});
+    else if(d0<=0&&d1>=0&&d1<=5)out.push({k:'warn debt',t:'⏳ '+f.nome+(d1===0?' termina hoje':' termina em '+d1+(d1===1?' dia':' dias')),d:per,go:['dividas','visao'],key:'fz:'+f.id+':fim',nt:1});
+    else if(d0<=0&&d0>=-2&&d1>=0)out.push({k:'info debt',t:'📣 '+f.nome+' começou',d:per,go:['dividas','visao'],key:'fz:'+f.id+':on',nt:1})})}catch(_){}
+  try{S.goals.filter(gOpen).forEach(g=>{const c=gcalc(g);if(c.pend||!g.prazo)return;if(c.late)out.push({k:'bad meta',t:'O prazo da meta "'+g.nome+'" passou',d:'Faltam '+brl0(c.falta)+'. Você pode mudar o prazo ou guardar o que falta.',go:['metas',''],key:'mt:'+g.id+':late',nt:1});
+    else if(c.dias<=14)out.push({k:'warn meta',t:'Meta "'+g.nome+'" vence '+(c.dias===0?'hoje':c.dias===1?'amanhã':'em '+c.dias+' dias'),d:'Faltam '+brl0(c.falta)+' para completar.',go:['metas',''],key:'mt:'+g.id+':'+(c.dias<=3?'3':'14'),nt:1})})}catch(_){}
+  return out}
 function goalTasks(){
   const act=S.goals.filter(gOpen).sort((a,b)=>a.prazo.localeCompare(b.prazo)),mk=Y+'-'+pad(M+1);
   if(!S.orc)return[{k:'info meta',t:'Organize o orçamento do mês',d:'Diga quanto você tem e o Prumo sugere como dividir entre dívidas, reserva, metas e lazer.',go:['casa','orc']}];
@@ -3474,7 +3483,11 @@ async function notify(){if(ntSt()!=='granted')return;let reg=null;try{reg=naviga
   (S.goals||[]).forEach(g=>{let L=[];try{L=lembDue(g)}catch(_){}L.forEach(x=>{const k='prumo_ln_'+x.id+'_'+TODAYISO;try{if(localStorage.getItem(k))return;localStorage.setItem(k,'1')}catch(_){return}
     const ti='Prumo: '+x.t,bo=g.nome+(x.v>0?' · '+brl0(x.v):'');
     try{if(reg&&reg.showNotification)reg.showNotification(ti,{body:bo,icon:'icon-192.png',tag:x.id});else new Notification(ti,{body:bo})}catch(_){}})})}
-setTimeout(notify,2500);setInterval(notify,30*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)notify()});
+async function notifyEv(){if(ntSt()!=='granted')return;let reg=null;try{reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration()}catch(_){}
+  let L=[];try{L=evTasks().filter(x=>x.nt);(meiAlerts()||[]).forEach(a=>{if(/^Guia de/.test(a.t)&&(a.k==='warn'||a.k==='bad'))L.push({...a,key:'das:'+a.t})})}catch(_){}
+  L.forEach(x=>{const k='prumo_ev_'+x.key;try{if(localStorage.getItem(k))return;localStorage.setItem(k,TODAYISO)}catch(_){return}
+    const ti='Prumo: '+x.t.replace(/^[^\wÀ-ú"]+/,'');try{if(reg&&reg.showNotification)reg.showNotification(ti,{body:x.d,icon:'icon-192.png',tag:x.key});else new Notification(ti,{body:x.d})}catch(_){}})}
+setTimeout(notify,2500);setInterval(notify,30*60*1000);setTimeout(notifyEv,3500);setInterval(notifyEv,60*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)notifyEv()});document.addEventListener('visibilitychange',()=>{if(!document.hidden)notify()});
 /* eventos */
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.lbg){UI.lbo=UI.lbo||{};UI.lbo[d.dataset.lbg]=d.open}},true);
 document.addEventListener('change',e=>{const i=e.target;if(!i||!i.dataset||!i.dataset.lb)return;e.stopImmediatePropagation();const g=S.goals.find(x=>x.id===UI.plan);if(!g)return;const L=lbD(g),k=i.dataset.lb;
