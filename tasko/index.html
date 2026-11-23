@@ -3921,6 +3921,7 @@ ${!I.cat||!I.city?`<div class="card"><b>Complete seu perfil</b><p class="muted" 
 <p class="muted" style="margin:0">Vagas em ${esc(I.cat)} · ${esc(I.city)}: <b>${I.n} de ${SP_SLOTS}</b> ocupadas.${I.n?' O preço já inclui o ajuste pela procura.':''}</p>
 ${I.own?`<p style="margin:0"><span class="tag">Em destaque até ${dd(new Date(I.own.to))}</span></p>`:I.full?`<p class="alert" style="margin:0">Sem vagas agora nesta categoria e cidade. A próxima vaga abre em ${dd(new Date(I.next))}.</p>`:`<p style="margin:4px 0 0"><b>Como pagar?</b></p><div class="row">${I.opts.map(o=>`<button class="chip" data-dvx="pfp" data-o="${o}" aria-pressed="${I.pay===o}">${SPL[o]}${o==='bonus'?' ('+(r.spotDays||0)+' d)':o==='credit'?' ('+brl2((r.cred||0)/100)+')':''}</button>`).join('')}</div>
 <div class="sum" style="font-size:18px"><b>Total</b><b>${I.pay==='bonus'?'Sem custo':brl2(I.price/100)}</b></div>
+${I.cat===OUT?`<div><label for="pfar">Qual é a sua área de atuação? <span class="muted small">(aparece no destaque no lugar de “Outros serviços”)</span></label><input id="pfar" maxlength="60" placeholder="Ex.: Montagem de móveis, aulas de violão" value="${esc(S.user.area||'')}"><div class="err" id="e-pfar"></div></div>`:''}
 <p class="muted" style="margin:0">Ao destacar, você autoriza mostrar seu primeiro nome, categoria, cidade, avaliação e título do perfil aos contratantes da cidade.</p>
 <button class="btn" data-dvx="pfgo">Destacar meu perfil (simulado)</button>`}</div>`}
 <p class="muted" style="margin:0">Valores de exemplo, ainda serão testados com profissionais.</p></main>`};
@@ -3959,7 +3960,7 @@ document.addEventListener('click',e=>{
   if(x==='pfend'&&isAdmin()){const L=jget('ms_plans'),r=L.find(z=>z&&z.email===D.em);if(r&&Array.isArray(r.pf)){r.pf=r.pf.map(z=>String(z.id)===D.id?{...z,to:new Date().toISOString()}:z);spSaveAll('ms_plans',L)}render();return}
   if(x==='pfd'){S.pfs=S.pfs||{days:7,pay:''};S.pfs.days=+D.d;DV().msg='';render();return}
   if(x==='pfp'){S.pfs=S.pfs||{days:7,pay:''};S.pfs.pay=D.o;render();return}
-  if(x==='pfgo'){pfBuy();render();scrollTo(0,0);return}
+  if(x==='pfgo'){if(S.user.cat===OUT){const i=$('#pfar'),v=String(i?i.value:S.user.area||'').replace(/[<>]/g,'').trim().slice(0,60);if(v.length<3){if(showErrors({pfar:'Informe sua área de atuação para destacar o perfil.'}))return;return}if(v!==S.user.area){const l=users(),u=l.find(z=>z.email===S.user.email);if(u&&u.roles){const r=(u.roles.pro&&typeof u.roles.pro==='object')?u.roles.pro:(u.roles.proE&&typeof u.roles.proE==='object')?u.roles.proE:null;if(r){r.area=v;saveUsers(l)}}S.user.area=v}}pfBuy();render();scrollTo(0,0);return}
   if(x==='pfreq'){const r=newReq();r.pref=D.em;r.prefName=D.nm||'';r.city=lastCity();S.req=r;S.aid=(S.aid||0)+1;go('request');return}
 },true);
 /* ---------- aparições e toques ---------- */
