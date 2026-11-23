@@ -3805,10 +3805,50 @@ setInterval(()=>{try{const b=document.body;if(UI.tab!=='mais')UI.cfg=false;b.cla
 <script>
 (()=>{
 const _i=VIEWS.inicio;VIEWS.inicio=function(){let h=_i();try{const L=(window.PR_ADS?PR_ADS.ativas():[]).sort((a,b)=>(b.ptipo==='app')-(a.ptipo==='app')||(b.ptipo==='org')-(a.ptipo==='org'));
- let c='';if(L.length){c=`<div class="card" style="gap:8px"><h3 style="margin:0">📣 Anúncios</h3>${L.slice(0,3).map(o=>`<button class="mrow" type="button" data-of="ver" style="text-align:left"><span class="tx"><b>${esc(o.tit)}</b><span class="muted small">${o.ptipo==='app'?'⭐ Do Prumo':esc(o.pnome)}${o.cid?' · '+esc(o.cid):''}${o.preco?' · '+esc(o.preco):''}</span></span></button>`).join('')}<button class="btn ghost sm" type="button" data-of="ver">Ver todos os anúncios (${L.length})</button><span class="muted small">Anúncios conferidos pela equipe. O Prumo não repassa seus dados.</span></div>`}
+ let c='';if(L.length){const N=Math.min(L.length,6),I=(window.PR_CI||0)%N;window.PR_CI=I;c=`<div class="card" id="pr-car" style="gap:8px;padding:12px 14px"><div class="row" style="justify-content:space-between;align-items:center"><span class="muted small" style="font-weight:700">📣 Anúncios</span><button class="btn ghost sm" type="button" data-of="ver" style="min-height:32px;padding:4px 10px">Ver todos (${L.length})</button></div>${L.slice(0,N).map((o,k)=>`<button type="button" class="pr-sl${k===I?' on':''}" data-of="ver" data-k="${k}" style="text-align:left;background:transparent;border:0;padding:4px 0;display:${k===I?'grid':'none'};gap:2px;cursor:pointer;color:inherit;font:inherit"><b style="font-size:18px;line-height:1.2">${esc(o.tit)}</b><span class="muted small">${o.ptipo==='app'?'⭐ Do Prumo':o.ptipo==='org'?'🏛️ '+esc(o.pnome):esc(o.pnome)}${o.cid?' · '+esc(o.cid):''}</span>${o.preco?`<b class="num" style="color:var(--meta,#7c5cff)">${esc(o.preco)}</b>`:''}</button>`).join('')}${N>1?`<div class="row" style="gap:6px;justify-content:center">${L.slice(0,N).map((o,k)=>`<button type="button" data-car="${k}" aria-label="Anúncio ${k+1}" style="width:${k===I?20:8}px;height:8px;min-height:0;padding:0;border:0;border-radius:6px;background:${k===I?'var(--meta,#7c5cff)':'var(--line,#ccc)'}"></button>`).join('')}</div>`:''}</div>`}
  else if(typeof PT!=='undefined'&&PT.adm){c=`<div class="card" style="gap:8px"><h3 style="margin:0">📣 Anúncios</h3><p class="muted small">Ainda não há anúncios no ar. Cadastre o primeiro em Mais, Cadastrar anúncio. Só você, administrador, vê este aviso.</p></div>`}
  const mk='Suas metas, seu negócio e suas contas num só lugar.</p></div>';if(c&&h.includes(mk))h=h.replace(mk,mk+c)}catch(_){}return h};
-const _m=VIEWS.mais;VIEWS.mais=function(){let h=_m();if(UI.cfg&&!UI.pof&&!UI.pofv)h+='<p class="muted small" style="text-align:center">Versão do app: 23/11/2026, 16h30</p>';return h};
+const mostra=i=>{const c=document.getElementById('pr-car');if(!c)return;const S=c.querySelectorAll('.pr-sl'),D=c.querySelectorAll('[data-car]');if(!S.length)return;i=((i%S.length)+S.length)%S.length;window.PR_CI=i;S.forEach((x,k)=>{x.style.display=k===i?'grid':'none'});D.forEach((x,k)=>{x.style.width=(k===i?20:8)+'px';x.style.background=k===i?'var(--meta,#7c5cff)':'var(--line,#ccc)'})};
+let pausa=0;document.addEventListener('click',e=>{const d=e.target.closest&&e.target.closest('[data-car]');if(!d)return;e.preventDefault();e.stopImmediatePropagation();pausa=Date.now()+12000;mostra(+d.dataset.car)},true);
+document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#pr-car'))pausa=Date.now()+8000},true);
+const calmo=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!calmo)setInterval(()=>{if(document.hidden||Date.now()<pausa)return;mostra((window.PR_CI||0)+1)},5000);
+const _m=VIEWS.mais;VIEWS.mais=function(){let h=_m();if(UI.cfg&&!UI.pof&&!UI.pofv)h+='<p class="muted small" style="text-align:center">Versão do app: 23/11/2026, 17h20</p>';return h};
+})();
+</script>
+<style>
+header.top .who{display:none}
+#pr-hb{display:flex;gap:6px;align-items:center;margin-left:auto}
+.pr-hb{min-height:40px;min-width:40px;padding:0 10px;border-radius:12px;border:1.5px solid var(--line,rgba(127,127,127,.55));background:var(--surface,var(--card,#fff));color:var(--ink,var(--fg,inherit));font:inherit;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;position:relative}
+.pr-hb:focus-visible{outline:3px solid currentColor;outline-offset:2px}
+.pr-hb .pr-ok{position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:var(--ok,#1c9a5e);border:2px solid var(--surface,#fff);display:none}
+.pr-in .pr-hb .pr-ok{display:block}
+.navbar .pr-lab{display:none}
+#pr-hb.nv{margin:0}
+#pr-menu{position:fixed;z-index:80;right:max(8px,env(safe-area-inset-right,0px));top:calc(max(8px,env(safe-area-inset-top,0px)) + 52px);width:min(300px,calc(100vw - 16px));background:var(--surface,var(--card,#fff));color:var(--ink,var(--fg,inherit));border:1.5px solid var(--line,rgba(127,127,127,.4));border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:14px;display:grid;gap:10px}
+#pr-menu[hidden]{display:none}
+</style>
+<script>
+(()=>{
+const PERS='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+const GEAR='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+const lg=()=>{try{return !!(window.IA_AUTH&&IA_AUTH.logado&&IA_AUTH.logado())}catch(_){return false}};
+const box=document.createElement('div');box.id='pr-hb';
+box.innerHTML='<button type="button" class="pr-hb" id="pr-acc">'+PERS+'<span class="pr-lab" id="pr-acl">Entrar</span><i class="pr-ok"></i></button><button type="button" class="pr-hb" id="pr-gear" data-cfg="abrir" aria-label="Configurações" title="Configurações">'+GEAR+'</button>';
+const menu=document.createElement('div');menu.id='pr-menu';menu.hidden=true;document.body.appendChild(menu);
+function lugar(){const nav=document.getElementById('navbar'),hd=document.querySelector('header.top');
+ if(nav){if(box.parentNode!==nav){nav.insertBefore(box,nav.lastElementChild);box.classList.add('nv')}}
+ else if(hd){if(box.parentNode!==hd){hd.appendChild(box);box.classList.remove('nv')}}
+ const a=document.getElementById('pr-acc'),l=lg();if(a){a.setAttribute('aria-label',l?'Minha conta':'Entrar na conta');a.title=l?'Minha conta':'Entrar na conta';const t=document.getElementById('pr-acl');if(t)t.style.display=l?'none':''}
+ document.body.classList.toggle('pr-in',l)}
+setInterval(lugar,300);lugar();
+function nomeEmail(){let n='',e='';try{n=IA_AUTH.nome()||'';e=IA_AUTH.email()||''}catch(_){}return [String(n),String(e)]}
+function abreMenu(){const [n,e]=nomeEmail();const esc2=x=>x.replace(/[<>"&]/g,'');
+ menu.innerHTML=`<div style="display:grid;gap:2px"><b style="font-size:16px">${esc2(n)||'Minha conta'}</b>${e?`<span class="muted small" style="word-break:break-all">${esc2(e)}</span>`:''}<span class="muted small">✓ Seus dados ficam salvos na conta</span></div><button type="button" class="btn ghost sm" data-cfg="abrir" data-pm="1">⚙️ Configurações</button><button type="button" class="btn ghost sm" data-pm="sair">Sair da conta</button><button type="button" class="btn ghost sm" data-pm="fechar">Fechar</button>`;menu.hidden=false}
+document.addEventListener('click',e=>{const t=e.target;
+ if(t.closest&&t.closest('#pr-acc')){e.preventDefault();e.stopImmediatePropagation();if(!lg()){try{IA_AUTH.entrar('Entre para salvar seus dados e participar da comunidade.')}catch(_){}return}menu.hidden?abreMenu():menu.hidden=true;return}
+ const m=t.closest&&t.closest('[data-pm]');if(m){const k=m.dataset.pm;if(k==='sair'){menu.hidden=true;e.preventDefault();e.stopImmediatePropagation();try{IA_AUTH.sair()}catch(_){}return}if(k==='fechar'){menu.hidden=true;e.preventDefault();e.stopImmediatePropagation();return}menu.hidden=true;return}
+ if(!menu.hidden&&!(t.closest&&t.closest('#pr-menu')))menu.hidden=true},true);
 })();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script><script>
