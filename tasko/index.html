@@ -357,14 +357,14 @@ ${fld('razao','Razão social','type="text" autocomplete="organization"')}${fld('
 ${isP&&cpfNeed()?cpfProFld(true):''}${isP?`<div><label for="cat">Categoria</label><select id="cat" aria-describedby="e-cat"><option value="">Selecione</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select><div class="err" id="e-cat"></div></div>${areaFld('cat','','')}${fld('city','Cidade de atuação','type="text" autocomplete="address-level2" value="'+esc(S.user.city||'')+'"')}`:''}
 <button class="btn" data-act="addemp">Adicionar perfil</button></main>`},
 mine:()=>mineV(false),minedone:()=>mineV(true),hist:()=>histV(),
-feedmenu:()=>`${head('Vídeos de serviços','home')}<main>
+feedmenu:()=>`${head('Vídeos e fotos de serviços','home')}<main>
 <button class="btn" data-go="workers">Procurar vídeos de um trabalhador</button>
-<button class="btn ghost" data-go="feed">Ver todos os vídeos</button></main>`,
+<button class="btn ghost" data-go="feed">Ver todos os vídeos e fotos</button></main>`,
 workers:()=>`${head('Procurar trabalhador','feedmenu')}<main>
 ${fld('fq','Nome do trabalhador','type="search" autocomplete="off" placeholder="Digite o nome" value="'+esc(S.fq||'')+'"')}
 <div id="wlist">${workersList()}</div></main>`,
 feed:()=>{const w=S.user.role!=='pro'&&S.fw?workerOf(S.fw):null;return `${head(w?'Vídeos de '+String(w.name).split(' ')[0]:'Vídeos de serviços',S.user.role==='pro'?'home':(w?'workers':'feedmenu'))}<main>
-${S.user.role==='pro'?'<button class="btn" data-go="record">Filmar meu serviço</button><button class="btn ghost" data-go="spot">Destacar meus vídeos</button>':''}
+${S.user.role==='pro'?'<button class="btn" data-go="record">📷🎬 Publicar fotos ou vídeo do serviço</button><button class="btn ghost" data-go="spot">Destacar meus vídeos</button>':''}
 <div id="flist">${feedList()}</div></main>`},
 spend:()=>{const P=projs(),X=exps(),tot=l=>l.reduce((a,x)=>a+x.amount,0),loose=X.filter(x=>!P.some(p=>p.id===x.projId));return `${head('Gastos e planilhas','home')}<main>
 <p class="muted" style="margin:0">Organize o que você gasta com serviços em projetos e emita planilhas e relatórios quando quiser.</p>
@@ -424,7 +424,7 @@ ${pro?`<div><label for="pcat">Categoria</label><select id="pcat" aria-describedb
 <div class="card"><b>Encarregado de dados</b><p class="muted" style="margin:6px 0 0">Para pedidos sobre seus dados: [E-MAIL DO ENCARREGADO]. Você também pode reclamar à ANPD (gov.br/anpd).</p></div>
 ${H.length?`<div class="card"><b>Histórico de aceites</b>${H.map(x=>`<div class="sum"><span>${esc(TL[x.type]||x.type)}</span><span class="muted">${dt(x.at)}</span></div>`).join('')}</div>`:''}
 <div class="card"><b>Excluir minha conta</b><p class="muted" style="margin:6px 0 10px">Apaga seus dados, pedidos, propostas, vídeos, projetos e gastos. Na versão real, alguns registros podem ser mantidos pelo prazo que a lei exigir.</p><button class="btn ghost" data-act="pdel">Excluir minha conta e meus dados</button></div></main>`},
-record:()=>`${head('Filmar meu serviço','home')}<main>
+record:()=>`${head('Mostrar meu serviço','home')}<main>
 <input class="sr" type="file" id="vcam" accept="video/*" capture="environment" tabindex="-1" aria-label="Gravar vídeo com a câmera">
 <input class="sr" type="file" id="vgal" accept="video/*" tabindex="-1" aria-label="Escolher vídeo da galeria">
 <div id="recbody" style="display:flex;flex-direction:column;gap:14px">${recBody()}</div></main>`,
@@ -827,7 +827,7 @@ function hmDefs(pro){const un=unreadTotal(),cb=campOn().length?' · '+campOn().l
  chat=`<button class="btn" data-go="chats">Conversas${un?' ('+un+(un>1?' novas':' nova')+')':''}</button>`,
  B=(id,l,h)=>({id,l,h}),nm={id:'nums',l:'Telefones de emergência',h:null};
 const ex=[X('reports','Relatórios, '+(pro?'ganhos':'gastos')+', impostos, contador e advogado','reports'),...(E?[X('staff','Funcionários e gastos da equipe','staff')]:[]),X('done','Pedidos atendidos',pro?'inboxdone':'minedone'),X('hist','Histórico e estatísticas','hist'),...(pro?[X('spot','Destacar meus vídeos','spot'),X('pdest','Destacar meu perfil','pdest'),X('plans','Planos, pontos e vantagens'+cb,'plans')]:[X('cplans','Planos do contratante','cplans'),X('cperks','Pontos, prêmios e vantagens'+cb,'cperks')]),X('vitrine','⭐ Vitrine de profissionais','vitrine'),X('garantias','🛡️ Garantias','garantias'),...(pro?[X('selos','🎓 Meus selos de qualificação','selos')]:[]),X('indique','🎁 Indique e ganhe','indique'),X('adv','Divulgar meu negócio','adv'),X('legal','Termos, políticas e privacidade','legal')];
-return[B('agenda','Agenda','<button class="btn ghost" data-go="agenda">📅 Agenda'+(window.agN&&agN()?' ('+agN()+')':'')+'</button>'),...(pro?[B('pregoes','Pregões abertos','<button class="btn ghost" data-go="pregoes">🔨 Pregões abertos'+(pgOpenN()?' ('+pgOpenN()+')':'')+'</button>'),B('inbox','Ver pedidos recebidos','<button class="btn" data-go="inbox">Ver pedidos recebidos'+(newReqCount()?' ('+newReqCount()+' novos)':'')+'</button>'),B('feed','Vídeos da plataforma e filmar meu serviço','<button class="btn" data-go="feed">Vídeos da plataforma</button>')]:[B('request','Pedir um serviço','<button class="btn" data-go="request">Pedir um serviço</button>'),B('mine','Meus pedidos','<button class="btn" data-go="mine">Meus pedidos</button>'),B('feedmenu','Vídeos de serviços','<button class="btn" data-go="feedmenu">Vídeos de serviços</button>')]),B('chats','Conversas',chat),nm,...ex]}
+return[B('agenda','Agenda','<button class="btn ghost" data-go="agenda">📅 Agenda'+(window.agN&&agN()?' ('+agN()+')':'')+'</button>'),...(pro?[B('pregoes','Pregões abertos','<button class="btn ghost" data-go="pregoes">🔨 Pregões abertos'+(pgOpenN()?' ('+pgOpenN()+')':'')+'</button>'),B('inbox','Ver pedidos recebidos','<button class="btn" data-go="inbox">Ver pedidos recebidos'+(newReqCount()?' ('+newReqCount()+' novos)':'')+'</button>'),B('feed','Vídeos da plataforma e filmar meu serviço','<button class="btn" data-go="feed">Vídeos da plataforma</button>')]:[B('request','Pedir um serviço','<button class="btn" data-go="request">Pedir um serviço</button>'),B('mine','Meus pedidos','<button class="btn" data-go="mine">Meus pedidos</button>'),B('feedmenu','Vídeos e fotos de serviços','<button class="btn" data-go="feedmenu">Vídeos e fotos de serviços</button>')]),B('chats','Conversas',chat),nm,...ex]}
 function hmCfg(){const r=plRec(),c=(r.hm||{})[S.user.role]||{},D=hmDefs(S.user.role==='pro'),ids=D.map(x=>x.id),o=(c.o||[]).filter(x=>ids.includes(x));return{o:[...o,...ids.filter(x=>!o.includes(x))],h:(c.h||[]).filter(x=>ids.includes(x)),p:(c.p||[]).filter(x=>ids.includes(x)),D}}
 function hmSave(c){const r=plRec();r.hm=r.hm||{};r.hm[S.user.role]={o:c.o,h:c.h,p:c.p};plSave(r)}
 const hmOn=(c,id)=>{const d=c.D.find(x=>x.id===id);return d.x?c.p.includes(id):!c.h.includes(id)};
@@ -1797,13 +1797,22 @@ const newRec=()=>({file:null,url:'',title:'',desc:'',busy:false,err:'',auth:fals
 S.rec=newRec();S.del=null;
 const dt=iso=>{const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('pt-BR')};
 const BLOBOK=!/github\.io$/i.test(location.hostname);
-const validPost=p=>p&&p.id&&typeof p.url==='string'&&(BLOBOK?/^(\/_blob\/|https:\/\/)/:/^https:\/\//).test(p.url)&&p.title&&p.name&&p.cat;
+const phOK=d=>typeof d==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(d)&&d.length<200000;
+const validPost=p=>p&&p.id&&p.title&&p.name&&p.cat&&(p.kind==='foto'?Array.isArray(p.imgs)&&p.imgs.length>0&&p.imgs.length<=4&&p.imgs.every(i=>i&&phOK(i.d)):typeof p.url==='string'&&(BLOBOK?/^(\/_blob\/|https:\/\/)/:/^https:\/\//).test(p.url));
 function vInfo(R){const mb=R.file.size/1048576,pc=Math.min(100,Math.round(R.file.size/MAXV*100)),d=Math.round(R.dur||0),tm=d>0?Math.floor(d/60)+':'+String(d%60).padStart(2,'0')+' · ':'';
   return`<div class="card" style="margin:0"><div class="sum" style="margin:0"><span>${tm}${mb.toFixed(1).replace('.',',')} MB</span><span class="muted">limite 20 MB</span></div><div style="height:8px;border-radius:99px;background:var(--line);margin-top:8px;overflow:hidden" role="img" aria-label="${pc}% do limite de tamanho"><div style="height:100%;width:${pc}%;background:${pc>85?'var(--bad)':'var(--pri)'}"></div></div>${pc>85?'<p class="muted" style="margin:8px 0 0">Perto do limite. Se o envio falhar, grave um vídeo mais curto.</p>':''}</div>`}
+function phBody(R,err){const ph=R.ph||(R.ph={a:[],d:[]}),sl=(k,l)=>`<div class="card" style="margin:0"><b>${l} (${ph[k].length}/2)</b><div class="row" style="gap:8px;margin-top:8px">${ph[k].map((d,i)=>`<span style="position:relative;display:inline-block"><img src="${d}" alt="${l} ${i+1}" style="width:120px;height:120px;object-fit:cover;border-radius:10px" data-imgz><button type="button" class="chip" data-phdel="${k}:${i}" aria-label="Tirar foto" style="position:absolute;top:4px;right:4px;min-height:30px;width:30px;padding:0">✕</button></span>`).join('')}${ph[k].length<2?`<button type="button" class="chip" data-phadd="${k}" style="width:120px;height:120px;border-style:dashed">📷 Adicionar</button>`:''}</div></div>`;
+  return `${err}<div class="card"><b>📷 Fotos de antes e depois</b><p class="muted" style="margin:6px 0 0">Até 2 fotos de antes e 2 de depois. O app diminui as fotos para ocupar pouco espaço. Evite mostrar documentos, placas de carro ou o rosto de outras pessoas.</p></div>
+${sl('a','Antes')}${sl('d','Depois')}<input class="sr" type="file" id="phfile" accept="image/*" tabindex="-1" aria-label="Escolher foto">
+${fld('rtitle','Título','type="text" maxlength="60" placeholder="Ex.: Pintura da fachada" value="'+esc(R.title)+'"')}
+<div><label for="rdescv">Descrição (opcional)</label><textarea id="rdescv" maxlength="300" placeholder="O que foi feito, materiais usados e prazo">${esc(R.desc)}</textarea></div>
+<div><label class="chk" style="align-items:flex-start"><input type="checkbox" id="vauth" ${R.auth?'checked':''} aria-describedby="e-vauth"> <span>Autorizo o ${APPN} a exibir estas fotos na vitrine do app enquanto estiverem publicadas. Posso excluí-las quando quiser. ${dlk('community','Regras da comunidade')}</span></label><div class="err" id="e-vauth"></div></div>
+<button class="btn" data-act="phpub" ${R.busy?'disabled':''}>Publicar fotos</button><button class="btn ghost" data-act="phback">Voltar para vídeo</button>`}
 function recBody(){
   const R=S.rec,err=R.err?`<div class="alert" role="alert">${esc(R.err)}</div>`:'';
-  if(!R.file)return`${err}<div class="card"><b>Mostre o seu trabalho</b><ul><li>Filme o serviço em andamento ou o resultado final, com boa luz.</li><li><b>Grave até 30 segundos</b>: o limite é 20 MB por vídeo.</li><li>Segure o celular na horizontal e fique parado por alguns segundos em cada detalhe.</li><li>Se o vídeo passar de 20 MB, baixe a qualidade na câmera do celular (HD em vez de 4K).</li><li>Evite mostrar documentos, placas de carro ou o rosto de outras pessoas.</li></ul></div>
-<button class="btn" data-act="vcam">Gravar com a câmera</button><button class="btn ghost" data-act="vgal">Escolher da galeria</button>`;
+  if(R.mode==='foto')return phBody(R,err);
+  if(!R.file)return`${err}<div class="card"><b>Mostre o seu trabalho</b><p class="muted" style="margin:6px 0 0">Publique um vídeo ou fotos de antes e depois. Fotos ocupam bem menos espaço.</p><ul><li>Filme o serviço em andamento ou o resultado final, com boa luz.</li><li><b>Grave até 30 segundos</b>: o limite é 20 MB por vídeo.</li><li>Segure o celular na horizontal e fique parado por alguns segundos em cada detalhe.</li><li>Se o vídeo passar de 20 MB, baixe a qualidade na câmera do celular (HD em vez de 4K).</li><li>Evite mostrar documentos, placas de carro ou o rosto de outras pessoas.</li></ul></div>
+<button class="btn" data-act="phmode">📷 Publicar fotos de antes e depois</button><button class="btn ghost" data-act="vcam">🎬 Gravar vídeo com a câmera</button><button class="btn ghost" data-act="vgal">🎬 Escolher vídeo da galeria</button>`;
   return`${err}<video controls playsinline preload="metadata" src="${esc(R.url)}" style="width:100%;max-height:50vh;border-radius:12px;background:#000"></video>
 ${vInfo(R)}<button class="chip" data-act="vreset" ${R.busy?'disabled':''}>Trocar vídeo</button>
 ${fld('rtitle','Título do vídeo','type="text" maxlength="60" placeholder="Ex.: Instalação de 6 tomadas na sala" value="'+esc(R.title)+'"')}
@@ -1843,6 +1852,18 @@ async function pubVideo(){
     if(S.v==='record')recRender();
   }
 }
+const phView=p=>{const A=p.imgs.filter(i=>i.t==='a'),Dp=p.imgs.filter(i=>i.t!=='a'),col=(L,l)=>L.length?`<div style="display:grid;gap:6px;align-content:start"><span class="tag" style="justify-self:start">${l}</span>${L.map(i=>`<img src="${i.d}" alt="${l}" data-imgz style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join('')}</div>`:'';return `<div style="display:grid;grid-template-columns:${A.length&&Dp.length?'1fr 1fr':'1fr'};gap:8px">${col(A,'Antes')}${col(Dp,'Depois')}</div>`};
+function phCompress(file){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(u);let mx=1000,q=0.6,d='';for(let i=0;i<5;i++){const r=Math.min(1,mx/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext('2d').drawImage(img,0,0,c.width,c.height);d=c.toDataURL('image/jpeg',q);if(d.length<=140000)break;mx=Math.round(mx*0.8);q=Math.max(0.4,q-0.06)}d.length<200000?res(d):rej(new Error('big'))};img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img'))};img.src=u})}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-phadd],[data-phdel]');if(!b||S.v!=='record')return;e.preventDefault();e.stopPropagation();const R=S.rec;R.ph=R.ph||{a:[],d:[]};
+  if(b.dataset.phdel){const [k,i]=b.dataset.phdel.split(':');R.ph[k].splice(+i,1);return recRender()}
+  R.phk=b.dataset.phadd;const f=document.getElementById('phfile');if(f)f.click()},true);
+document.addEventListener('change',async e=>{const f=e.target;if(!f||f.id!=='phfile'||!f.files||!f.files[0])return;const R=S.rec,k=R.phk||'a',file=f.files[0];f.value='';if(!/^image\//.test(file.type)){R.err='Escolha uma foto.';return recRender()}
+  try{const d=await phCompress(file);R.ph=R.ph||{a:[],d:[]};if(R.ph[k].length<2)R.ph[k].push(d);R.err=''}catch(_){R.err='Não consegui usar essa foto. Tente outra.'}recRender()},true);
+function pubPhotos(){const R=S.rec,t=String(R.title||'').trim(),ph=R.ph||{a:[],d:[]},VE={};if(!ph.a.length&&!ph.d.length){R.err='Adicione pelo menos uma foto.';return recRender()}
+  if(t.length<3)VE.rtitle='Dê um título (mínimo de 3 caracteres).';if(!R.auth)VE.vauth='Marque a autorização para publicar.';if(showErrors(VE))return;
+  const p={id:Date.now(),email:S.user.email,name:S.user.name.split(' ')[0],cat:S.user.cat,title:t.slice(0,60),desc:String(R.desc||'').trim().slice(0,300),kind:'foto',imgs:[...ph.a.map(d=>({t:'a',d})),...ph.d.map(d=>({t:'d',d}))],at:new Date().toISOString()};
+  try{store.setItem('ms_posts',JSON.stringify([...jget('ms_posts'),p]))}catch(e){R.err='Sem espaço no aparelho para as fotos. Tente com menos fotos.';return recRender()}
+  try{logC('video',S.user.email,{post:p.id})}catch(_){}S.rec=newRec();toast('Fotos publicadas!');go('feed')}
 async function delPost(id){
   const L=jget('ms_posts'),p=L.find(x=>x.id===id);
   if(!p||p.email!==S.user.email)return render();
@@ -2211,7 +2232,7 @@ function feedList(){
     A.map(x=>[x,((x.vid*31+hb*17)%997)]).sort((a,b)=>a[1]-b[1]).slice(0,SP_TOP).forEach(([x])=>spon.set(x.vid,x));
     L.sort((a,b)=>(hot.has(b.email)-hot.has(a.email))||((spon.has(b.id)?1:0)-(spon.has(a.id)?1:0))||b.id-a.id)}
   if(!L.length)return qn?'<div class="card"><b>Nenhum vídeo encontrado</b><p class="muted" style="margin:6px 0 0">Este trabalhador ainda não publicou vídeos.</p></div>':'<div class="card"><b>Nenhum vídeo publicado ainda</b><p class="muted" style="margin:6px 0 0">Os profissionais podem filmar o próprio serviço e publicar aqui.</p></div>';
-  return L.map(p=>`<div class="card">${hot.has(p.email)?'<span class="tag" style="margin-bottom:8px">Entrou em contato com você</span> ':''}${spon.has(p.id)?`<span class="tag" style="margin-bottom:8px;background:var(--acc);color:#14213D;font-weight:700">Destaque · patrocinado</span>${p.email===me?` <span class="muted">até ${dd(new Date(spon.get(p.id).to))}</span>`:''}`:''}<video controls playsinline preload="metadata" src="${esc(p.url)}" style="width:100%;max-height:60vh;border-radius:12px;background:#000"></video>
+  return L.map(p=>`<div class="card">${hot.has(p.email)?'<span class="tag" style="margin-bottom:8px">Entrou em contato com você</span> ':''}${spon.has(p.id)?`<span class="tag" style="margin-bottom:8px;background:var(--acc);color:#14213D;font-weight:700">Destaque · patrocinado</span>${p.email===me?` <span class="muted">até ${dd(new Date(spon.get(p.id).to))}</span>`:''}`:''}${p.kind==='foto'?phView(p):`<video controls playsinline preload="metadata" src="${esc(p.url)}" style="width:100%;max-height:60vh;border-radius:12px;background:#000"></video>`}
 <b style="display:block;margin-top:10px">${esc(p.title)}</b>
 <p class="muted" style="margin:4px 0 0">${esc(p.name)} · ${esc(p.cat)} · ${dt(p.at)}</p>
 ${p.desc?`<p style="margin:8px 0 0">${esc(p.desc)}</p>`:''}
@@ -3157,6 +3178,9 @@ document.addEventListener('click',e=>{
   if(D.act==='vgal')return $('#vgal').click();
   if(D.act==='vreset'){if(S.rec.url)URL.revokeObjectURL(S.rec.url);Object.assign(S.rec,{file:null,url:'',err:''});return recRender()}
   if(D.act==='vpub')return pubVideo();
+  if(D.act==='phmode'){S.rec.mode='foto';S.rec.err='';return recRender()}
+  if(D.act==='phback'){S.rec.mode='';S.rec.err='';return recRender()}
+  if(D.act==='phpub')return pubPhotos();
   if(D.act==='addpro')return addPro();
   if(D.act==='cpfsave'){if(cpfTake())render();return}
   if(D.act==='locgps'){const q=reqOf(+D.qid);if(!q||q.email!==S.user.email||q.fin||q.sample)return;if(!navigator.geolocation){toast('Este aparelho não permite pegar a localização. Digite o endereço.');return}toast('Pegando sua localização…');navigator.geolocation.getCurrentPosition(pos=>{const q2=reqOf(+D.qid);if(!q2)return;const tx=String(($('#loctxt-'+q2.id)||{}).value||'').replace(/[<>]/g,'').trim().slice(0,160)||(q2.loc&&q2.loc.txt)||'';S.locd={qid:q2.id,lat:Math.round(pos.coords.latitude*1e5)/1e5,lng:Math.round(pos.coords.longitude*1e5)/1e5,acc:Math.round(pos.coords.accuracy||0),txt:tx};render()},()=>toast('Não consegui pegar a localização. Permita o acesso no aparelho ou digite o endereço.'),{enableHighAccuracy:true,timeout:12000,maximumAge:60000});return}
