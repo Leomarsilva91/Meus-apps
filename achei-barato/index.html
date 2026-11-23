@@ -1545,7 +1545,7 @@ function adminBox(){return `<div class="box" style="border-left-color:var(--acc)
 const shTxt=(n,p,old,loja,ate)=>`Achei Barato: ${n}${p>0?' por '+brl(p):''}${p>0&&old?' (era '+brl(old)+')':''}${loja?' em '+loja:''}${ate?', até '+fd(ate):''}. Confira o preço no local.${appUrl&&/^https:\/\//.test(appUrl)?' '+appUrl:''}`;
 const shBtn=t=>`<button class="chip" data-sh="${esc(encodeURIComponent(t))}" type="button" aria-label="Compartilhar no WhatsApp">Compartilhar</button>`;
 const shareNow=async t=>{try{if(navigator.share){await navigator.share({text:t});return}}catch(e){if(e&&e.name==='AbortError')return}
-  const u='https://wa.me/?text='+encodeURIComponent(t);let w=null;try{w=window.open(u,'_blank','noopener')}catch(_){}if(!w){const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';document.body.appendChild(a);a.click();a.remove()}try{navigator.clipboard&&navigator.clipboard.writeText(t)}catch(_){}};
+  const u='https://wa.me/?text='+encodeURIComponent(t);let w=null;try{w=window.open(u,'_blank','noopener')}catch(_){}if(!w){const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';document.body.appendChild(a);a.click();a.remove()}try{navigator.clipboard&&navigator.clipboard.writeText(t).catch(()=>{})}catch(_){}};
 const appLink=()=>appUrl&&/^https:\/\//.test(appUrl)?appUrl:(/^https:/.test(location.href)?location.origin+location.pathname:'');
 function newsBox(){const L=newsL.slice().sort((a,b)=>(b.t||'').localeCompare(a.t||'')).slice(0,3);
   return `<div class="box"><b>Novidades</b>${L.length?L.map(n=>`<div style="display:grid;gap:2px"><span style="font-weight:700">${esc(n.title)} <span class="m">· ${fd(n.t)}</span></span><span class="m" style="color:var(--ink)">${esc(n.body)}</span><div class="row">${shBtn('📢 '+n.title+'\n'+n.body+(appLink()?'\n'+appLink():''))}</div></div>`).join(''):'<span class="m">Ainda não há novidades.</span>'}<div class="row">${shBtn('Veja promoções perto de você e o roteiro mais barato no Achei Barato.'+(appLink()?' '+appLink():''))}</div></div>`}
@@ -3150,6 +3150,67 @@ const r0=window.render;window.render=function(){const r=r0.apply(this,arguments)
 })();
 </script>
 <style>details.ofd>summary::-webkit-details-marker{display:none}details.ofd>summary::after{content:none!important}details.ofd .ofd-m::before{content:'+ Ver descrição completa'}details.ofd[open] .ofd-m::before{content:'− Ver menos'}details.ofd[open] .ofd-c{display:none}details.ofd[open]{display:flex;flex-direction:column-reverse}</style>
+<style>
+#pr-hb{display:flex;gap:6px;align-items:center;pointer-events:auto}
+.pr-hb{min-height:40px;min-width:40px;padding:0 10px;border-radius:12px;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);color:#fff;font:inherit;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;position:relative;pointer-events:auto;}
+.pr-hb:focus-visible{outline:3px solid currentColor;outline-offset:2px}
+.pr-hb .pr-ok{position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:#1c9a5e;border:2px solid #fff;display:none}
+body.pr-in .pr-hb .pr-ok{display:block}
+body.pr-in #ia-admlink{display:none!important}
+#pr-pop{position:fixed;z-index:2147483000;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:flex-end;padding:calc(env(safe-area-inset-top,0px) + 56px) 10px 10px}
+#pr-pop[hidden]{display:none}
+#pr-pop .pr-box{background:#fff;color:#111;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:14px;display:grid;gap:8px;width:min(320px,100%);max-height:80vh;overflow:auto;font:15px system-ui,sans-serif}
+#pr-pop .pr-b{min-height:44px;border-radius:12px;border:1.5px solid #cfcfcf;background:#fff;color:#111;font:inherit;font-weight:700;cursor:pointer;text-align:left;padding:0 12px}
+#pr-pop .pr-m{color:#555;font-size:13px;word-break:break-all}
+header.top #pr-hb{position:absolute;top:12px;right:12px;z-index:3}header.top .brand{padding-right:104px}
+</style>
+<script>
+(()=>{
+const APP='Achei Barato',MODO='achei';
+const T={pt:{ent:'Entrar',conta:'Minha conta',cfg:'Configurações',vis:'Você está como visitante',salvo:'Seus dados ficam salvos na conta',sair:'Sair da conta',goo:'Entrar com Google para não perder seus dados',como:'Como o '+APP+' funciona',mem:'Memória do app neste aparelho',adm:'Sou administrador',fechar:'Fechar'},
+en:{ent:'Sign in',conta:'My account',cfg:'Settings',vis:'You are browsing as a visitor',salvo:'Your data is saved to your account',sair:'Sign out',goo:'Sign in with Google to keep your data',como:'How '+APP+' works',mem:'App storage on this device',adm:"I'm an administrator",fechar:'Close'},
+es:{ent:'Entrar',conta:'Mi cuenta',cfg:'Configuración',vis:'Estás como visitante',salvo:'Tus datos se guardan en tu cuenta',sair:'Salir de la cuenta',goo:'Entrar con Google para no perder tus datos',como:'Cómo funciona '+APP,mem:'Memoria de la app en este aparato',adm:'Soy administrador',fechar:'Cerrar'}};
+const lang=()=>{let l='pt';if(MODO==='respiro'){try{l=localStorage.getItem('rs_lang')||'';if(!l){const n=(navigator.language||'pt').toLowerCase();l=n.indexOf('pt')===0?'pt':n.indexOf('es')===0?'es':'en'}}catch(_){l='pt'}}return T[l]?l:'pt'};
+const tx=k=>T[lang()][k];
+const PERS='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+const GEAR='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+const lg=()=>{try{return !!(window.IA_AUTH&&IA_AUTH.logado&&IA_AUTH.logado())}catch(_){return false}};
+const q2=x=>String(x||'').replace(/[<>"&]/g,'');
+const box=document.createElement('div');box.id='pr-hb';
+box.innerHTML='<button type="button" class="pr-hb" id="pr-acc">'+PERS+'<span id="pr-acl" class="pr-lab"></span><i class="pr-ok"></i></button><button type="button" class="pr-hb" id="pr-gear">'+GEAR+'</button>';
+const pop=document.createElement('div');pop.id='pr-pop';pop.hidden=true;document.body.appendChild(pop);
+function lugar(){let ok=false;
+ if(MODO==='respiro'){const top=document.querySelector('.top'),hm=document.getElementById('hm');if(top&&hm){if(box.parentNode!==top)top.insertBefore(box,hm);ok=true}}
+ else{const hd=document.querySelector('header.top');if(hd){if(box.parentNode!==hd)hd.appendChild(box);ok=true}}
+ if(!ok&&box.parentNode!==document.body){box.style.cssText='position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + 8px);right:8px';document.body.appendChild(box)}
+ const l=lg(),a=document.getElementById('pr-acc'),t=document.getElementById('pr-acl'),g=document.getElementById('pr-gear');
+ if(a){a.setAttribute('aria-label',l?tx('conta'):tx('ent'));a.title=l?tx('conta'):tx('ent')}
+ if(t){t.textContent=l?'':tx('ent');t.style.display=(l||MODO==='respiro')?'none':''}
+ if(g){g.setAttribute('aria-label',tx('cfg'));g.title=tx('cfg')}
+ document.body.classList.toggle('pr-in',l)}
+setInterval(lugar,300);lugar();
+const clk=s=>{const e=document.querySelector(s);if(e){e.click();return true}return false};
+function abre(tipo){const l=lg();let n='',e='';try{n=IA_AUTH.nome()||'';e=IA_AUTH.email()||''}catch(_){}
+ let h=`<div style="display:grid;gap:2px"><b style="font-size:16px">${l?(q2(n)||tx('conta')):tx('vis')}</b>${l&&e?`<span class="pr-m">${q2(e)}</span>`:''}${l?`<span class="pr-m">✓ ${tx('salvo')}</span>`:''}</div>`;
+ if(!l)h+=`<button type="button" class="pr-b" data-pp="entrar">${tx('ent')}</button>`;
+ if(tipo==='cfg'){let goo=false;try{goo=localStorage.getItem('ia_google')==='1'}catch(_){}
+  if(!goo&&document.querySelector('[data-iagoogle]'))h+=`<button type="button" class="pr-b" data-pp="goo">🔐 ${tx('goo')}</button>`;
+  if(document.getElementById('ia-introlink'))h+=`<button type="button" class="pr-b" data-pp="como">${tx('como')}</button>`;
+  if(document.querySelector('[data-lsmem]'))h+=`<button type="button" class="pr-b" data-pp="mem">${tx('mem')}</button>`;
+  h+=`<button type="button" class="pr-b" data-pp="adm">${tx('adm')}</button>`}
+ if(l)h+=`<button type="button" class="pr-b" data-pp="sair">${tx('sair')}</button>`;
+ h+=`<button type="button" class="pr-b" data-pp="fechar">${tx('fechar')}</button>`;
+ pop.innerHTML='<div class="pr-box">'+h+'</div>';pop.hidden=false}
+document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;
+ if(t.closest('#pr-acc')){e.preventDefault();e.stopImmediatePropagation();if(!lg()){try{IA_AUTH.entrar()}catch(_){}}else abre('conta');return}
+ if(t.closest('#pr-gear')){e.preventDefault();e.stopImmediatePropagation();abre('cfg');return}
+ const b=t.closest('[data-pp]');if(b){e.preventDefault();e.stopImmediatePropagation();const k=b.dataset.pp;pop.hidden=true;
+  if(k==='entrar'){try{IA_AUTH.entrar()}catch(_){}}else if(k==='sair'){try{IA_AUTH.sair()}catch(_){}}
+  else if(k==='goo')clk('[data-iagoogle]');else if(k==='como')clk('#ia-introlink');else if(k==='mem')clk('[data-lsmem]');else if(k==='adm'){if(!clk('#ia-admlink a[href="#admin"]'))location.hash='#admin'}
+  return}
+ if(!pop.hidden&&!t.closest('.pr-box'))pop.hidden=true},true);
+})();
+</script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script><script>
 /* tirar um link principal de loja (administrador) */
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-lkrm]');if(!b)return;e.preventDefault();e.stopPropagation();if(!adm)return;const v={...lnk};delete v[b.dataset.lkrm];
