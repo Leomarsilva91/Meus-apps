@@ -1673,7 +1673,7 @@ function dreamSubmit(){
   else if(!trip&&mes>0){const n=Math.max(1,Math.ceil(Math.max(0,alvo-gg)/mes)),d=new Date(Y,M+n,TODAY.getDate());prazo=iso(d)}
   else{const d=new Date(Y,M+12,TODAY.getDate());prazo=iso(d)}
   const ng={id:uid(),nome,tipo,alvo,guardado:gg,prazo,aportes:gg>0?[{d:TODAYISO,v:gg}]:[]};S.goals.push(ng);
-  if(trip){S.goals.pop();UI.dream=null;go('metas');setTimeout(()=>{const n=$('#g-n'),t=$('#g-t'),dv=$('#g-dv'),gw=$('#g-g');if(t){t.value='viagem';tripToggle()}if(n)n.value=nome;if(dv&&g('dr-p'))dv.value=prazo;if(gw&&gg>0)gw.value=String(gg).replace('.',',');const o=$('#g-or');if(o){o.scrollIntoView({block:'center'});o.focus()}},80);toast('Agora preencha os dados da viagem. A IA analisa antes de criar a meta.');return}
+  if(trip){const drp=g('dr-p');S.goals.pop();UI.dream=null;go('metas');setTimeout(()=>{const n=$('#g-n'),t=$('#g-t'),dv=$('#g-dv'),gw=$('#g-g');if(t){t.value='viagem';tripToggle()}if(n)n.value=nome;if(dv&&drp)dv.value=prazo;if(gw&&gg>0)gw.value=String(gg).replace('.',',');const o=$('#g-or');if(o){o.scrollIntoView({block:'center'});o.focus()}},80);toast('Agora preencha os dados da viagem. A IA analisa antes de criar a meta.');return}
   save();UI.dream={done:ng.id};render(true);burst(innerWidth/2,innerHeight/3,36);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.inv){UI.inv=null;render(true)}else if(e.key==='Escape'&&UI.dream){UI.dream=null;render(true)}});
