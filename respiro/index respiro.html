@@ -55,7 +55,7 @@ p{margin:0}button,input,select,textarea{font:inherit;color:inherit}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .err{color:var(--bad);font-size:13.5px;min-height:1px}
 .hero{background:var(--pri);color:var(--pri-ink);border-radius:20px;padding:18px;display:grid;gap:8px}
-.hero h1{color:var(--pri-ink)}
+.hero h1{color:var(--pri-ink)}.hero2{order:-1;padding:8px 14px;gap:0}.hero2>summary{min-height:36px;gap:8px}.hero2 h1{font-size:17px;line-height:1.25;margin:0}.hero2 .dbody{display:grid;gap:8px;padding:2px 0 6px}.hero2 p{font-size:14px;margin:0}.hero2 .tag{font-size:12px}
 .rad{display:grid;gap:6px}.rad input[type=range]{width:100%;accent-color:var(--pri);min-height:34px}
 .big{font-family:var(--fd);font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
 .tile{text-align:left;cursor:pointer;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:13px;display:grid;gap:5px;color:inherit;min-width:0}
@@ -113,7 +113,7 @@ svg.map .pin{cursor:pointer}svg.map .pin:focus-visible{outline:none}svg.map .pin
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <div class="top"><button class="fb" id="bk" type="button" aria-label="Voltar uma tela">← Voltar</button><span class="ttl" id="tt">Respiro</span><button class="fb" id="hm" type="button" aria-label="Ir para o início">⌂ Início</button></div>
-<div class="wrap" id="app"></div>
+<div class="wrap" id="pr-nm"><span>Respiro</span></div><div class="wrap" id="app"></div>
 <div class="wrap" id="fblk" style="margin-top:18px"></div>
 <nav class="nav" id="nav" aria-label="Seções"></nav>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -217,7 +217,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   trSave();if(t.sh&&typeof trSync==='function')try{trSync(t)}catch(_){}toast(t.pid?'Trilha ligada a '+t.n+'.':'Trilha desligada do lugar.');render()},true);
 function viewEx(){const L=lista(),ri=Math.max(0,RADS.findIndex(x=>x>=S.rad));
  return `${trHome()}<div class="row" data-nt style="justify-content:flex-end;gap:6px"><span class="m" aria-hidden="true">🌐</span>${Object.entries(window.RSI18N?RSI18N.nomes:{pt:'Português'}).map(([k,v])=>`<button class="chip" style="min-height:34px;font-size:13px" data-lang="${k}" lang="${k}" aria-pressed="${(window.RSI18N?RSI18N.lang:'pt')===k}">${v}</button>`).join('')}</div>
-<div class="hero"><h1>Natureza e descanso perto de você ou em qualquer lugar do Brasil</h1><p>Veja parques, cachoeiras, hotéis fazenda, clubes, day use e mais ${S.br?'no Brasil todo':'num raio de '+S.rad.toLocaleString('pt-BR')+' km'}. Sem precisar saber o nome. Vai viajar? Escolha a cidade do destino e se programe antes.</p><span class="tag sun" style="justify-self:start">Versão de teste · lugares reais do mapa; confirme preço e horário antes de ir</span></div>
+<details class="hero hero2" data-k="hero" ${op('hero',true)}><summary><h1>Natureza e descanso perto de você ou em qualquer lugar do Brasil</h1></summary><div class="dbody"><p>Veja parques, cachoeiras, hotéis fazenda, clubes, day use e mais ${S.br?'no Brasil todo':'num raio de '+S.rad.toLocaleString('pt-BR')+' km'}. Sem precisar saber o nome. Vai viajar? Escolha a cidade do destino e se programe antes.</p><span class="tag sun" style="justify-self:start">Versão de teste · lugares reais do mapa; confirme preço e horário antes de ir</span></div></details>
 <div class="card pop"><div class="row sp"><b>Onde procurar</b><button class="chip" data-act="geo" type="button" aria-pressed="${!!(S.cll&&S.cll.k==='eu')}">${S.cll&&S.cll.k==='eu'?'📍 Minha localização':'Usar minha localização'}</button></div>${S.cll?`<p class="m" style="margin:0" role="status">📍 Procurando perto de <b>${esc(S.cll.k==='eu'?'você':String(S.cll.n||'').split(',')[0])}</b>${S.cll.k==='eu'&&S.cll.t?' (posição salva em '+new Date(S.cll.t).toLocaleDateString('pt-BR')+' às '+new Date(S.cll.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+')':''}. Fica guardado até você escolher outro lugar${S.cll.k==='eu'?' ou tocar em Minha localização para atualizar':''}.</p>`:''}
 <div class="row">${Object.entries(CEN).map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${!S.cx&&!S.cll&&S.c===k}">${v[0]}</button>`).join('')}</div>
 <form id="endf" class="f" novalidate style="gap:6px"><label for="end_q">Procure pelo nome do lugar, endereço ou cidade<div class="row" style="flex-wrap:nowrap;gap:6px"><input id="end_q" maxlength="120" data-dr="end_q" value="${esc(dv('end_q',''))}" placeholder="Ex.: Parque Nacional, Cachoeira do Tabuleiro, Goiânia" autocomplete="off" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)"><button class="btn" type="submit" style="flex:none">Buscar</button></div></label><div id="endr" aria-live="polite">${S.endr?S.endr:''}</div></form>
@@ -1419,6 +1419,67 @@ document.addEventListener('click',async function(e){var b=e.target.closest&&e.ta
  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-iago]');if(!b)return;e.preventDefault();e.stopPropagation();if(!MZ.busy)sugerir()},true);
  document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('[data-iaop]'))MZ.op=d.open},true);
  document.addEventListener('input',e=>{if(e.target&&e.target.id==='iaq')MZ.q=e.target.value});
+})();
+</script>
+<style>
+#pr-hb{display:flex;gap:6px;align-items:center;pointer-events:auto}
+.pr-hb{min-height:40px;min-width:40px;padding:0 10px;border-radius:12px;border:1.5px solid var(--line,#ccc);background:var(--card,#fff);color:var(--ink,inherit);font:inherit;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;position:relative;pointer-events:auto;box-shadow:var(--shadow,0 2px 8px rgba(0,0,0,.2))}
+.pr-hb:focus-visible{outline:3px solid currentColor;outline-offset:2px}
+.pr-hb .pr-ok{position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:#1c9a5e;border:2px solid #fff;display:none}
+body.pr-in .pr-hb .pr-ok{display:block}
+body.pr-in #ia-admlink{display:none!important}
+#pr-pop{position:fixed;z-index:2147483000;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:flex-end;padding:calc(env(safe-area-inset-top,0px) + 56px) 10px 10px}
+#pr-pop[hidden]{display:none}
+#pr-pop .pr-box{background:#fff;color:#111;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:14px;display:grid;gap:8px;width:min(320px,100%);max-height:80vh;overflow:auto;font:15px system-ui,sans-serif}
+#pr-pop .pr-b{min-height:44px;border-radius:12px;border:1.5px solid #cfcfcf;background:#fff;color:#111;font:inherit;font-weight:700;cursor:pointer;text-align:left;padding:0 12px}
+#pr-pop .pr-m{color:#555;font-size:13px;word-break:break-all}
+#pr-nm{margin-bottom:10px}#pr-nm span{display:block;justify-self:start;font-family:var(--fd);font-weight:700;font-size:20px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:4px 12px;box-shadow:var(--shadow)}.top .ttl{flex:1 1 0;min-width:0;text-align:center}@media(max-width:480px){.top .ttl{display:none}.top{gap:6px}}.top #pr-hb{flex:none}.top .pr-hb{min-height:40px}
+</style>
+<script>
+(()=>{
+const APP='Respiro',MODO='respiro';
+const T={pt:{ent:'Entrar',conta:'Minha conta',cfg:'Configurações',vis:'Você está como visitante',salvo:'Seus dados ficam salvos na conta',sair:'Sair da conta',goo:'Entrar com Google para não perder seus dados',como:'Como o '+APP+' funciona',mem:'Memória do app neste aparelho',adm:'Sou administrador',fechar:'Fechar'},
+en:{ent:'Sign in',conta:'My account',cfg:'Settings',vis:'You are browsing as a visitor',salvo:'Your data is saved to your account',sair:'Sign out',goo:'Sign in with Google to keep your data',como:'How '+APP+' works',mem:'App storage on this device',adm:"I'm an administrator",fechar:'Close'},
+es:{ent:'Entrar',conta:'Mi cuenta',cfg:'Configuración',vis:'Estás como visitante',salvo:'Tus datos se guardan en tu cuenta',sair:'Salir de la cuenta',goo:'Entrar con Google para no perder tus datos',como:'Cómo funciona '+APP,mem:'Memoria de la app en este aparato',adm:'Soy administrador',fechar:'Cerrar'}};
+const lang=()=>{let l='pt';if(MODO==='respiro'){try{l=localStorage.getItem('rs_lang')||'';if(!l){const n=(navigator.language||'pt').toLowerCase();l=n.indexOf('pt')===0?'pt':n.indexOf('es')===0?'es':'en'}}catch(_){l='pt'}}return T[l]?l:'pt'};
+const tx=k=>T[lang()][k];
+const PERS='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+const GEAR='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+const lg=()=>{try{return !!(window.IA_AUTH&&IA_AUTH.logado&&IA_AUTH.logado())}catch(_){return false}};
+const q2=x=>String(x||'').replace(/[<>"&]/g,'');
+const box=document.createElement('div');box.id='pr-hb';
+box.innerHTML='<button type="button" class="pr-hb" id="pr-acc">'+PERS+'<span id="pr-acl" class="pr-lab"></span><i class="pr-ok"></i></button><button type="button" class="pr-hb" id="pr-gear">'+GEAR+'</button>';
+const pop=document.createElement('div');pop.id='pr-pop';pop.hidden=true;document.body.appendChild(pop);
+function lugar(){let ok=false;
+ if(MODO==='respiro'){const top=document.querySelector('.top'),hm=document.getElementById('hm');if(top&&hm){if(box.parentNode!==top)top.insertBefore(box,hm);ok=true}}
+ else{const hd=document.querySelector('header.top');if(hd){if(box.parentNode!==hd)hd.appendChild(box);ok=true}}
+ if(!ok&&box.parentNode!==document.body){box.style.cssText='position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + 8px);right:8px';document.body.appendChild(box)}
+ const l=lg(),a=document.getElementById('pr-acc'),t=document.getElementById('pr-acl'),g=document.getElementById('pr-gear');
+ if(a){a.setAttribute('aria-label',l?tx('conta'):tx('ent'));a.title=l?tx('conta'):tx('ent')}
+ if(t){t.textContent=l?'':tx('ent');t.style.display=(l||MODO==='respiro')?'none':''}
+ if(g){g.setAttribute('aria-label',tx('cfg'));g.title=tx('cfg')}
+ document.body.classList.toggle('pr-in',l)}
+setInterval(lugar,300);lugar();
+const clk=s=>{const e=document.querySelector(s);if(e){e.click();return true}return false};
+function abre(tipo){const l=lg();let n='',e='';try{n=IA_AUTH.nome()||'';e=IA_AUTH.email()||''}catch(_){}
+ let h=`<div style="display:grid;gap:2px"><b style="font-size:16px">${l?(q2(n)||tx('conta')):tx('vis')}</b>${l&&e?`<span class="pr-m">${q2(e)}</span>`:''}${l?`<span class="pr-m">✓ ${tx('salvo')}</span>`:''}</div>`;
+ if(!l)h+=`<button type="button" class="pr-b" data-pp="entrar">${tx('ent')}</button>`;
+ if(tipo==='cfg'){let goo=false;try{goo=localStorage.getItem('ia_google')==='1'}catch(_){}
+  if(!goo&&document.querySelector('[data-iagoogle]'))h+=`<button type="button" class="pr-b" data-pp="goo">🔐 ${tx('goo')}</button>`;
+  if(document.getElementById('ia-introlink'))h+=`<button type="button" class="pr-b" data-pp="como">${tx('como')}</button>`;
+  if(document.querySelector('[data-lsmem]'))h+=`<button type="button" class="pr-b" data-pp="mem">${tx('mem')}</button>`;
+  h+=`<button type="button" class="pr-b" data-pp="adm">${tx('adm')}</button>`}
+ if(l)h+=`<button type="button" class="pr-b" data-pp="sair">${tx('sair')}</button>`;
+ h+=`<button type="button" class="pr-b" data-pp="fechar">${tx('fechar')}</button>`;
+ pop.innerHTML='<div class="pr-box">'+h+'</div>';pop.hidden=false}
+document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;
+ if(t.closest('#pr-acc')){e.preventDefault();e.stopImmediatePropagation();if(!lg()){try{IA_AUTH.entrar()}catch(_){}}else abre('conta');return}
+ if(t.closest('#pr-gear')){e.preventDefault();e.stopImmediatePropagation();abre('cfg');return}
+ const b=t.closest('[data-pp]');if(b){e.preventDefault();e.stopImmediatePropagation();const k=b.dataset.pp;pop.hidden=true;
+  if(k==='entrar'){try{IA_AUTH.entrar()}catch(_){}}else if(k==='sair'){try{IA_AUTH.sair()}catch(_){}}
+  else if(k==='goo')clk('[data-iagoogle]');else if(k==='como')clk('#ia-introlink');else if(k==='mem')clk('[data-lsmem]');else if(k==='adm'){if(!clk('#ia-admlink a[href="#admin"]'))location.hash='#admin'}
+  return}
+ if(!pop.hidden&&!t.closest('.pr-box'))pop.hidden=true},true);
 })();
 </script>
 <script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})</script><script>(function(){function w(){var r=window.render;if(typeof r!=='function'||r.__sk)return;var f=function(){var y=scrollY,g;try{g=S.v+'|'+(S.id||'')}catch(e){g=Math.random()}var x=r.apply(this,arguments);if(g===window.__ssg&&Math.abs(scrollY-y)>2)scrollTo(0,y);window.__ssg=g;return x};f.__sk=1;window.render=f}w();setTimeout(w,1500);setTimeout(w,6000)})();</script>
