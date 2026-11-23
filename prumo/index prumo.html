@@ -546,7 +546,7 @@ function vInicio(){
   const tasks=[...evTasks(),...goalTasks(),...al.map(a=>({...a,area:'negocio'}))];
   if(ord[0])tasks.push({k:'info debt',t:'Dívida para tratar primeiro: '+ord[0].cred,d:why(ord[0]),go:['dividas','roteiro',ord[0].id]});
   return `${demoBar()}
-  <div class="card" style="border:0;background:transparent;padding:4px 0"><h2>${S.mei.nome?'Oi, '+esc(S.mei.nome.split(' ')[0])+'!':'Oi!'}</h2><p class="muted">Suas metas, seu negócio e suas contas num só lugar.</p></div>
+  <div class="card" style="border:0;background:transparent;padding:4px 0"><h2>${(()=>{let n=S.mei.nome||'';if(!n){try{n=(window.IA_AUTH&&IA_AUTH.nome&&IA_AUTH.nome())||''}catch(_){}}n=String(n).trim();return n?'Oi, '+esc(n.split(' ')[0])+'!':'Oi!'})()}</h2><p class="muted">Suas metas, seu negócio e suas contas num só lugar.</p></div>
   ${metaEntry()}
   ${casaEntry()}
   ${cofreEntry()}
@@ -677,7 +677,7 @@ function vMais(){
   <details class="card fold"><summary>🚫 O que o Prumo não é</summary><ul class="steps"><li>Não é consultoria financeira, contábil nem jurídica.</li><li>Não negocia dívidas por você e não promete desconto ou resultado.</li><li>Não recomenda onde investir. As simulações usam só os números que você informa.</li><li>Não prevê o futuro. A projeção do orçamento mostra uma direção, com renda e gastos constantes.</li><li>Não emite nota fiscal nem gera a guia do MEI. Ele leva você ao Portal do Empreendedor.</li><li>Valores do MEI são de referência para ${REF.ano}. Confirme sempre no Portal.</li></ul></details>
   <div class="card"><h3><span aria-hidden="true" id="cmi-mais"></span>Comunidade</h3><p class="muted small">Troque experiências sobre dívidas, negócio e metas com outras pessoas, usando só um apelido.</p><button class="btn ghost sm" data-go="comunidade">Abrir a comunidade</button></div>
   <div class="card"><h3>Programa de pontos</h3><p class="muted small">Ganhe pontos usando o Prumo e troque por meses grátis quando houver mensalidade.</p><button class="btn ghost sm" data-go="pontos">Ver meus pontos</button></div>
-  <div class="card"><h3>Seus dados</h3><div class="row"><button class="btn ghost sm" data-copy-sum="1">Copiar resumo</button>${(()=>{try{return PT.adm}catch(_){return false}})()?'<button class="btn danger sm" data-act="fresh">Zerar o app (só administrador)</button>':''}</div></div>`;
+  <div class="card"><h3>Seus dados</h3><div class="row"><button class="btn ghost sm" data-copy-sum="1">Copiar resumo</button><button class="btn danger sm" data-act="wipe">Apagar meus dados</button>${(()=>{try{return PT.adm}catch(_){return false}})()?'<button class="btn danger sm" data-act="fresh">Zerar o app (só administrador)</button>':''}</div></div>`;
 }
 
 
@@ -1827,6 +1827,7 @@ document.addEventListener('click',e=>{
   if(D.act==='gnew'){UI.gf={v:'',d:TODAYISO,t:'',c:'alim'};return render(true)}
   if(D.act==='gcancel'){UI.gf=null;return render(true)}
   if(D.act==='orcapply'){const pl=orcPlan();if(!pl)return;S.budget=Math.round(pl.mins+orcV(pl,'divida'));save();toast('Plano das dívidas atualizado para '+brl0(S.budget)+' por mês.');return}
+  if(D.act==='wipe'){if(!confirm('Apagar todos os seus dados do Prumo (neste aparelho e na sua conta)? Isso não pode ser desfeito.'))return;S=empty();save();UI.neg='resumo';UI.div='visao';toast('Seus dados foram apagados.');return render()}
   if(D.act==='fresh'){if(!(typeof PT!=='undefined'&&PT.adm))return toast('Só o administrador pode zerar o app.');if(!confirm('Zerar o app? Todos os lançamentos deste aparelho e da conta serão apagados.'))return;S=empty();save();UI.neg='resumo';UI.div='visao';toast('Pronto. Comece pelas suas receitas ou dívidas.');return render()}
   if(D.act==='demo'){return}
   if(D.copy){const el=$('#'+D.copy);return copy(el?el.textContent:'')}
