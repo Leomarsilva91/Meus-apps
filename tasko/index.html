@@ -432,7 +432,7 @@ pregoes:()=>inboxV0(false,true),inboxdone:()=>inboxV(true),
 quote:()=>{const q=curReq(),Q=S.q;if(!q)return V.inbox();qMatInit(q);return `${head('Analisar e propor','inbox')}<main>
 <div class="card"><b>${esc(q.desc).replace(/\n/g,'<br>')}</b><br><button type="button" class="chip" style="min-height:36px;padding:0 12px;font-size:13px;margin:6px 0 0" data-say="q:${q.id}">🔊 Ouvir</button><p class="muted" style="margin:6px 0 0">${esc(q.cats.join(', '))}${locShow(q)?' · '+esc(locShow(q)):''} · ${esc(urgLabel(q.urg))}</p>${rateBox(q.email,'cli')}${qVis(q)?`<p style="margin:6px 0 0"><span class="tag">${qVis(q).src==='own'?'Valor informado pelo cliente':'Estimativa que o cliente compartilhou'}: ${visTxt(qVis(q))}</span></p>`:'<p class="muted" style="margin:6px 0 0">O cliente não mostrou nenhum valor.</p>'}${Array.isArray(q.mats)&&q.mats.length?`<details style="margin-top:6px"><summary style="cursor:pointer;min-height:36px;display:flex;align-items:center"><span class="muted">Ver materiais e especificações do cliente</span></summary><ul style="margin:6px 0 0;padding-left:18px">${q.mats.map(m=>`<li>${esc(m.n)} · ${String(m.q).replace('.',',')} ${esc(m.u)}</li>`).join('')}</ul></details>`:''}${cedInfo(q)}${vidHtml(q)}${contactHtml(q)}</div>
 ${pgInfoPro(q)}${propFor(q.id)?'':'<button class="btn ghost" data-act="qint">Quero negociar</button><p class="muted" style="margin:0">Você pode pedir para negociar agora, antes ou depois da análise. A análise por IA é opcional e só você a vê.</p>'}
-<div class="row" style="gap:8px"><button class="btn" id="qan" data-act="qanalyze" style="flex:1 1 180px">${Q.ai&&Q.ai.src==='ia'?'✨ Analisar de novo com IA':'✨ Analisar pedido com IA'}</button><button class="btn ghost" id="qanq" data-act="qquick" style="flex:1 1 180px">⚡ Análise rápida</button></div><span class="muted small">Análise rápida: sugestão simples feita pelo app, boa para serviços pequenos. Para obras e serviços maiores, use a IA.</span>
+<div class="row" style="gap:8px"><button class="btn" id="qanq" data-act="qquick" style="flex:1 1 180px">⚡ Análise rápida</button><button class="btn ghost" id="qan" data-act="qanalyze" style="flex:1 1 180px">${Q.ai&&Q.ai.src==='ia'?'✨ Analisar de novo com IA':'✨ Analisar com IA'}</button></div><span class="muted small">Comece pela análise rápida: é feita pelo próprio app, na hora. Se precisar de mais detalhe, use a IA.</span>
 <div id="qai" aria-live="polite" style="display:flex;flex-direction:column;gap:14px">${qaiHtml()}</div>
 <div id="qmats" style="display:flex;flex-direction:column;gap:14px">${qMatsHtml()}</div>
 ${qModeHtml()}
@@ -967,7 +967,7 @@ function calcDetect(d){const t=String(d||'').toLowerCase();for(const [k,r] of CA
 function anBox(){const r=S.req,c=r.calc||(r.calc={t:'',v:{},k:{}}),obra=!!c.t,feito=!!(r.ai&&(r.ai.calc||r.ai.src==='ia'));
   if(obra&&!feito){if(c.op!==false||!r.ai)c.op=true;return calcBox()}
   if(obra&&feito)return calcBox()+`<div class="card"><b>Quer uma análise mais detalhada?</b><p class="muted" style="margin:4px 0 8px">A IA revisa o pedido com a sua descrição completa (detalhes que as medidas não mostram).</p><button class="btn ghost" id="an" data-act="analyze">✨ Analisar com IA</button></div>`;
-  return calcBox()+`<div class="row" style="gap:8px"><button class="btn ghost" id="an" data-act="analyze" style="flex:1 1 180px">✨ Analisar com IA</button><button class="btn ghost" id="anq" data-act="analyzeq" style="flex:1 1 180px">⚡ Análise rápida</button></div><span class="muted small" style="margin-top:-6px">Análise rápida: estimativa simples do próprio app, boa para serviços pequenos (tomada, torneira, faxina).</span>`}
+  return calcBox()+`<div class="row" style="gap:8px"><button class="btn" id="anq" data-act="analyzeq" style="flex:1 1 180px">⚡ Análise rápida</button><button class="btn ghost" id="an" data-act="analyze" style="flex:1 1 180px">✨ Analisar com IA</button></div><span class="muted small" style="margin-top:-6px">Comece pela análise rápida: é feita pelo próprio app, na hora. Se precisar de mais detalhe, use a IA.</span>`}
 function anRefresh(){const b=document.getElementById('anbox');if(b){b.innerHTML=anBox();try{sync()}catch(_){}}}
 let CALC_TM=0;document.addEventListener('input',e=>{const t=e.target;if(!t||t.id!=='rdesc'||S.v!=='request')return;clearTimeout(CALC_TM);CALC_TM=setTimeout(()=>{const r=S.req,c=r.calc||(r.calc={t:'',v:{},k:{}});if(c.man)return;const k=calcDetect(t.value);if(k&&k!==c.t){c.t=k;c.err='';c.op=true;anRefresh()}},450)});
 function calcBox(){const c=S.req.calc||(S.req.calc={t:'',v:{},k:{}}),T=CALC_T[c.t];
@@ -1866,7 +1866,7 @@ async function qanalyze(){
   if(!a)a=qObra(localQ(q),q);
   if(id!==S.qaid||S.v!=='quote')return;
   a=adjQ(a);Q.ai=a;if(Q.mA&&!Q.mA.mats.length&&a.mats&&a.mats.length){Q.mA.mats=a.mats.map(m=>({n:m.n,q:m.q,u:m.u,v:m.v,p:mUnit(m),ia:m.ia}));Q.mA.matTotal=Q.mA.mats.reduce((t,m)=>t+m.v,0);const e=$('#qmats');if(e)e.innerHTML=qMatsHtml()}
-  Q.busy=false;$('#qai').innerHTML=qaiHtml();$('#qan').disabled=false;$('#qan').textContent=a.src==='ia'?'✨ Analisar de novo com IA':'✨ Analisar pedido com IA';
+  Q.busy=false;$('#qai').innerHTML=qaiHtml();$('#qan').disabled=false;$('#qan').textContent=a.src==='ia'?'✨ Analisar de novo com IA':'✨ Analisar com IA';
 }
 
 const EMKW=[[2,1,/trancad[oa] (para )?fora|chave (ficou|dentro)|perdi a chave|porta travou|preso (no|na|em)/i],
