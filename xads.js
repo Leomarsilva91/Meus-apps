@@ -56,7 +56,7 @@
     /* envolve a configuração dos anúncios flutuantes (FADS) para incluir os dos outros apps */
     wrap: function (app, C) {
       var D = {}; for (var k in C) D[k] = C[k];
-      D.list = function () { var a = []; try { a = C.list() || []; } catch (_) {} return a.concat(X.list(app)); };
+      D.list = function () { var a = []; try { a = C.list() || []; } catch (_) {} return C.xin ? a : a.concat(X.list(app)); };
       D.id = function (a) { return a._x ? 'x' + a.id : C.id(a); };
       D.card = function (a) { return a._x ? X.card(a) : C.card(a); };
       D.href = function (a) { return a._x ? { url: E(X.url(a)), attr: 'target="_blank" rel="noopener noreferrer"' } : C.href(a); };
