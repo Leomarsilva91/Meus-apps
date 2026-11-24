@@ -3904,7 +3904,8 @@ let pausa=0;document.addEventListener('click',e=>{const d=e.target.closest&&e.ta
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#pr-car'))pausa=Date.now()+8000},true);
 const calmo=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(!calmo)setInterval(()=>{if(document.hidden||Date.now()<pausa)return;mostra((window.PR_CI||0)+1)},5000);
-const _m=VIEWS.mais;VIEWS.mais=function(){let h=_m();if(UI.cfg&&!UI.pof&&!UI.pofv)h+='<p class="muted small" style="text-align:center">Versão do app: 23/11/2026, 17h20</p>';return h};
+setInterval(()=>{try{if(document.hidden||UI.tab!=='inicio')return;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;const n=window.PR_ADS?PR_ADS.ativas().length:0,tem=!!document.getElementById('pr-car');if((n>0)!==tem)render(true)}catch(_){}},2000);
+const _m=VIEWS.mais;VIEWS.mais=function(){let h=_m();if(UI.cfg&&!UI.pof&&!UI.pofv)h+='<p class="muted small" style="text-align:center">Versão do app: 24/11/2026, 10h10</p>';return h};
 })();
 </script>
 <style>
