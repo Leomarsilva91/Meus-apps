@@ -184,7 +184,7 @@ const SYNCK={ms_fotos:1,ms_gar:1,ms_recor:1,ms_certs:1,ms_ind:1,ms_esc:1,ms_post
 const SY={db:null,on:false,sent:{},q:Promise.resolve(),tm:{}};
 const rawSet=(k,v)=>_store.setItem(k,v);
 const syId=(k,x)=>String(k==='ms_users'||k==='ms_plans'?x.email:x.id).replace(/[^A-Za-z0-9_\-.~:@+]/g,'_').slice(0,180);
-const syStrip=(k,x)=>{if(k!=='ms_users')return x;const y={...x};delete y.h;delete y.cpf;return y};
+const syStrip=(k,x)=>{if(k!=='ms_users')return x;const y={...x};delete y.h;delete y.hk;delete y.cpf;return y};
 const syRead=k=>{try{const v=JSON.parse(_store.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}};
 function syPush(k){if(!SY.db||!SYNCK[k])return;clearTimeout(SY.tm[k]);SY.tm[k]=setTimeout(()=>{SY.q=SY.q.then(async()=>{try{
   const L=syRead(k).filter(x=>x&&(k==='ms_users'||k==='ms_plans'?x.email:x.id!=null)&&!x.sample),sent=SY.sent[k]=SY.sent[k]||{},ids={};
@@ -202,8 +202,9 @@ function syApply(k,snap){const sent=SY.sent[k]=SY.sent[k]||{};let L=syRead(k),ch
     const d=c.doc.data(),j=d&&d.j;if(!j||sent[id]===j)continue;
     let r;try{r=JSON.parse(j)}catch(e){continue}
     const i=L.findIndex(x=>x&&keyOf(x)===id);sent[id]=j;
+    if(k==='ms_users'){delete r.h;delete r.hk}
     if(i<0){L.push(r)}else{const o=L[i];
-      if(k==='ms_users')L[i]={...o,...r};
+      if(k==='ms_users'){delete r.h;delete r.hk;L[i]={...o,...r}}
       else if(k==='ms_msgs')L[i]={...r,seen:[...new Set([...(r.seen||[]),...(o.seen||[])])]};
       else L[i]=r}
     ch=true}
@@ -234,6 +235,22 @@ async function kdf(email,pw,salt){const k=await crypto.subtle.importKey('raw',ne
 async function pwSet(u,pw){u.h=await hash(u.email+':'+pw);try{const a=new Uint8Array(16);crypto.getRandomValues(a);const s0=hx(a);u.hk={s:s0,d:await kdf(u.email,pw,s0)}}catch(e){}}
 async function pwOk(u,pw){if(!u)return false;try{if(u.hk&&u.hk.s&&u.hk.d){const ok=(await kdf(u.email,pw,u.hk.s))===u.hk.d;if(ok&&u.h!==await hash(u.email+':'+pw)){const l=users(),x=l.find(y=>y.email===u.email);if(x){x.h=await hash(u.email+':'+pw);saveUsers(l)}}return ok}}catch(e){}
   const ok=!!u.h&&u.h===await hash(u.email+':'+pw);if(ok&&!u.hk){try{const l=users(),x=l.find(y=>y.email===u.email);if(x){await pwSet(x,pw);saveUsers(l)}}catch(e){}}return ok}
+/* ---- Login de verdade pelo Firebase (e-mail e senha). A senha não fica mais no app nem na nuvem do app. ---- */
+const FA={
+  async ready(){for(let i=0;i<40;i++){if(window.IA_SEM_NUVEM)return false;if(window.firebase&&firebase.auth&&firebase.apps&&firebase.apps.length&&window.IA_NUVEM_UID)return true;await new Promise(r=>setTimeout(r,200))}return false},
+  au(){return firebase.auth()},
+  async signIn(email,pw){return this.au().signInWithEmailAndPassword(email,pw)},
+  async create(email,pw){const au=this.au(),cu=au.currentUser;if(cu&&cu.isAnonymous){try{return await cu.linkWithCredential(firebase.auth.EmailAuthProvider.credential(email,pw))}catch(e){const c=String(e&&e.code||'');if(!/credential-already-in-use|provider-already-linked/.test(c))throw e}}return au.createUserWithEmailAndPassword(email,pw)},
+  async out(){try{if(await this.ready()){const au=this.au();if(au.currentUser&&!au.currentUser.isAnonymous){await au.signOut();await au.signInAnonymously().catch(()=>{})}}}catch(_){}},
+  msg(e){const c=String(e&&e.code||'');return /too-many-requests/.test(c)?'Muitas tentativas. Espere alguns minutos ou use "Esqueci minha senha".':/network-request-failed/.test(c)?'Sem internet agora. Confira a conexão e tente de novo.':/operation-not-allowed/.test(c)?'O login por e-mail e senha ainda não foi ligado no Firebase (Authentication › Método de login › E-mail/senha).':/weak-password/.test(c)?'Senha fraca: use ao menos 8 caracteres, com letras e números.':''}
+};
+function faStrip(email){try{const l=users(),x=l.find(y=>y.email===email);if(x&&(x.h||x.hk)){delete x.h;delete x.hk;saveUsers(l)}}catch(_){}}
+/* confere a senha: primeiro no Firebase; a conta antiga (senha guardada neste aparelho) é levada para o Firebase no primeiro login */
+async function authCheck(u,pw){if(!u||!pw)return{ok:false};
+  if(!(await FA.ready()))return{ok:await pwOk(u,pw)};
+  try{await FA.signIn(u.email,pw);faStrip(u.email);return{ok:true}}catch(e){const m=FA.msg(e);if(m&&!/operation-not-allowed/.test(String(e.code)))return{ok:false,err:m};
+    if((u.h||u.hk)&&await pwOk(u,pw)){try{await FA.create(u.email,pw);faStrip(u.email);return{ok:true}}catch(e2){const c=String(e2&&e2.code||'');if(/email-already-in-use/.test(c))return{ok:false};return{ok:false,err:FA.msg(e2)||'Não foi possível entrar agora. Tente de novo.'}}}
+    return{ok:false,err:m}}}
 const S={v:'welcome',role:null,user:null};
 
 const OUT='Outros serviços',areaFld=(sel,val,cat)=>`<div id="${sel}ab"${cat===OUT?'':' hidden'}>${fld(sel+'ar','Qual é a sua área de atuação?','type="text" maxlength="60" placeholder="Ex.: Fotografia de eventos, aulas de violão, conserto de celulares" value="'+esc(val||'')+'"')}</div>`;
@@ -872,7 +889,7 @@ ${fld('nempw','Sua senha atual','type="password" autocomplete="current-password"
 async function changeEm(){const ne=String(($('#nem')||{}).value||'').trim().toLowerCase(),pw=($('#nempw')||{}).value||'',E={};$('#nemmsg').textContent='';
   if(!EMAIL.test(ne))E.nem='Informe um e-mail válido.';if(!pw)E.nempw='Informe a senha atual.';if(showErrors(E))return;
   const l=users(),u=l.find(x=>x.email===S.user.email);if(!u)return;
-  if(!(await pwOk(u,pw))){showErrors({nempw:'Senha incorreta.'});return}
+  {const A=await authCheck(u,pw);if(!A.ok){showErrors({nempw:A.err||'Senha incorreta.'});return}}
   if(ne===loginOf(u)){showErrors({nem:'Esse já é o e-mail da conta.'});return}
   if(emailUsado(ne)){showErrors({nem:'Este e-mail já está em uso em outra conta.'});return}
   u.em2=ne===u.email?'':ne;u.emHist=[...(u.emHist||[]),{de:loginOf(u),at:new Date().toISOString()}].slice(-10);saveUsers(l);logC('troca_email',u.email,{para:ne});
@@ -2777,7 +2794,7 @@ async function delAccount(){
   const pids=jget('ms_proposals').filter(p=>p&&(p.email===em||my.includes(p.reqId))).map(p=>p.id);keep('ms_msgs',x=>pids.includes(x.pid)||x.from===em);
   keep('ms_lists',x=>my.includes(x.reqId));keep('ms_rates',x=>x.by===em||x.to===em);keep('ms_requests',x=>x.email===em);keep('ms_proposals',x=>x.email===em||my.includes(x.reqId));
   ['ms_lists','ms_fb','ms_posts','ms_jobs','ms_projects','ms_expenses','ms_staff','ms_pay','ms_inc','ms_alloc','ms_consents','ms_reports','ms_refunds','ms_plans'].forEach(k=>keep(k,x=>x.email===em));
-  saveUsers(users().filter(u=>u.email!==em));store.removeItem('ms_session');
+  saveUsers(users().filter(u=>u.email!==em));store.removeItem('ms_session');(async()=>{try{if(await FA.ready()){const cu=FA.au().currentUser;if(cu&&!cu.isAnonymous&&cu.email===em)await cu.delete()}}catch(_){}FA.out()})();
   S.user=null;S.role=null;S.req=newReq();S.q=newQ();S.rec=newRec();S.aid++;S.qaid++;S.pdel=0;go('welcome');
 }
 const hadContact=q=>jget('ms_proposals').some(p=>p&&p.reqId===q.id)||msgs().some(m=>m&&m.rid===q.id&&!m.sys&&m.from!==q.email);
@@ -2906,7 +2923,7 @@ function showErrors(E){
   return ks.length>0;
 }
 function enter(u,r){S.entryUntil=0;S.entryN=0;S.user=view(u,r||pickRole(u));store.setItem('ms_session',u.email);go(needsC(u)?'accept':'home')}
-async function unlockProfile(){const r=S.unl,pw=($('#unlpw')||{}).value||'';if(!r)return;if(!pw){toast('Digite a senha.');return}const l=users(),u=S.user&&l.find(x=>x.email===S.user.email);if(!u||!(await pwOk(u,pw))){toast('Senha incorreta.');return}poutSet(u.email,poutGet(u.email).filter(k=>k!==r));S.unl=null;u.last=r;saveUsers(l);S.user=view(u,r);S.hdrP='';S.req=newReq();S.aid++;S.q=newQ();S.qaid++;go('home')}
+async function unlockProfile(){const r=S.unl,pw=($('#unlpw')||{}).value||'';if(!r)return;if(!pw){toast('Digite a senha.');return}const l=users(),u=S.user&&l.find(x=>x.email===S.user.email);if(!u||!(await authCheck(u,pw)).ok){toast('Senha incorreta.');return}poutSet(u.email,poutGet(u.email).filter(k=>k!==r));S.unl=null;u.last=r;saveUsers(l);S.user=view(u,r);S.hdrP='';S.req=newReq();S.aid++;S.q=newQ();S.qaid++;go('home')}
 function switchRole(r){const l=users(),u=l.find(x=>x.email===S.user.email);if(!u||!u.roles[r])return;if(poutGet(u.email).includes(r)){S.unl=r;S.hdrP='perfil';return go('home')}u.last=r;saveUsers(l);S.user=view(u,r);go('home')}
 function addRole(r,prof){const l=users(),u=l.find(x=>x.email===S.user.email);if(!u)return;u.roles[r]=prof;u.last=r;saveUsers(l);S.user=view(u,r);go('home')}
 function addEmp(){const k=S.addk||'cliE',isP=k==='proE',E={},rz=$('#razao').value.trim(),cn=$('#cnpj').value;
@@ -2953,10 +2970,12 @@ async function signup(){
   if(resv){$('#go').disabled=false;showErrors({email:'Este e-mail já foi usado em outra conta e não pode ser usado de novo.'});return}
   let u;
   if(old){
-    if(!sx&&!(await pwOk(old,pw))){$('#go').disabled=false;showErrors({pw:'Este e-mail já tem conta. Use a mesma senha dela para adicionar o novo perfil.'});return}
+    if(!sx&&!(await authCheck(old,pw)).ok){$('#go').disabled=false;showErrors({pw:'Este e-mail já tem conta. Use a mesma senha dela para adicionar o novo perfil.'});return}
     old.roles[S.role]=prof;old.last=S.role;u=old;
     if(sx){old.name=v('name');old.phone=v('phone').replace(/\D/g,'');if(email!==loginOf(old)){old.emHist=[...(old.emHist||[]),{de:loginOf(old),at:new Date().toISOString()}].slice(-10);old.em2=email===old.email?'':email}S.sx=null}
-  }else{u={name:v('name'),email,phone:v('phone').replace(/\D/g,''),h,roles:{[S.role]:prof},last:S.role};await pwSet(u,pw);list.push(u);try{window.indOnSignup&&indOnSignup(email)}catch(e){}}
+  }else{u={name:v('name'),email,phone:v('phone').replace(/\D/g,''),roles:{[S.role]:prof},last:S.role};
+    if(await FA.ready()){try{await FA.create(email,pw)}catch(e){$('#go').disabled=false;const c=String(e&&e.code||'');showErrors(/email-already-in-use/.test(c)?{email:'Este e-mail já tem conta. Toque em Voltar e entre com ele.'}:{pw:FA.msg(e)||'Não foi possível criar a conta agora. Tente de novo.'});return}}else{u.h=h;await pwSet(u,pw)}
+    list.push(u);try{window.indOnSignup&&indOnSignup(email)}catch(e){}}
   if(isP||S.role==='cli')cpfProSet(u);
   u.consent={v:LEGAL_V,at:new Date().toISOString(),age18:true,mkt:$('#mkt').checked};
   saveUsers(list);logC('termos',u.email);if(u.consent.mkt)logC('marketing',u.email);enter(u,S.role);
@@ -2971,7 +2990,7 @@ async function login(){
   $('#go').disabled=true;
   const u=byLogin(email),lk=lkGet(),lr=u&&lk[u.email]||{n:0,t:0};
   if(u&&lr.n>=5&&Date.now()-lr.t<9e5){$('#go').disabled=false;$('#lerr').textContent='Muitas tentativas erradas. Por segurança, espere 15 minutos ou use "Esqueci minha senha".';return}
-  const okPw=u?await pwOk(u,pw):false;
+  const A=u?await authCheck(u,pw):{ok:false},okPw=A.ok;if(!okPw&&A.err){$('#go').disabled=false;$('#lerr').textContent=A.err;return}
   if(u&&!okPw){const m=lkGet(),r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m))}
   if(u&&okPw){const m=lkGet();if(m[u.email]){delete m[u.email];store.setItem('ms_lk',JSON.stringify(m))}}
   if(!u||!okPw){$('#go').disabled=false;$('#lerr').textContent=isDoc?'Documento ou senha incorretos.':'E-mail ou senha incorretos.';return}
@@ -2983,6 +3002,14 @@ async function login(){
    e depois da troca as outras sessões saem e a pessoa recebe aviso */
 const rsCode=()=>{try{const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+a[0]%900000)}catch(e){return String(Math.floor(100000+Math.random()*900000))}};
 const rsLim=k=>{let m={};try{m=JSON.parse(store.getItem('ms_rsl')||'{}')}catch(e){}const n=Date.now(),L=(m[k]||[]).filter(t=>n-t<36e5);if(L.length>=5)return 'Muitos pedidos de código. Tente de novo daqui a 1 hora.';if(L.length&&n-L[L.length-1]<6e4)return 'Espere 1 minuto para pedir outro código.';L.push(n);m[k]=L;store.setItem('ms_rsl',JSON.stringify(m));return ''};
+/* recuperação de senha de verdade: o Firebase manda o link para o e-mail da conta (o código na tela era só demonstração) */
+const faOn=()=>!!(window.firebase&&firebase.auth&&firebase.apps&&firebase.apps.length&&window.IA_NUVEM_UID&&!window.IA_SEM_NUVEM);
+{const _rv=V.reset;V.reset=()=>{const R=S.rs||{};if(!faOn())return _rv();
+  if(R.ok&&!R.fbSent){R.fbSent=1;try{firebase.auth().sendPasswordResetEmail(R.email).catch(()=>{})}catch(_){}}
+  return `${head('Recuperar senha','login')}<main><div class="card"><b>Confira o seu e-mail</b><p style="margin:8px 0 0">Se houver uma conta com <b>${esc(R.login||R.email||'')}</b>, enviamos um link para ${R.ok?'<b>'+esc(emMask(R.email))+'</b>':'o e-mail cadastrado'}.</p><ol style="margin:10px 0 0;padding-left:20px"><li>Abra o e-mail do Firebase (veja também o spam ou lixo eletrônico).</li><li>Toque no link e crie a nova senha.</li><li>Volte aqui e entre com a senha nova.</li></ol><p class="muted" style="margin:10px 0 0">O link vale por pouco tempo. O Tasko nunca pede senha nem código por telefone ou mensagem.</p></div>
+<button class="btn" data-go="login">Já criei a nova senha: entrar</button>
+<button class="btn ghost" data-act="rsfb">Não chegou? Enviar de novo</button><div class="alert" id="rerr" role="alert"></div></main>`}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act="rsfb"]');if(!b||!S.rs)return;e.preventDefault();e.stopImmediatePropagation();const lim=rsLim(S.rs.email);if(lim){const x=document.getElementById('rerr');if(x)x.textContent=lim;return}S.rs.fbSent=0;render();toast('Enviamos o link de novo.')},true);
 function rsStart(email,mk){const fu=byLogin(email)||users().find(x=>x&&x.email===email),key=fu?fu.email:email,lim=rsLim(key);if(lim)return lim;
   S.rs={email:key,em2:fu&&fu.em2?fu.em2:'',login:email,ok:!!fu,tel:fu&&fu.phone?String(fu.phone):'',ch:'em',code:rsCode(),exp:Date.now()+600000,tries:0,at:Date.now(),mk:mk?1:0};return ''}
 const lkGet=()=>{try{return JSON.parse(store.getItem('ms_lk')||'{}')}catch(e){return{}}};
@@ -3016,8 +3043,9 @@ async function changePw(){
   if($('#npw2').value!==pw)E.npw2='As senhas não coincidem.';
   if(showErrors(E))return;
   const l=users(),u=l.find(x=>x.email===S.user.email);
-  if(!u||!(await pwOk(u,cur))){showErrors({cpw:'Senha atual incorreta.'});return}
-  const l2=users(),u2=l2.find(x=>x.email===S.user.email);await pwSet(u2,pw);saveUsers(l2);
+  {const A=u?await authCheck(u,cur):{ok:false};if(!A.ok){showErrors({cpw:A.err||'Senha atual incorreta.'});return}}
+  if(await FA.ready()){try{await FA.au().currentUser.updatePassword(pw)}catch(e){showErrors({npw:FA.msg(e)||'Não foi possível trocar a senha agora. Tente de novo.'});return}faStrip(S.user.email)}
+  else{const l2=users(),u2=l2.find(x=>x.email===S.user.email);await pwSet(u2,pw);saveUsers(l2)}
   ['cpw','npw','npw2'].forEach(id=>{const e=$('#'+id);if(e)e.value=''});$('#cpmsg').textContent='Senha alterada com sucesso.';
 }
 document.addEventListener('submit',e=>{if(e.target.classList&&e.target.classList.contains('pf'))e.preventDefault()});
@@ -3235,7 +3263,7 @@ document.addEventListener('click',e=>{
   if(D.act==='rsnew'&&S.rs){const R=S.rs,lim=rsLim(R.email);if(lim){const e=$('#rerr');if(e)e.textContent=lim;return}Object.assign(R,{code:rsCode(),exp:Date.now()+600000,tries:0,at:Date.now()});render();toast('Enviamos um código novo. O anterior não vale mais.');return}
   if(D.act==='sxfind'){const q=($('#sxid')||{}).value||'',d=q.replace(/\D/g,'');S.sxf={q};if(!(d.length===11&&cpfOk(q))&&!(d.length===14&&cnpjOk(q))){S.sxf.err='Digite um CPF ou CNPJ válido.';return render()}const u=byDoc(q);if(u){S.sxf.em=u.email;S.sxf.mask=loginOf(u)}else S.sxf.no=1;return render()}
   if(D.act==='sxok'){const F=S.sxf||{},u=users().find(x=>x.email===F.em);if(!u)return;const pw=($('#sxpw')||{}).value||'',lk=lkGet(),lr=lk[u.email]||{n:0,t:0};if(lr.n>=5&&Date.now()-lr.t<9e5){F.err='Muitas tentativas erradas. Espere 15 minutos ou use "Esqueci a senha".';return render()}
-   pwOk(u,pw).then(okp=>{const m=lkGet();if(!okp){const r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m));F.err='Senha incorreta.';return render()}delete m[u.email];store.setItem('ms_lk',JSON.stringify(m));S.sx=u.email;S.sxf=null;render();setTimeout(sxFill,30)});return}
+   authCheck(u,pw).then(A=>{const okp=A.ok;const m=lkGet();if(!okp){const r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m));F.err='Senha incorreta.';return render()}delete m[u.email];store.setItem('ms_lk',JSON.stringify(m));S.sx=u.email;S.sxf=null;render();setTimeout(sxFill,30)});return}
   if(D.act==='sxsair'){S.sx=null;S.sxf=null;return render()}
   if(D.act==='findacc'){S.fa={};return go('findacc')}
   if(D.act==='faalt'){S.fa={alt:!(S.fa&&S.fa.alt)};return go('findacc')}
@@ -3247,7 +3275,7 @@ document.addEventListener('click',e=>{
   if(D.act==='unlockno'){S.unl=null;return render()}
   if(D.act==='unlock')return unlockProfile();
   if(D.act==='logout'){const l0=users(),u0=S.user&&l0.find(x=>x.email===S.user.email);if(u0){const out=poutGet(u0.email),act=Object.keys(u0.roles).filter(k=>!out.includes(k));if(act.length>1&&act.includes(S.user.pk)){const old=S.user.pk,nx=act.find(k=>k!==old);poutSet(u0.email,[...out,old]);u0.last=nx;saveUsers(l0);S.user=view(u0,nx);S.hdrP='';S.unl=null;S.req=newReq();S.aid++;S.q=newQ();S.qaid++;toast('Você saiu do perfil '+ROLE[old]+'. Agora você está como '+ROLE[nx]+'.');return go('home')}poutSet(u0.email,[])}
-    store.removeItem('ms_session');S.user=null;S.role=null;S.req=newReq();S.aid++;S.q=newQ();S.qaid++;return go('welcome')}
+    store.removeItem('ms_session');FA.out();S.user=null;S.role=null;S.req=newReq();S.aid++;S.q=newQ();S.qaid++;return go('welcome')}
 });
 document.addEventListener('change',e=>{
   if(['cat','pcat','pcat2'].includes(e.target.id)){const b=$('#'+e.target.id+'ab');if(b)b.hidden=e.target.value!==OUT}
