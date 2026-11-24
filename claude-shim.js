@@ -54,7 +54,7 @@
     var f = d.querySelector('form'), ap = f.querySelector('#ia-ap'), em = f.querySelector('#ia-em'), e = f.querySelector('.e');
     ap.value = ls('g', 'ia_nome') || ''; em.value = ls('g', 'ia_email') || ''; ap.focus();
     f.querySelector('[data-fechar]').onclick = function () { d.remove(); };
-    f.querySelector('#ia-g').onclick = function () { var b = this; b.disabled = true; b.lastChild.textContent = 'Abrindo o Google…'; e.textContent = ''; google().catch(function (er) { b.disabled = false; b.lastChild.textContent = 'Entrar com Google'; var c = String(er && er.code || ''); e.textContent = /unauthorized-domain/.test(c) ? 'O endereço do app ainda não foi autorizado no Firebase (Authentication › Configurações › Domínios autorizados).' : /operation-not-allowed/.test(c) ? 'O login com Google ainda não foi ligado no Firebase (Authentication › Sign-in method › Google).' : /popup-closed|cancelled/.test(c) ? 'Login cancelado.' : 'Não consegui entrar com o Google agora (' + (c || 'erro') + ').'; }); };
+    f.querySelector('#ia-g').onclick = function () { var b = this; var apv = String(ap.value || '').replace(/[<>]/g, '').trim(); if (apv) ls('s', 'ia_nome', apv.slice(0, 20)); b.disabled = true; b.lastChild.textContent = 'Abrindo o Google…'; e.textContent = ''; google().catch(function (er) { b.disabled = false; b.lastChild.textContent = 'Entrar com Google'; var c = String(er && er.code || ''); e.textContent = /unauthorized-domain/.test(c) ? 'O endereço do app ainda não foi autorizado no Firebase (Authentication › Configurações › Domínios autorizados).' : /operation-not-allowed/.test(c) ? 'O login com Google ainda não foi ligado no Firebase (Authentication › Sign-in method › Google).' : /popup-closed|cancelled/.test(c) ? 'Login cancelado.' : 'Não consegui entrar com o Google agora (' + (c || 'erro') + ').'; }); };
     var se = f.querySelector('#ia-se'), ss = f.querySelector('#ia-ss'), msgSenha = function (er) { var c = String(er && er.code || ''); return /operation-not-allowed/.test(c) ? 'O login por e-mail e senha ainda não foi ligado no Firebase (Authentication › Sign-in method › E-mail/senha).' : /invalid-email/.test(c) ? 'Esse e-mail não parece certo.' : /email-already-in-use/.test(c) ? 'Esse e-mail já tem conta. Toque em Entrar ou em Esqueci a senha.' : /weak-password/.test(c) ? 'Use uma senha com pelo menos 6 caracteres.' : /user-not-found|wrong-password|invalid-credential|invalid-login/.test(c) ? 'E-mail ou senha incorretos. Se esqueceu, toque em Esqueci a senha.' : /too-many-requests/.test(c) ? 'Muitas tentativas. Espere alguns minutos e tente de novo.' : /network/.test(c) ? 'Sem internet agora. Tente de novo.' : 'Não consegui entrar agora (' + (c || 'erro') + ').'; },
       porSenha = function (criar) {
         var m = se.value.trim(), p = ss.value; e.textContent = '';
@@ -91,7 +91,7 @@
     };
   }
   function sair() { ls('s', 'ia_conta', '0'); if (ls('g', 'ia_google') === '1') { ls('r', 'ia_google'); try { if (window.firebase && firebase.auth) return firebase.auth().signOut().then(function () { location.reload(); }, function () { location.reload(); }); } catch (_) {} } location.reload(); }
-  function gOk(u) { if (!u) return; var nm = String(u.displayName || '').trim().split(/\s+/)[0] || ''; if (!ls('g', 'ia_nome') && nm) ls('s', 'ia_nome', nm.slice(0, 20)); if (u.email) ls('s', 'ia_email', u.email); ls('s', 'ia_conta', '1'); ls('s', 'ia_google', '1'); }
+  function gOk(u) { if (!u) return; var nm = String(u.displayName || '').trim().split(/\s+/)[0] || String(u.email || '').split('@')[0].replace(/[^A-Za-zÀ-ÿ]/g, '') || ''; if (!ls('g', 'ia_nome') && nm) ls('s', 'ia_nome', nm.slice(0, 20)); if (u.email) ls('s', 'ia_email', u.email); ls('s', 'ia_conta', '1'); ls('s', 'ia_google', '1'); }
   function google() {
     return fbIni().then(function () {
       if (!window.firebase || !firebase.auth) throw { code: 'sem-firebase' };
@@ -232,7 +232,7 @@
       return (au.setPersistence ? au.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () {}) : Promise.resolve()).then(function () { return new Promise(function (ok) { var first = true, off = au.onAuthStateChanged(function (u) { if (u) { off(); ok(u); return; } if (first) { first = false; au.signInAnonymously().catch(function () { off(); ok(null); }); } }); }); });
     }).then(function (u) {
       if (!u) { window.IA_SEM_NUVEM = true; return null; }
-      FBU = u.uid; window.IA_NUVEM_UID = u.uid;
+      FBU = u.uid; window.IA_NUVEM_UID = u.uid; if (!u.isAnonymous && !ls('g', 'ia_nome')) { var nn = String(u.displayName || '').trim().split(/\s+/)[0] || String(u.email || '').split('@')[0].replace(/[^A-Za-zÀ-ÿ]/g, ''); if (nn) ls('s', 'ia_nome', nn.slice(0, 20)); }
       var fs = firebase.firestore(), pre = 'apps/' + appNome() + '/';
       return { collection: function (p) { return fs.collection(pre + p); }, doc: function (p) { return fs.doc(pre + p); } };
     }).catch(function () { window.IA_SEM_NUVEM = true; return null; });
