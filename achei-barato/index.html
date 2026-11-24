@@ -1,7 +1,8 @@
 <!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=28"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 #v>div,#v .box,#v details>div{grid-template-columns:minmax(0,1fr)}#v .box,#v details,#v form{min-width:0;max-width:100%}#v input,#v select,#v textarea{max-width:100%;min-width:0;box-sizing:border-box}#v .row>*{min-width:0}#v .line>span{min-width:0;overflow-wrap:anywhere}
 details[data-stenc]>summary{cursor:pointer}
-</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"></head><body>
+</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"><script src="../xads.js?v=1"></script>
+</head><body>
 <title>Achei Barato</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
@@ -2493,7 +2494,7 @@ function adsMerch(){
 <label for="dv_tx">Texto (até 120 letras)<textarea id="dv_tx" rows="3" maxlength="120" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%">${esc(d.tx||'')}</textarea></label>
 <label for="dv_bairro">Bairro ou cidade<input id="dv_bairro" maxlength="40" value="${esc(d.bairro||'')}"></label>
 <label for="dv_wa">WhatsApp com DDD (opcional)<input id="dv_wa" type="tel" inputmode="numeric" maxlength="16" value="${esc(d.wa||'')}"></label>
-<label for="dv_ln">Link do site ou rede social (opcional, começa com https://)<input id="dv_ln" type="url" inputmode="url" maxlength="200" value="${esc(d.ln||'')}"></label>
+<label for="dv_ln">Link do site ou rede social (opcional, começa com https://)<input id="dv_ln" type="url" inputmode="url" maxlength="200" value="${esc(d.ln||'')}"></label>${window.XADS?XADS.pick('achei-barato',d.xa):''}
 <div class="row"><label class="chip pk">${d.img?'Trocar foto':'Escolher foto (opcional)'}<input type="file" id="dv_img" accept="image/*" aria-label="Escolher foto do anúncio"></label>${d.img?'<button class="chip" type="button" data-adact="noimg">Remover foto</button>':''}</div><div class="err" id="dv_ie" role="alert">${esc(A.ierr||'')}</div><span class="m">A foto é reduzida automaticamente. Use foto do seu comércio ou produto, sem pessoas identificáveis sem autorização e sem textos de preço. A equipe confere antes de publicar.</span>
 <span class="m">Informe pelo menos o WhatsApp ou o link. Não escreva preço ou promoção que você não vá cumprir; se citar preço, ele precisa estar no app com validade. Sem dados pessoais de terceiros.</span>
 <div class="m"><b>Como vai aparecer:</b></div><div id="dvprev">${adCard(d,{pv:1})}</div>
@@ -2510,9 +2511,9 @@ ${L.length?dtl('dvmy','Minhas divulgações ('+L.length+')',L.map(i=>{const st=s
 /* ---------- gravação ---------- */
 function persistLocal(){LS.s('ab_adq',LQ);LS.s('ab_ads',LA)}
 async function saveMine(items){items=items.slice(-30);if(DB&&UID)await DB.doc('adq/'+UID).set({items});else{LQ=items;persistLocal()}}
-async function submitOrder(){const A=ST(mem),k=A.k,d=A.dr;if(mineL().filter(i=>i.st==='Em análise').length>=3){A.err='Você já tem 3 pedidos em análise. Espere a aprovação ou cancele um.';A.s='form';toast(A.err);render();return}const it={id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),k,days:AK[k].d,price:price(k),t:stamp(),st:'Em análise',ad:{loja:d.loja,tp:d.tp,tt:d.tt,tx:d.tx,bairro:d.bairro||'',wa:d.wa||'',ln:d.ln||'',...(IMGOK(d.img)?{img:d.img}:{})}};
+async function submitOrder(){const A=ST(mem),k=A.k,d=A.dr;if(mineL().filter(i=>i.st==='Em análise').length>=3){A.err='Você já tem 3 pedidos em análise. Espere a aprovação ou cancele um.';A.s='form';toast(A.err);render();return}const it={id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),k,days:AK[k].d,price:price(k),t:stamp(),st:'Em análise',ad:{loja:d.loja,tp:d.tp,tt:d.tt,tx:d.tx,bairro:d.bairro||'',wa:d.wa||'',ln:d.ln||'',xa:Array.isArray(d.xa)?d.xa:[],...(IMGOK(d.img)?{img:d.img}:{})}};
   try{await saveMine([...mineL(),it]);A.s='';A.k='';A.dr={};A.err='';toast('Pedido enviado para análise (pagamento simulado).');render()}catch(_){A.err='Não consegui enviar agora. Tente de novo.';toast(A.err)}}
-function readDraft(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};return{loja:g('dv_loja'),tp:g('dv_tp')||'mercado',tt:g('dv_tt'),tx:g('dv_tx'),bairro:g('dv_bairro'),wa:g('dv_wa'),ln:g('dv_ln'),img:(mem.ad&&mem.ad.dr&&mem.ad.dr.img)||''}}
+function readDraft(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():''};return{loja:g('dv_loja'),tp:g('dv_tp')||'mercado',tt:g('dv_tt'),tx:g('dv_tx'),bairro:g('dv_bairro'),wa:g('dv_wa'),ln:g('dv_ln'),xa:window.XADS?XADS.read():[],img:(mem.ad&&mem.ad.dr&&mem.ad.dr.img)||''}}
 function validate(d){if(d.loja.length<3)return 'Informe o nome do comércio.';if(d.tt.length<4)return 'Informe o título.';if(d.tx.length<10)return 'O texto precisa ter pelo menos 10 letras.';if(d.bairro.length<2)return 'Informe o bairro ou a cidade.';if(d.wa&&!waNum(d.wa))return 'WhatsApp inválido. Use DDD e número.';if(d.ln&&!/^https:\/\/[^\s]{4,}$/i.test(d.ln))return 'O link precisa começar com https://';if(!d.wa&&!d.ln)return 'Informe o WhatsApp ou o link.';if(/(cpf|senha|cart[aã]o)/i.test(d.tx))return 'Não coloque dados pessoais ou sensíveis no anúncio.';return ''}
 document.addEventListener('input',e=>{if(!e.target.closest||!e.target.closest('#dvf'))return;const A=ST(mem);A.dr=readDraft();const p=document.getElementById('dvprev');if(p)p.innerHTML=adCard(A.dr,{pv:1})});
 document.addEventListener('change',async e=>{if(!e.target||e.target.id!=='dv_img')return;const f=e.target.files&&e.target.files[0];if(!f)return;const A=ST(mem);A.dr=readDraft();A.ierr='';
@@ -2584,7 +2585,7 @@ let tries=0;const iv=setInterval(()=>{if(started)return;if(typeof HASCL==='undef
     if(UID){DB.doc('adq/'+UID).onSnapshot(d=>{ADQM=d.exists&&Array.isArray(d.data().items)?d.data().items:[];rs()},()=>{});
       DB.doc('adv/'+UID).onSnapshot(d=>{if(d.exists&&d.data().m&&typeof d.data().m==='object'){const m=d.data().m;Object.keys(m).forEach(id=>{const x=MYV[id]=MYV[id]||{v:0,c:0};x.v=Math.max(x.v,m[id].v||0);x.c=Math.max(x.c,m[id].c||0)})}},()=>{})}
     if(adm)DB.collection('adq').onSnapshot(sn=>{ADQ=sn.docs.map(d=>({uid:d.id,items:Array.isArray(d.data().items)?d.data().items:[]}));rs()},()=>{})}catch(_){}},500);
-window.AB_ADS={act:()=>{try{return adsOn()?actAds():[]}catch(_){return[]}},card:a=>adCard(a.ad,{id:a.id})};
+window.AB_ADS={xs:()=>(DB?ADS:LA).filter(a=>a&&a.ad&&a.to>=stamp()).map(a=>({sid:a.id,tt:a.ad.tt,loja:a.ad.loja,cid:a.ad.bairro,tx:a.ad.tx,wa:a.ad.wa,ln:a.ad.ln,from:a.from,to:a.to,xa:a.ad.xa})),adm:()=>!!(DB&&adm),act:()=>{try{return adsOn()?actAds():[]}catch(_){return[]}},card:a=>adCard(a.ad,{id:a.id})};
 })();
 </script>
 <style>
@@ -3178,7 +3179,7 @@ body.pr-in #ia-admlink{display:none!important}
 #pr-pop .pr-box{background:#fff;color:#111;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:14px;display:grid;gap:8px;width:min(320px,100%);max-height:80vh;overflow:auto;font:15px system-ui,sans-serif}
 #pr-pop .pr-b{min-height:44px;border-radius:12px;border:1.5px solid #cfcfcf;background:#fff;color:#111;font:inherit;font-weight:700;cursor:pointer;text-align:left;padding:0 12px}
 #pr-pop .pr-m{color:#555;font-size:13px;word-break:break-all}
-header.top #pr-hb{position:absolute;top:12px;right:12px;z-index:3}header.top .brand{padding-right:104px}
+header.top #pr-hb{position:absolute;top:12px;right:12px;z-index:3}header.top .brand{padding-right:104px}@media(min-width:640px){header.top:has(#pr-hb){padding-right:210px}header.top:has(#pr-hb) .brand{padding-right:0}}
 </style>
 <script>
 (()=>{
@@ -3333,10 +3334,11 @@ function FADS(C){let I=0,K='';const MK=C.key+'_adbar_min',dia=()=>new Date().toI
  document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-fadmin]');if(!t)return;e.preventDefault();e.stopImmediatePropagation();try{localStorage.setItem(MK,dia())}catch(_){}K='';tick()},true);
  setInterval(tick,800);setInterval(()=>{if(!document.hidden){I++;tick()}},6000);addEventListener('resize',()=>{K='';tick()})}
 
-FADS({key:'ab',list:()=>window.AB_ADS?AB_ADS.act():[],id:a=>a.id,card:a=>AB_ADS.card(a),
+setInterval(()=>{try{if(window.XADS&&window.AB_ADS&&AB_ADS.adm())XADS.sync('achei-barato',AB_ADS.xs())}catch(_){}},10000);
+FADS((window.XADS?XADS.wrap:(a,c)=>c)('achei-barato',{key:'ab',list:()=>window.AB_ADS?AB_ADS.act():[],id:a=>a.id,card:a=>AB_ADS.card(a),
  href:a=>{const ad=a.ad||{},wa=String(ad.wa||'').replace(/\D/g,''),ln=/^https:\/\/[^\s]+$/i.test(ad.ln||'')?ad.ln:'';return {url:wa?'https://wa.me/'+(wa.length<=11?'55'+wa:wa):ln||'#',attr:`data-adc="${String(a.id).replace(/[^\w-]/g,'')}" target="_blank" rel="noopener noreferrer"`}},
  t:a=>String((a.ad&&(a.ad.tt||a.ad.loja))||'Oferta').replace(/[<>&"]/g,''),s:a=>String((a.ad&&a.ad.loja)||'').replace(/[<>&"]/g,''),
  hide:()=>!!document.querySelector('.sheet:not([hidden]),dialog[open],.ov.on')||(typeof S!=='undefined'&&S.tab==='adm'),content:()=>document.querySelector('.wrap'),leftOff:()=>{const t=document.querySelector('.tabs');return t?t.getBoundingClientRect().right+8:0},
- bottom:()=>0,pad:px=>{document.body.style.paddingBottom=px?px+'px':''}});
+ bottom:()=>0,pad:px=>{document.body.style.paddingBottom=px?px+'px':''}}));
 </script>
 </body></html>
