@@ -27,7 +27,7 @@
   setInterval(start, 1500);
 
   function norm(app, a) {
-    var xa = (Array.isArray(a.xa) ? a.xa : []).filter(function (k) { return APPS[k] && k !== app; });
+    var xa = (Array.isArray(a.xa) ? a.xa : Object.keys(APPS)).filter(function (k) { return APPS[k] && k !== app; });
     return { k: app, sid: String(a.sid || '').slice(0, 60), tt: String(a.tt || '').slice(0, 60), loja: String(a.loja || '').slice(0, 60),
       cid: String(a.cid || '').slice(0, 40), tx: String(a.tx || '').slice(0, 200), pr: String(a.pr || '').slice(0, 40),
       wa: wa(a.wa), ln: ln(a.ln), from: dt(a.from), to: dt(a.to), xa: xa };
