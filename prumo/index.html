@@ -1308,7 +1308,8 @@ function planSync(g){
   if(r.modo==='carro')g.custos=g.custos.filter(x=>!(x.n==='Passagens'&&!x.auto&&!(+x.v>0)));
   else{const t=g.custos.find(x=>x.n==='Passagens'&&!x.auto);if(t&&!(+t.v>0)){t.auto='pass';t.n=AUTO.pass[0];t.tip=AUTO.pass[1]}}
   want.slice().reverse().forEach(k=>{if(!g.custos.some(x=>x.auto===k))g.custos.unshift({id:uid(),n:AUTO[k][0],tip:AUTO[k][1],v:'',auto:k})});
-  g.custos.forEach(x=>{if(x.auto==='ref'&&x.n==='Almoço e jantar na estrada'){x.n=AUTO.ref[0];x.tip=AUTO.ref[1]}if(x.auto==='adest'){x.tip=AUTO.adest[1]}});
+  g.custos.forEach(x=>{if(x.auto==='ref'&&x.n==='Almoço e jantar na estrada'){x.n=AUTO.ref[0];x.tip=AUTO.ref[1]}if(x.auto==='adest'){x.tip=AUTO.adest[1]}if(x.auto==='tloc'){const L={alug:['Combustível e estacionamento no destino','Do carro alugado, por dia. O aluguel fica em “Aluguel do carro”.'],proprio:['Combustível e estacionamento no destino','Do carro da viagem, por dia, no destino.'],app:['Aplicativo ou táxi no destino','Corridas por dia, grupo todo.'],pub:['Ônibus ou metrô no destino','Passagens por dia, grupo todo.'],misto:['Transporte no destino','Aplicativo, ônibus e outros, por dia.'],ape:['Transporte no destino','A pé ou com transporte incluso: sem custo.']}[r.tlt||(r.modo==='carro'?'proprio':r.alugado?'alug':'')]||AUTO.tloc;x.n=L[0];x.tip=L[1]}
+   if(x.auto==='trf'){const L={app:['Aplicativo ou táxi até o aeroporto','Ida e volta, valor total.'],pub:['Ônibus, metrô ou trem até o aeroporto','Ida e volta, valor total.'],carro:['Estacionamento e combustível até o aeroporto','Valor total, ida e volta.'],carona:['Ida e volta ao aeroporto','Carona: sem custo.']}[r.trft]||AUTO.trf;x.n=L[0];x.tip=L[1]}});
   r.pessoas=rotaGrp(g).pes;
   g.custos.forEach(x=>{if(x.auto&&!x.man){const v=C[x.auto];x.v=v===''||v===undefined?'':Math.round(v)}});sa();
 }
