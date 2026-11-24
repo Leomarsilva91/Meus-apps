@@ -1,4 +1,5 @@
 <!doctype html><html lang="pt-BR"><head><script src="i18n.js?v=5"></script><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2D6A4F"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Respiro"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"><style>/* nada pode passar da largura da tela */html,body{max-width:100%;overflow-x:hidden;overflow-x:clip}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}.wrap{grid-template-columns:minmax(0,1fr)}.wrap>*,.card,.card *{min-width:0}.card,.card p,.card span,.card b,.card a,.card h2,.card h3{overflow-wrap:anywhere}img,video,iframe,canvas,svg,table{max-width:100%}.nav button{min-width:0;overflow:hidden}.nav button>span,.nav button{text-overflow:ellipsis;white-space:nowrap}.top{max-width:100vw}</style><script src="../xads.js?v=3"></script>
+<script src="../avisos.js?v=1"></script>
 </head><body>
 <title>Respiro</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1589,5 +1590,8 @@ FADS((window.XADS?XADS.wrap:(a,c)=>c)('respiro',{key:'rs',list:()=>window.RS_ADS
  t:a=>RS_ADS.E(a.tt),s:a=>RS_ADS.E(a.loja),
  hide:()=>['trl','dm','grp','env','adm','cad'].includes(S.v),content:()=>document.getElementById('app'),
  bottom:()=>{const n=document.getElementById('nav');return n?n.getBoundingClientRect().height:0},pad:px=>{const n=document.getElementById('nav'),nh=n?n.getBoundingClientRect().height:0;document.body.style.paddingBottom=px>nh+2?(px+10)+'px':''}}));
+</script>
+<script>
+try{NBADGE({key:'rs',me:()=>UID,posts:()=>posts(),onCom:()=>S.v==='com',dm:()=>dmNovas(),targets:()=>[...document.querySelectorAll('#nav [data-go="com"]')]})}catch(_){}
 </script>
 </body></html>

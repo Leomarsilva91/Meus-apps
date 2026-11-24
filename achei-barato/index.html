@@ -2,6 +2,7 @@
 #v>div,#v .box,#v details>div{grid-template-columns:minmax(0,1fr)}#v .box,#v details,#v form{min-width:0;max-width:100%}#v input,#v select,#v textarea{max-width:100%;min-width:0;box-sizing:border-box}#v .row>*{min-width:0}#v .line>span{min-width:0;overflow-wrap:anywhere}
 details[data-stenc]>summary{cursor:pointer}
 </style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"><script src="../xads.js?v=3"></script>
+<script src="../avisos.js?v=1"></script>
 </head><body>
 <title>Achei Barato</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap">
@@ -3350,5 +3351,8 @@ FADS((window.XADS?XADS.wrap:(a,c)=>c)('achei-barato',{key:'ab',list:()=>window.A
  t:a=>String((a.ad&&(a.ad.tt||a.ad.loja))||'Oferta').replace(/[<>&"]/g,''),s:a=>String((a.ad&&a.ad.loja)||'').replace(/[<>&"]/g,''),
  hide:()=>!!document.querySelector('.sheet:not([hidden]),dialog[open],.ov.on')||(typeof S!=='undefined'&&S.tab==='adm'),content:()=>document.querySelector('.wrap'),leftOff:()=>{const t=document.querySelector('.tabs');return t?t.getBoundingClientRect().right+8:0},
  bottom:()=>0,pad:px=>{document.body.style.paddingBottom=px?px+'px':''}}));
+</script>
+<script>
+try{NBADGE({key:'ab',me:()=>UID,posts:()=>comPosts(),onCom:()=>mem.tab==='com',dm:()=>window.DM&&DM.unread?DM.unread():0,targets:()=>[...document.querySelectorAll('#tabs [data-tab="com"]')]})}catch(_){}
 </script>
 </body></html>
