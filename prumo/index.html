@@ -3753,7 +3753,7 @@ function start(){if(OF.sub||!dbo())return;OF.sub=true;
   try{(PT.adm?dbo().collection('pst'):dbo().collection('pst').where('ow','==',uid())).onSnapshot(sn=>{const m={};sn.docs.forEach(d=>m[d.id]=d.data()||{});OF.st=m;rr()},()=>{})}catch(_){}
   if(PT.adm)dbo().collection('pofr').onSnapshot(sn=>{const L=[];sn.docs.forEach(d=>(d.data().items||[]).forEach(x=>L.push({...x,by:d.id})));OF.rep=L;rr()},()=>{})}
 const iv=setInterval(()=>{if(dbo()){start();clearInterval(iv)}},1500);
-const rr=()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;if(UI.tab==='metas'||UI.tab==='mais'||UI.tab==='inicio')render(true)};
+const rr=()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;if(UI.tab==='inicio'){let g='';try{g=ativas().map(x=>x.u+':'+x.id+':'+x.ts).join('|')}catch(_){}if(g===window.__adsig)return;window.__adsig=g;return render(true)}if(UI.tab==='metas'||UI.tab==='mais')render(true)};
 const aprov=o=>OF.ok[o.id]===o.ts;
 const ativas=()=>{const L=[];Object.keys(OF.all).forEach(u=>{const P=OF.all[u];P.L.forEach(o=>{if(aprov(o)&&!o.hid&&(!o.ate||o.ate>=hj()))L.push({...o,u,pnome:P.nome,ptipo:P.tipo,wa:P.wa,site:o.link||P.site,psobre:P.sobre,plogo:P.logo,pdst:((OF.dst||{})[u]||'')>=hj(),psel:!!(OF.sel||{})[u]})})});L.sort((a,b)=>(b.pdst?1:0)-(a.pdst?1:0));return L};
 function doDestino(g){try{const r=rotaDef(g);return String(r.dest||'').trim()}catch(_){return ''}}
@@ -3905,7 +3905,7 @@ document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closes
 const calmo=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(!calmo)setInterval(()=>{if(document.hidden||Date.now()<pausa)return;mostra((window.PR_CI||0)+1)},5000);
 setInterval(()=>{try{if(document.hidden||UI.tab!=='inicio')return;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;const n=window.PR_ADS?PR_ADS.ativas().length:0,tem=!!document.getElementById('pr-car');if((n>0)!==tem)render(true)}catch(_){}},2000);
-const _m=VIEWS.mais;VIEWS.mais=function(){let h=_m();if(!UI.pof&&!UI.pofv&&!UI.pofe)h+='<p class="muted small" style="text-align:center">Versão do app: 24/11/2026, 10h25</p>';return h};
+const _m=VIEWS.mais;VIEWS.mais=function(){let h=_m();if(!UI.pof&&!UI.pofv&&!UI.pofe)h+='<p class="muted small" style="text-align:center">Versão do app: 24/11/2026, 10h30</p>';return h};
 })();
 </script>
 <style>
