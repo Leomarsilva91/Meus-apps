@@ -47,6 +47,8 @@ details.card>summary::after{margin-left:auto;flex:none;width:28px;height:28px;bo
 </style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"><script src="../xads.js?v=3"></script>
 <script src="../avisos.js?v=1"></script>
 <style>.gbx>summary::after{background:var(--surface,#fff)!important;color:inherit!important;border:2px solid currentColor;box-sizing:border-box;font-weight:800;opacity:1!important}</style><style>/* + e − sempre bem visíveis */details:not(.gbx)>summary::after,.mcal>summary::after{color:var(--ink,#14211C)!important;opacity:1!important;font-weight:800!important;background:var(--surface,#fff)!important;border:2px solid currentColor;box-sizing:border-box;display:inline-flex!important;align-items:center;justify-content:center;width:26px!important;height:26px!important;border-radius:50%!important;font-size:17px!important;line-height:1!important;flex:none;vertical-align:middle}</style>
+<script src="../mover.js?v=2"></script>
+<style>#f-goal .grid2>*{min-width:0}#f-goal input[type=date]{min-width:0;width:100%;box-sizing:border-box}</style>
 </head><body>
 <title>Prumo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -980,8 +982,8 @@ function planBoxes(g,tot,T,it){
     out+=rotaCard(g);
     out+=gbox('pes','👥 Quem vai e quem paga','var(--plum)',G.pes+(G.pes===1?' pessoa':' pessoas')+' · '+G.pesPag+(G.pesPag===1?' paga':' pagam'),peopleIn(g,tot));
     if(r.modo==='carro'){const L=inA(['comb','ped','hot','ref','alug']);segs.push(['🚗 Na estrada','var(--orange)',sum(L)]);out+=gbox('estrada','🚗 Na estrada','var(--orange)',(C.diasE>0?C.diasE+(C.diasE===1?' dia':' dias')+' de estrada · ':'')+brl0(sum(L)),roadIn(g)+rowsA(L,'Resumo dos gastos na estrada')+econTips(g,'E'))}
-    if(r.modo==='aviao'){const L=inA(['pass','bag','trf','alug']);segs.push(['✈️ Passagens e aeroporto','var(--sky)',sum(L)]);out+=gbox('aviao','✈️ Passagens e aeroporto','var(--sky)',brl0(sum(L)),airIn(g)+rowsA(L,'Resumo dos gastos com o trajeto'))}
-    if(r.modo){const L=inA(['hdest','adest','tloc','pasd']);segs.push(['🏖️ No destino','var(--mei)',sum(L)]);out+=gbox('destino','🏖️ No destino','var(--mei)',(C.nn>0?C.nn+(C.nn===1?' noite':' noites')+' · ':'')+brl0(sum(L)),destIn(g)+rowsA(L,'Resumo dos gastos no destino')+econTips(g,'D'))}
+    if(r.modo==='aviao'){const L=inA(['pass','bag','trf']);segs.push(['✈️ Passagens e aeroporto','var(--sky)',sum(L)]);out+=gbox('aviao','✈️ Passagens e aeroporto','var(--sky)',brl0(sum(L)),airIn(g)+rowsA(L,'Resumo dos gastos com o trajeto'))}
+    if(r.modo){const L=inA(['hdest','alug','adest','tloc','pasd']);segs.push(['🏖️ No destino','var(--mei)',sum(L)]);out+=gbox('destino','🏖️ No destino','var(--mei)',(C.nn>0?C.nn+(C.nn===1?' noite':' noites')+' · ':'')+brl0(sum(L)),destIn(g)+rowsA(L,'Resumo dos gastos no destino')+econTips(g,'D'))}
   }else if(GRPS[g.tipo]){grp=true;GRPS[g.tipo].forEach(([k,t,c,names])=>{const L=take(it.filter(x=>!used.has(x)&&names.includes(x.n)));if(L.length){segs.push([t,c,sum(L)]);out+=gbox(g.tipo+'-'+k,t,c,L.length+(L.length===1?' item':' itens')+' · '+brl0(sum(L)),rows(L,'Itens'))}})}
   const rest=it.filter(x=>!used.has(x));if(grp&&segs.length)segs.push([g.tipo==='viagem'?'🧾 Outros gastos':'🧾 Outros itens','var(--debt)',sum(rest)]);
   return out+`<div class="card${grp?' gbx':''}" style="--bc:var(--debt)"><h3${grp?' style="color:var(--bc)"':''}>${grp?(g.tipo==='viagem'?'🧾 Outros gastos e total':'🧾 Outros itens e total'):'Lista de custos'}</h3><p class="muted small">Preencha o valor de cada item, ou envie o documento (orçamento, nota, print) e a IA lê.</p>
@@ -4073,4 +4075,5 @@ try{NBADGE({key:'prumo',me:()=>PT.uid,posts:()=>window.cmPosts?cmPosts():[],onCo
 /* quando a faixa de anúncios está embaixo, sobe a barra "Salvar meta" para não ficar escondida */
 setInterval(()=>{const b=document.getElementById('pr-fbar'),on=b&&b.style.display==='flex'&&!b.style.transform,v=on?(b.offsetHeight+8)+'px':'0px';if(document.documentElement.style.getPropertyValue('--fbh')!==v)document.documentElement.style.setProperty('--fbh',v)},400);
 </script>
+<script>try{MOVER('prumo',['.navbar button','#pr-fmin'])}catch(_){}</script>
 </body></html>
