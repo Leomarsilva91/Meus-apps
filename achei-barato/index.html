@@ -46,7 +46,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;background:var(--soft)}
 .tag.off{background:var(--acc);color:var(--acc-ink)}.tag.ok{background:var(--okbg);color:var(--ok)}.tag.warn{background:var(--warnbg);color:var(--warn)}
 .bar{display:grid;gap:10px;margin-bottom:14px}
-.bar input,.bar select,.f input,.f select{border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--card);width:100%;min-width:0}
+.box>label[for=tl]{display:grid;gap:4px;font-weight:700;font-size:14.5px}#tl,.bar input,.bar select,.f input,.f select{border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--card);width:100%;min-width:0}
 .box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:8px}
 .step{display:flex;align-items:center;gap:6px}.step button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:20px;cursor:pointer;line-height:1}.step b{min-width:24px;text-align:center;font-variant-numeric:tabular-nums}
 .line{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}.line.tot{font-weight:800;font-size:18px;font-family:var(--f-d)}
@@ -55,7 +55,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:10p
 .stop{border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:6px;background:var(--card)}
 .num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--pri);color:var(--pri-ink);font-weight:800;font-size:14px;flex:none}
 .map{width:100%;height:auto;border-radius:14px;background:var(--soft);border:1px solid var(--line)}
-.f{display:grid;gap:12px;max-width:560px}.f label{display:grid;gap:4px;font-weight:700;font-size:14.5px}.err{color:var(--bad);font-size:13.5px;min-height:1px}
+.f{display:grid;gap:12px}.f label{display:grid;gap:4px;font-weight:700;font-size:14.5px}.err{color:var(--bad);font-size:13.5px;min-height:1px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(20px,env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 16px;z-index:2147483600;max-width:92vw}
 .legal{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}.legal summary{cursor:pointer;font-family:var(--f-d);font-weight:700;min-height:32px}.legal ul{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:14.5px;display:grid;gap:6px}
 .fl{display:grid;gap:4px;font-weight:700;font-size:14px}.fl select,.fl input{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);width:100%;min-width:0}
@@ -1102,8 +1102,8 @@ function mPfCard(p){const st=mSt(mMe()),v=mVerOf(mMe())||{};
   ${st==='no'&&v.mo?`<span class="m" style="color:var(--bad)">Motivo: ${esc(v.mo)}. Corrija os dados e salve de novo.</span>`:st==='pend'?'<span class="m">Cadastro recebido. A equipe vai aceitar ou recusar com base nos dados enviados. Enquanto isso, você já pode publicar. Depois de aceito, as suas promoções ganham o selo ✔.</span>':''}${window.mPlanBox?mPlanBox(p):''}
   <div class="row"><button class="chip" type="button" data-mpfe="1">✏️ Editar dados do comércio</button></div></section>`}
 function merchV(){const p=mPf();if(DB&&UID&&p)mPrivLoad();
-  if(!p||mem.mpfEd)return `<div style="display:grid;gap:12px;max-width:560px">${mPfForm(p)}</div>`;
-  return merchV0().replace('<div style="display:grid;gap:12px;max-width:560px">','<div style="display:grid;gap:12px;max-width:560px">'+mPfCard(p))}
+  if(!p||mem.mpfEd)return `<div style="display:grid;gap:12px">${mPfForm(p)}</div>`;
+  return merchV0().replace('<div style="display:grid;gap:12px">','<div style="display:grid;gap:12px">'+mPfCard(p))}
 async function mPfSave(f){const g=id=>(f.querySelector('#'+id)||{}).value||'',x=f.querySelector('#mp_x'),bad=t=>{if(x)x.textContent=t};
   const p={nome:g('mp_n').trim(),tipo:TN[g('mp_t')]?g('mp_t'):'mercado',doc:mDig(g('mp_d')),resp:g('mp_r').trim(),tel:mDig(g('mp_w')),end:g('mp_e').trim(),cid:g('mp_c').trim(),uf:g('mp_u').trim().toUpperCase(),hor:g('mp_h').trim(),ent:g('mp_g')==='1'};
   if(p.nome.length<2)return bad('Escreva o nome do comércio.');
@@ -1145,7 +1145,7 @@ function mljAdm(){const L=mAdmList();if(!L.length)return '<span class="m">Nenhum
    ${x.st!=='no'?`<div class="row" style="gap:6px;flex-wrap:nowrap"><input id="mvm_${esc(x.uid)}" maxlength="120" placeholder="Motivo da recusa" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--card)"><button class="chip" type="button" data-mvno="${esc(x.uid)}">Recusar</button></div>`:''}</div>`).join('')}
 
 function merchV0(){
-  return `<div style="display:grid;gap:12px;max-width:560px">${merchPanel()}
+  return `<div style="display:grid;gap:12px">${merchPanel()}
   ${flyBox()}
   ${planBox()}
   <form class="f box" id="dsf" novalidate><b>Descontos para quem compra na loja</b><span class="m">Informe só o que você realmente cumpre no caixa. O app mostra ao cliente o valor já com esse desconto.</span>
@@ -1165,7 +1165,7 @@ function tagMine(){const L=mine.map((o,k)=>({o,k})).filter(x=>x.o.src==='tag').r
   return `<div class="box" data-nc="1" data-ins="1"><b>Seus envios (${L.length})</b>${L.map(({o,k},i)=>`<div class="line"><span>${i+1}. ${esc(o.n)} <span class="m">· ${esc(o.loja)} · ${brl(o.p)} · até ${fd(o.ate)}</span></span><button class="chip" data-del="${k}" type="button">Remover</button></div>`).join('')}</div>`}
 function tagV(){
   const t=mem.tag,pl=mem.tgPlace||'';
-  return `<div style="display:grid;gap:12px;max-width:560px">${hereBox()}${repBox()}<div class="box"><b>Achou um preço bom? Compartilhe</b><span class="m">Fotografe a etiqueta ou a placa de preço. A IA lê o produto e o valor, você confere e envia para outras pessoas verem.</span></div>
+  return `<div style="display:grid;gap:12px">${hereBox()}${repBox()}<div class="box"><b>Achou um preço bom? Compartilhe</b><span class="m">Fotografe a etiqueta ou a placa de preço. A IA lê o produto e o valor, você confere e envia para outras pessoas verem.</span></div>
   <div class="box"><label for="tl">Onde você viu?<input id="tl" list="tls" value="${esc(pl)}" placeholder="Nome do mercado ou loja" autocomplete="off"></label><datalist id="tls">${S.map(x=>`<option value="${esc(x.n)}">`).join('')}</datalist>
   <div class="row">${pick('tfc','Tirar foto da etiqueta',1)}${pick('tf','Foto da galeria')}</div>${TAGF?`<span class="m">Foto escolhida: ${esc(TAGF.name||'foto')}</span>`:''}
   <button class="btn acc" data-tgread="1" type="button">Ler a foto</button>
@@ -1581,7 +1581,7 @@ function adminV(){
   if(!adm)return '<div class="box"><b>Área restrita</b><span class="m">Esta área é só para o administrador.</span></div>';
   const sec=(t,h)=>`<details class="adm" data-adm="${t}"${(mem.adm||{})[t]?' open':''}><summary style="font-weight:700;font-size:16px;cursor:pointer;min-height:44px;display:flex;align-items:center">${h}</summary><div style="display:grid;gap:12px;padding:6px 0 12px">`;
   const pend=subAll.reduce((a,d)=>a+d.items.filter(i=>i.st==='Em análise').length,0);
-  return `<div style="display:grid;gap:12px;max-width:620px"><div class="box" style="border-left-color:var(--acc)"><b>Administrador</b><span class="m">Tudo que você faz aqui vale para todos os usuários. ${DB?'':'O armazenamento compartilhado não está ativo agora: o que você cadastra fica só neste aparelho.'}</span></div>
+  return `<div style="display:grid;gap:12px"><div class="box" style="border-left-color:var(--acc)"><b>Administrador</b><span class="m">Tudo que você faz aqui vale para todos os usuários. ${DB?'':'O armazenamento compartilhado não está ativo agora: o que você cadastra fica só neste aparelho.'}</span></div>
   ${sec('mod','Moderar envios ('+pend+' em análise)')}${modBox()}${ownAdm()}</div></details>
   ${sec('pts','Programa de pontos')}${ptsAdm()}</div></details>
   ${sec('mlj','Comerciantes: cadastros para conferir ('+mAdmList().filter(x=>x.st==='pend').length+' aguardando)')}${mljAdm()}</div></details>
