@@ -167,7 +167,7 @@ header.top h1{text-shadow:0 1px 0 rgba(0,0,0,.25)}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2457d6"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <script src="../xads.js?v=3"></script>
-<script src="../mover.js?v=2"></script>
+<script src="../mover.js?v=3"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -4266,6 +4266,6 @@ FADS((window.XADS?XADS.wrap:(a,c)=>c)('tasko',{key:'tk',xin:1,list:()=>window.TK
 /* Botão Entrar/Salvar: enquanto confere a senha, mostra "Aguarde…" com a cor normal, em vez de parecer desligado */
 new MutationObserver(ms=>{ms.forEach(m=>{const b=m.target;if(b.id!=='go')return;if(b.disabled&&!b.classList.contains('busy')){b.dataset.tx=b.textContent;b.classList.add('busy');b.textContent=/login/.test(b.dataset.act||'')?'Entrando…':'Aguarde…'}else if(!b.disabled&&b.classList.contains('busy')){b.classList.remove('busy');if(b.dataset.tx)b.textContent=b.dataset.tx}})}).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled']});
 </script>
-<script>try{MOVER('tk',['#fad-m'])}catch(_){}</script>
+<script>try{MOVER('tk',['#fad-m','#fad-b'])}catch(_){}</script>
 </body>
 </html>

@@ -47,7 +47,7 @@ details.card>summary::after{margin-left:auto;flex:none;width:28px;height:28px;bo
 </style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f7a5c"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Prumo"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"><script src="../xads.js?v=3"></script>
 <script src="../avisos.js?v=1"></script>
 <style>.gbx>summary::after{background:var(--surface,#fff)!important;color:inherit!important;border:2px solid currentColor;box-sizing:border-box;font-weight:800;opacity:1!important}</style><style>/* + e − sempre bem visíveis */details:not(.gbx)>summary::after,.mcal>summary::after{color:var(--ink,#14211C)!important;opacity:1!important;font-weight:800!important;background:var(--surface,#fff)!important;border:2px solid currentColor;box-sizing:border-box;display:inline-flex!important;align-items:center;justify-content:center;width:26px!important;height:26px!important;border-radius:50%!important;font-size:17px!important;line-height:1!important;flex:none;vertical-align:middle}</style>
-<script src="../mover.js?v=2"></script>
+<script src="../mover.js?v=3"></script>
 <style>#f-goal .grid2>*{min-width:0}#f-goal input[type=date]{min-width:0;width:100%;box-sizing:border-box}</style>
 </head><body>
 <title>Prumo</title>
@@ -4083,5 +4083,5 @@ try{NBADGE({key:'prumo',me:()=>PT.uid,posts:()=>window.cmPosts?cmPosts():[],onCo
 /* quando a faixa de anúncios está embaixo, sobe a barra "Salvar meta" para não ficar escondida */
 setInterval(()=>{const b=document.getElementById('pr-fbar'),on=b&&b.style.display==='flex'&&!b.style.transform,v=on?(b.offsetHeight+8)+'px':'0px';if(document.documentElement.style.getPropertyValue('--fbh')!==v)document.documentElement.style.setProperty('--fbh',v)},400);
 </script>
-<script>try{MOVER('prumo',['.navbar button','#pr-fmin'])}catch(_){}</script>
+<script>try{MOVER('prumo',['.navbar button','#pr-fmin','#pr-fbar','.savebar'])}catch(_){}</script>
 </body></html>

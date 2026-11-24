@@ -6,7 +6,7 @@
     var K = key + '_mover', P = {};
     try { P = JSON.parse(localStorage.getItem(K) || '{}') || {}; } catch (_) { P = {}; }
     function save() { try { localStorage.setItem(K, JSON.stringify(P)); } catch (_) {} }
-    function idOf(el, s) { return s + '|' + String(el.getAttribute('aria-label') || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 30); }
+    function idOf(el, s) { if (!/\s/.test(s.trim())) return s; return s + '|' + String(el.getAttribute('aria-label') || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 30); }
     function match(t) { for (var i = 0; i < sels.length; i++) { var e = t.closest && t.closest(sels[i]); if (e) return { el: e, id: idOf(e, sels[i]) }; } return null; }
     function put(el, x, y) { el.style.translate = (x || y) ? x + 'px ' + y + 'px' : ''; }
     function clampAll() {
