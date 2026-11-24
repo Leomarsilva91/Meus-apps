@@ -71,7 +71,7 @@ service cloud.firestore {
       allow read: if entrou() && (
         !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr', 'cce', 'cpr', 'mscp', 'pofr', 'msct']) || request.auth.uid == uid || adm());
       allow write: if entrou() && (
-        (!(col in ['config', 'comx', 'pts', 'offers', 'pub', 'news', 'stores', 'ph', 'tips', 'ads']) && request.auth.uid == uid) || adm());
+        (!(col in ['config', 'comx', 'pts', 'offers', 'pub', 'news', 'stores', 'ph', 'tips', 'ads', 'radok']) && request.auth.uid == uid) || adm());
     }
   }
 }
