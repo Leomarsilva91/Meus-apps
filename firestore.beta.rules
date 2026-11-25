@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /apps/{app}/data/users/{uid}/{doc=**} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && app in ['prumo', 'achei-barato', 'tasko', 'respiro'];
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
