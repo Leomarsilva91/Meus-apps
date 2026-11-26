@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../integracao-apps.js?v=1"></script><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 .seg.fit.casa{grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px;gap:4px}
 .seg.fit.casa button{border:0;background:transparent;font-size:13px;font-weight:700;padding:6px 2px;min-height:42px;border-radius:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg.fit.casa button[aria-pressed=true]{background:var(--mei);color:var(--on-mei)}
@@ -1808,6 +1808,18 @@ function render(keepScroll){
   const sg=[UI.tab,UI.neg,UI.div,UI.met,UI.cs,UI.sel].join('|'),same=sg===window.__psg;window.__psg=sg;if(same)keepScroll=true;
   $('#v').className=keepScroll?'wrap noanim':'wrap';
   $('#v').innerHTML=VIEWS[UI.tab]();
+  if(window.PrInterApp && ['metas','casa','mais'].includes(UI.tab)){
+    const panel=document.createElement('details');panel.className='card';
+    const title=document.createElement('summary');title.textContent='Pesquisar compras e promoções';panel.append(title);
+    const note=document.createElement('p');note.className='muted small';note.textContent='Abra o Achei Barato com um termo de pesquisa. Não informe dados pessoais ou financeiros.';panel.append(note);
+    const label=document.createElement('label');label.textContent='O que você deseja comprar?';
+    const field=document.createElement('input');field.type='search';field.maxLength=120;field.placeholder='Ex.: cimento, tinta, material de construção';label.append(field);panel.append(label);
+    const button=document.createElement('button');button.type='button';button.className='btn';button.textContent='Pesquisar no Achei Barato';
+    button.addEventListener('click',()=>{if(!field.value.trim()){field.focus();return}location.assign(PrInterApp.link('prumo','achei-barato',field.value))});panel.append(button);
+    const construction=document.createElement('button');construction.type='button';construction.className='btn ghost';construction.textContent='Ofertas de materiais de construção';
+    construction.addEventListener('click',()=>location.assign(PrInterApp.link('prumo','achei-barato','material de construção')));panel.append(construction);
+    document.getElementById('v').append(panel);
+  }
   try{if(location.hash.slice(1)!==UI.tab)history.replaceState(null,'','#'+UI.tab)}catch(e){}
   scrollTo(0,keepScroll?y:0);animateBars();
   try{applyEdit()}catch(e){}
