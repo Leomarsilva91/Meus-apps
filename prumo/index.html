@@ -1818,6 +1818,14 @@ function render(keepScroll){
     button.addEventListener('click',()=>{if(!field.value.trim()){field.focus();return}location.assign(PrInterApp.link('prumo','achei-barato',field.value))});panel.append(button);
     const construction=document.createElement('button');construction.type='button';construction.className='btn ghost';construction.textContent='Ofertas de materiais de construção';
     construction.addEventListener('click',()=>location.assign(PrInterApp.link('prumo','achei-barato','material de construção')));panel.append(construction);
+    const destination=document.createElement('label');destination.textContent='Destino de viagem';
+    const city=document.createElement('input');city.type='search';city.maxLength=120;city.placeholder='Ex.: Caldas Novas';destination.append(city);panel.append(destination);
+    const explore=document.createElement('button');explore.type='button';explore.className='btn ghost';explore.textContent='Explorar destino no Respiro';
+    explore.addEventListener('click',()=>{if(!city.value.trim()){city.focus();return}location.assign(PrInterApp.link('prumo','respiro',city.value))});panel.append(explore);
+    title.textContent='Pesquisar compras e destinos';
+    note.textContent='Pesquise ofertas no Achei Barato ou explore destinos no Respiro. Não informe dados pessoais ou financeiros.';
+    panel.style.display='grid';panel.style.gap='10px';
+    for(const [input,btn] of [[field,button],[city,explore]])input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();btn.click()}});
     document.getElementById('v').append(panel);
   }
   try{if(location.hash.slice(1)!==UI.tab)history.replaceState(null,'','#'+UI.tab)}catch(e){}
