@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../integracao-apps.js?v=1"></script><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR" data-prumo-design="prumo"><head><script src="../integracao-apps.js?v=1"></script><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 .seg.fit.casa{grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px;gap:4px}
 .seg.fit.casa button{border:0;background:transparent;font-size:13px;font-weight:700;padding:6px 2px;min-height:42px;border-radius:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg.fit.casa button[aria-pressed=true]{background:var(--mei);color:var(--on-mei)}
@@ -49,7 +49,7 @@ details.card>summary::after{margin-left:auto;flex:none;width:28px;height:28px;bo
 <style>.gbx>summary::after{background:var(--surface,#fff)!important;color:inherit!important;border:2px solid currentColor;box-sizing:border-box;font-weight:800;opacity:1!important}</style><style>/* + e − sempre bem visíveis */details:not(.gbx)>summary::after,.mcal>summary::after{color:var(--ink,#14211C)!important;opacity:1!important;font-weight:800!important;background:var(--surface,#fff)!important;border:2px solid currentColor;box-sizing:border-box;display:inline-flex!important;align-items:center;justify-content:center;width:26px!important;height:26px!important;border-radius:50%!important;font-size:17px!important;line-height:1!important;flex:none;vertical-align:middle}</style>
 <script src="../mover.js?v=4"></script>
 <style>#f-goal .grid2>*{min-width:0}#f-goal input[type=date]{min-width:0;width:100%;box-sizing:border-box}</style>
-</head><body>
+<link rel="stylesheet" href="../design-apps.css?v=1"></head><body>
 <title>Prumo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1809,22 +1809,22 @@ function render(keepScroll){
   $('#v').className=keepScroll?'wrap noanim':'wrap';
   $('#v').innerHTML=VIEWS[UI.tab]();
   if(window.PrInterApp && ['metas','casa','mais'].includes(UI.tab)){
-    const panel=document.createElement('details');panel.className='card';
+    const panel=document.createElement('details');panel.className='card design-actions';
     const title=document.createElement('summary');title.textContent='Pesquisar compras e promoções';panel.append(title);
     const note=document.createElement('p');note.className='muted small';note.textContent='Abra o Achei Barato com um termo de pesquisa. Não informe dados pessoais ou financeiros.';panel.append(note);
     const label=document.createElement('label');label.textContent='O que você deseja comprar?';
     const field=document.createElement('input');field.type='search';field.maxLength=120;field.placeholder='Ex.: cimento, tinta, material de construção';label.append(field);panel.append(label);
-    const button=document.createElement('button');button.type='button';button.className='btn';button.textContent='Pesquisar no Achei Barato';
+    const button=document.createElement('button');button.type='button';button.className='btn design-primary';button.textContent='Pesquisar no Achei Barato';
     button.addEventListener('click',()=>{if(!field.value.trim()){field.focus();return}location.assign(PrInterApp.link('prumo','achei-barato',field.value))});panel.append(button);
-    const construction=document.createElement('button');construction.type='button';construction.className='btn ghost';construction.textContent='Ofertas de materiais de construção';
+    const construction=document.createElement('button');construction.type='button';construction.className='btn design-secondary';construction.textContent='Ofertas de materiais de construção';
     construction.addEventListener('click',()=>location.assign(PrInterApp.link('prumo','achei-barato','material de construção')));panel.append(construction);
     const destination=document.createElement('label');destination.textContent='Destino de viagem';
     const city=document.createElement('input');city.type='search';city.maxLength=120;city.placeholder='Ex.: Caldas Novas';destination.append(city);panel.append(destination);
-    const explore=document.createElement('button');explore.type='button';explore.className='btn ghost';explore.textContent='Explorar destino no Respiro';
+    const explore=document.createElement('button');explore.type='button';explore.className='btn design-secondary';explore.textContent='Explorar destino no Respiro';
     explore.addEventListener('click',()=>{if(!city.value.trim()){city.focus();return}location.assign(PrInterApp.link('prumo','respiro',city.value))});panel.append(explore);
     title.textContent='Pesquisar compras e destinos';
     note.textContent='Pesquise ofertas no Achei Barato ou explore destinos no Respiro. Não informe dados pessoais ou financeiros.';
-    panel.style.display='grid';panel.style.gap='10px';
+    
     for(const [input,btn] of [[field,button],[city,explore]])input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();btn.click()}});
     document.getElementById('v').append(panel);
   }
