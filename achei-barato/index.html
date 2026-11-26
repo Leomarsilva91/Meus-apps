@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../integracao-apps.js?v=1"></script><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 #v>div,#v .box,#v details>div{grid-template-columns:minmax(0,1fr)}#v .box,#v details,#v form{min-width:0;max-width:100%}#v input,#v select,#v textarea{max-width:100%;min-width:0;box-sizing:border-box}#v .row>*{min-width:0}#v .line>span{min-width:0;overflow-wrap:anywhere}
 details[data-stenc]>summary{cursor:pointer}
 </style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"><script src="../xads.js?v=3"></script>
@@ -1718,9 +1718,17 @@ function collapseBoxes(){const v=$('#v');if(!v)return;mem.bxo=mem.bxo||{};
     const sg=document.createElement('span');sg.setAttribute('aria-hidden','true');sg.textContent=open?'−':'+';sg.style.cssText='font-weight:800;font-size:1.3em;line-height:1;padding:0 6px';
     bt.appendChild(h);bt.appendChild(sg);bx.insertBefore(bt,bx.firstChild);bx.appendChild(body)})}
 function render(){
+  const incoming = window.PrInterApp && PrInterApp.receive('achei-barato');
+  if(incoming){
+    mem.tab='promo';mem.tabPick=1;mem.open=null;mem.fback=null;
+    const generic=/^(materiais? de construção|construção)$/i.test(incoming.q);
+    mem.cat=generic?'construcao':'';
+    mem.q=generic?'':incoming.q;mem.integrationPromo=true;
+    PrInterApp.clear('achei-barato');
+  }
   if(mem.tab!=='com'){const pb=document.getElementById('cm_pend');if(pb)pb.remove()}
   const IC={com:'<path d="M4 4.5h10a2 2 0 0 1 2 2V12a2 2 0 0 1-2 2H9.500L6 17.500V14H4a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2z"/><path d="M16 9.500h4a2 2 0 0 1 2 2v5.500a2 2 0 0 1-2 2h-1.500v3L15 19h-3.500a2 2 0 0 1-1.800-1.100"/><circle cx="6.500" cy="9.300" r=".7" fill="currentColor"/><circle cx="9" cy="9.300" r=".7" fill="currentColor"/><circle cx="11.500" cy="9.300" r=".7" fill="currentColor"/>',promo:'<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',plan:'<circle cx="5.5" cy="18" r="2"/><circle cx="18.5" cy="6" r="2"/><path d="M7.5 18H14a3 3 0 000-6h-4a3 3 0 010-6h6"/>',stores:'<path d="M4 10v10h16V10M3 10l2-6h14l2 6M9 20v-5h6v5"/>',online:'<path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/>',tag:'<path d="M4 8h4l2-3h4l2 3h4v11H4z"/><circle cx="12" cy="13.5" r="3"/>',merch:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',admin:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>'};
-  const T=[['plan','Roteiro de economia','Roteiro'],['stores','Todas as lojas','Todas as lojas'],['promo','Promoções lojas físicas','Físicas'],['online','Promoções online','Online'],['com','Comunidade','Social'],['tag','Achei uma promoção','Enviar preço'],['merch','Sou comerciante','Sou loja'],...(adm?[['admin','Administrador','Admin']]:[])].filter(t=>t[0]==='admin'||(tabOn(t[0])&&(t[0]!=='com'||comOn||adm)));
+  const T=[['plan','Roteiro de economia','Roteiro'],['stores','Todas as lojas','Todas as lojas'],['promo','Promoções lojas físicas','Físicas'],['online','Promoções online','Online'],['com','Comunidade','Social'],['tag','Achei uma promoção','Enviar preço'],['merch','Sou comerciante','Sou loja'],...(adm?[['admin','Administrador','Admin']]:[])].filter(t=>t[0]==='admin'||((tabOn(t[0])||(t[0]==='promo'&&mem.integrationPromo))&&(t[0]!=='com'||comOn||adm)));
   if(!T.some(t=>t[0]===mem.tab)&&T.length)mem.tab=T[0][0];
   {const nt=T.filter(t=>t[0]!=='admin').length;$('#tabs').style.gridTemplateColumns=nt<3?'repeat('+Math.max(1,nt)+',minmax(0,1fr))':''}
   $('#gst').innerHTML=guestBan();$('#pfb').innerHTML=prefBar(T.map(t=>t[0]));try{$('#locb').innerHTML=locBar()}catch(_){}
