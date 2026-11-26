@@ -1,0 +1,22 @@
+/* Acabamento visual compartilhado; cada app mantém sua identidade e estados. */
+html[data-prumo-design="prumo"]{--design-main:#176B55;--design-soft:#E4F3EC;--design-focus:#176B55}
+html[data-prumo-design="achei-barato"]{--design-main:#A95106;--design-soft:#FFF0D5;--design-focus:#A95106}
+html[data-prumo-design="tasko"]{--design-main:#2857B8;--design-soft:#E7EEFC;--design-focus:#2857B8}
+html[data-prumo-design="respiro"]{--design-main:#39765E;--design-soft:#E5F0E8;--design-focus:#39765E}
+html[data-prumo-design] .btn{border-radius:14px;min-height:44px;line-height:1.3;white-space:normal;overflow-wrap:anywhere;transition:filter .15s,box-shadow .15s}
+html[data-prumo-design] .btn:focus-visible{outline:3px solid var(--design-focus);outline-offset:3px}
+html[data-prumo-design] .btn:disabled{cursor:not-allowed}
+html[data-prumo-design] .btn.design-primary{background:var(--design-main);color:#fff;border:1px solid transparent;box-shadow:0 4px 12px #00000018}
+html[data-prumo-design] .btn.design-secondary{background:var(--design-soft);color:var(--design-main);border:1px solid currentColor;box-shadow:none}
+html[data-prumo-design] .design-actions{display:block;padding:16px;border-radius:18px}
+html[data-prumo-design] .design-actions[open]>*+*{margin-top:12px}
+html[data-prumo-design] .design-actions summary{font-weight:700;cursor:pointer;color:var(--design-main)}
+html[data-prumo-design] .design-actions input{width:100%;min-width:0;min-height:44px}
+html[data-prumo-design] .design-actions .btn{width:100%}
+html[data-prumo-design][data-theme="dark"]{--design-focus:#B6D3F5;--design-soft:#26394A;--design-main:#B6D3F5}
+html[data-prumo-design][data-theme="dark"] .btn.design-primary{color:#14213D}
+@media(prefers-color-scheme:dark){
+html[data-prumo-design]:not([data-theme="light"]){--design-focus:#B6D3F5;--design-soft:#26394A;--design-main:#B6D3F5}
+html[data-prumo-design]:not([data-theme="light"]) .btn.design-primary{color:#14213D}
+}
+@media(prefers-reduced-motion:reduce){html[data-prumo-design] .btn{transition:none}}
