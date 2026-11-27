@@ -348,7 +348,12 @@ ${fld('rpw2','Confirmar nova senha','type="password" autocomplete="new-password"
 <label class="chk"><input type="checkbox" data-act="showpw"> Mostrar senhas</label>
 <div class="alert" id="rerr" role="alert"></div>
 <button class="btn" id="go" type="submit" data-act="doreset">Salvar nova senha</button></form></main>`},
-findacc:()=>{const F=S.fa||{};return `${head('Recuperar senha','login')}<main>
+findacc:()=>{const F=S.fa||{};if(typeof faOn==='function'&&faOn())return `${head('Recuperar senha','login')}<main>
+<div class="card"><b>Digite o e-mail da conta</b><p class="muted" style="margin:6px 0 0">Mandamos para ele um link para você criar uma senha nova.</p></div>
+${fld('facpf','E-mail da conta','type="email" maxlength="80" autocomplete="email" value="'+esc(F.q||'')+'" placeholder="nome@email.com"')}
+<div class="alert" id="faerr" role="alert">${esc(F.err||'')}</div>
+<button class="btn" data-act="findgo">Enviar link</button>
+${F.list&&!F.list.length?'<div class="card"><b>Use o e-mail</b><p class="muted" style="margin:6px 0 0">A conta só pode ser achada pelo e-mail. Digite o e-mail que você usou no cadastro.</p></div>':''}</main>`;return `${head('Recuperar senha','login')}<main>
 <div class="card"><b>Comece pelo seu documento</b><p class="muted" style="margin:6px 0 0">Pessoa: digite o <b>CPF</b>. Empresa: digite o <b>CNPJ</b>. Achando a conta, mandamos um código para o e-mail ou o celular cadastrado. Não lembra do documento? Use o celular ou o e-mail.</p></div>
 ${F.alt?fld('facpf','Celular com DDD ou e-mail','type="text" maxlength="60" autocomplete="off" value="'+esc(F.q||'')+'" placeholder="(61) 90000-0000 ou nome@email.com"'):fld('facpf','CPF ou CNPJ','type="text" inputmode="numeric" maxlength="18" autocomplete="off" value="'+esc(F.q||'')+'" placeholder="CPF (pessoa) ou CNPJ (empresa)"')}<button type="button" class="link" data-act="faalt" style="justify-self:start">${F.alt?'Usar CPF ou CNPJ':'Não lembro do documento: usar celular ou e-mail'}</button>
 <div class="alert" id="faerr" role="alert">${esc(F.err||'')}</div>
