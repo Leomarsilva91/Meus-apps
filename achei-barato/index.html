@@ -1,7 +1,7 @@
 <!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=29"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 #v>div,#v .box,#v details>div{grid-template-columns:minmax(0,1fr)}#v .box,#v details,#v form{min-width:0;max-width:100%}#v input,#v select,#v textarea{max-width:100%;min-width:0;box-sizing:border-box}#v .row>*{min-width:0}#v .line>span{min-width:0;overflow-wrap:anywhere}
 details[data-stenc]>summary{cursor:pointer}
-</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png"><script src="../xads.js?v=3"></script>
+</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="icon" href="icon-192.png"><script src="../xads.js?v=3"></script>
 <script src="../avisos.js?v=1"></script>
 <script src="../mover.js?v=4"></script>
 </head><body>
@@ -204,7 +204,7 @@ header.top>*{position:relative;z-index:1}
 </style>
 
 <div class="wrap">
-<header class="top"><div class="brand"><i></i>Achei Barato</div><span class="pill">Protótipo · comércios e preços fictícios</span><button type="button" class="fbhb" data-fbx="open" aria-label="Teve dificuldade ou sentiu falta de algo?">💬 Sugestão</button><p class="tagline">Ache o menor preço, monte o roteiro e economize de verdade.</p></header>
+<header class="top"><div class="brand"><img src="logo.svg" width="26" height="26" alt="" aria-hidden="true" style="border-radius:7px;flex:none;vertical-align:middle">Achei Barato</div><span class="pill">Protótipo · comércios e preços fictícios</span><button type="button" class="fbhb" data-fbx="open" aria-label="Teve dificuldade ou sentiu falta de algo?">💬 Sugestão</button><p class="tagline">Ache o menor preço, monte o roteiro e economize de verdade.</p></header>
 <div id="gst"></div>
 <div id="pfb"></div>
 <nav class="tabs" id="tabs" aria-label="Seções"></nav>
@@ -629,7 +629,7 @@ function welcome(){if(PREF.set)return '';
     return `<div class="wel" role="dialog" aria-modal="true" aria-label="Escolher menus"><div><h1 style="font-size:24px">Quais menus você quer ver?</h1><div class="row">${ks.map(k=>`<button class="chip" type="button" data-ptab="${k}" aria-pressed="${cur.includes(k)}">${cur.includes(k)?'−':'+'}  ${TABN[k]}</button>`).join('')}</div><button class="btn" type="button" data-wgo2="1">Continuar</button><button class="chip" type="button" data-wback="1" style="justify-self:start">‹ Voltar</button></div></div>`}
   if(mem.wl===2)return `<div class="wel" role="dialog" aria-modal="true" aria-label="Como ver"><div><h1 style="font-size:24px">Como você quer ver as promoções?</h1><span class="m">Preço, % mais barato e quanto você economiza aparecem sempre.</span>
     ${b('data-wl2','enc','Links grandes','Cartões com mais detalhes')}${b('data-wl2','res','Links reduzidos','Vários por linha, toque para abrir')}${b('data-wl2','ess','Só o essencial','Nome, preço, % e R$ economizado')}${b('data-wl2','all','Tudo completo','Todas as informações abertas')}<button class="chip" type="button" data-wback="1" style="justify-self:start">‹ Voltar</button></div></div>`;
-  return `<div class="wel" role="dialog" aria-modal="true" aria-label="Boas-vindas"><div><div class="brand" style="color:var(--ink)"><i></i>Achei Barato</div><h1 style="font-size:26px">O que você quer ver?</h1><span class="m">Depois, toque em “O que ver?” para mudar o tamanho e os menus.</span>
+  return `<div class="wel" role="dialog" aria-modal="true" aria-label="Boas-vindas"><div><div class="brand" style="color:var(--ink)"><img src="logo.svg" width="30" height="30" alt="" aria-hidden="true" style="border-radius:8px;flex:none;vertical-align:middle">Achei Barato</div><h1 style="font-size:26px">O que você quer ver?</h1><span class="m">Depois, toque em “O que ver?” para mudar o tamanho e os menus.</span>
     ${b('data-wl1','all','Ver tudo','Lojas físicas, online, roteiro e mais')}${b('data-wl1','online','Só promoções online','Mercado Livre, Shopee, Amazon, Magalu')}${b('data-wl1','loja','Só lojas físicas','Promoções e comércios perto de você')}${b('data-wl1','plan','Só o roteiro de economia','Monte a lista e veja o melhor caminho')}${b('data-wl1','custom','Escolher os menus','Marque só o que quiser')}</div></div>`}
 
 /* Destaques: melhores promoções (online + físicas) sempre no início */
