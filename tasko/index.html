@@ -3037,8 +3037,8 @@ const rsLim=k=>{let m={};try{m=JSON.parse(store.getItem('ms_rsl')||'{}')}catch(e
 /* recuperação de senha de verdade: o Firebase manda o link para o e-mail da conta (o código na tela era só demonstração) */
 const faOn=()=>!!(window.firebase&&firebase.auth&&firebase.apps&&firebase.apps.length&&window.IA_NUVEM_UID&&!window.IA_SEM_NUVEM);
 {const _rv=V.reset;V.reset=()=>{const R=S.rs||{};if(!faOn())return _rv();
-  if(R.ok&&!R.fbSent){R.fbSent=1;try{firebase.auth().sendPasswordResetEmail(R.email).catch(()=>{})}catch(_){}}
-  return `${head('Recuperar senha','login')}<main><div class="card"><b>Confira o seu e-mail</b><p style="margin:8px 0 0">Se houver uma conta com <b>${esc(R.login||R.email||'')}</b>, enviamos um link para ${R.ok?'<b>'+esc(emMask(R.email))+'</b>':'o e-mail cadastrado'}.</p><ol style="margin:10px 0 0;padding-left:20px"><li>Abra o e-mail do Firebase (veja também o spam ou lixo eletrônico).</li><li>Toque no link e crie a nova senha.</li><li>Volte aqui e entre com a senha nova.</li></ol><p class="muted" style="margin:10px 0 0">O link vale por pouco tempo. O Tasko nunca pede senha nem código por telefone ou mensagem.</p></div>
+  if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(R.email||'')&&!R.fbSent){R.fbSent=1;try{firebase.auth().sendPasswordResetEmail(R.email).catch(er=>{const c=String(er&&er.code||'');if(/user-not-found/.test(c))return;setTimeout(()=>{const x=document.getElementById('rerr');if(x)x.textContent=/invalid-email/.test(c)?'Este e-mail não parece válido. Confira se não tem acento ou ç e tente de novo.':/too-many/.test(c)?'Muitos pedidos agora. Espere alguns minutos e tente de novo.':'Não consegui enviar o link agora. Confira a internet e tente de novo.'},300)})}catch(_){}}
+  return `${head('Recuperar senha','login')}<main><div class="card"><b>Confira o seu e-mail</b><p style="margin:8px 0 0">Se houver uma conta com <b>${esc(R.login||R.email||'')}</b>, enviamos um link para ${R.ok?'<b>'+esc(emMask(R.email))+'</b>':'esse e-mail'}.</p><ol style="margin:10px 0 0;padding-left:20px"><li>Abra o e-mail do Firebase (veja também o spam ou lixo eletrônico).</li><li>Toque no link e crie a nova senha.</li><li>Volte aqui e entre com a senha nova.</li></ol><p class="muted" style="margin:10px 0 0">O link vale por pouco tempo. O Tasko nunca pede senha nem código por telefone ou mensagem.</p></div>
 <button class="btn" data-go="login">Já criei a nova senha: entrar</button>
 <button class="btn ghost" data-act="rsfb">Não chegou? Enviar de novo</button><div class="alert" id="rerr" role="alert"></div></main>`}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act="rsfb"]');if(!b||!S.rs)return;e.preventDefault();e.stopImmediatePropagation();const lim=rsLim(S.rs.email);if(lim){const x=document.getElementById('rerr');if(x)x.textContent=lim;return}S.rs.fbSent=0;render();toast('Enviamos o link de novo.')},true);
@@ -3047,7 +3047,7 @@ function rsStart(email,mk){const fu=byLogin(email)||users().find(x=>x&&x.email==
 const lkGet=()=>{try{return JSON.parse(store.getItem('ms_lk')||'{}')}catch(e){return{}}};
 function forgot(){const i=$('#lemail'),q=i?i.value.trim():'';S.fa={q};if(q)return fagoQ(q);go('findacc')}
 function fagoQ(v){const dg=v.replace(/\D/g,''),al=!!(S.fa&&S.fa.alt);S.fa={q:v,alt:al};let L=null;
- if(/@/.test(v)){const u=byLogin(v.toLowerCase())||users().find(x=>x&&x.email===v.toLowerCase());L=u?[u]:[]}
+ if(/@/.test(v)){const u=byLogin(v.toLowerCase())||users().find(x=>x&&x.email===v.toLowerCase());L=u?[u]:[];if(!u&&faOn()){const lim=rsStart(v.toLowerCase().trim(),1);if(lim){S.fa.err=lim;return go('findacc')}return go('reset')}}
  else if(dg.length===11&&cpfOk(v)){const h=cpfH(v);L=users().filter(u=>u&&u.cpfh===h)}
  else if(dg.length===14&&cnpjOk(v)){const u=byDoc(v);L=u?[u]:[]}
  else if(dg.length>=10&&dg.length<=11&&!cpfOk(v)){L=users().filter(u=>u&&String(u.phone||'').replace(/\D/g,'').slice(-dg.length)===dg)}
