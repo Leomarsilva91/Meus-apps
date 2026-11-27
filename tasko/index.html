@@ -2971,19 +2971,23 @@ function dictEm(){const b=$('#dictem2'),m=$('#dictemmsg'),ta=$('#emdesc');if(!ta
   rc.onend=()=>{S.dictEmRec=null;const x=$('#dictem2');if(x)x.textContent='🎤 Falar os detalhes'};
   try{rc.start();S.dictEmRec=rc;if(b)b.textContent='⏹ Parar';say('Ouvindo…')}catch(e){S.dictEmRec=null;say('Não consegui ativar o microfone aqui.')}}
 function voiceMsg(t){const e=$('#dictmsg');if(e)e.textContent=t||''}
-function dictStop(){try{if(S.dictRec)S.dictRec.stop()}catch(e){}S.dictRec=null;const b=$('#dictbtn');if(b)b.textContent='🎤 Falar a descrição'}
+function dictStop(){S.dictWant=0;try{if(S.dictRec)S.dictRec.stop()}catch(e){}S.dictRec=null;const b=$('#dictbtn');if(b)b.textContent='🎤 Falar a descrição'}
 function dictToggle(){
-  if(S.dictRec){dictStop();return voiceMsg('')}
+  if(S.dictRec){S.dictWant=0;dictStop();return voiceMsg('Pronto. Confira e corrija o texto se precisar.')}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition,ta=$('#rdesc');if(!ta)return;
-  if(!SR)return voiceMsg('Este navegador não transcreve a voz. Use o microfone do teclado do celular para ditar.');
-  let rc;try{rc=new SR()}catch(e){return voiceMsg('Não consegui ativar o microfone aqui. Use o microfone do teclado do celular.')}
-  rc.lang='pt-BR';rc.continuous=true;rc.interimResults=true;
-  const base=ta.value,sep=base&&!/\s$/.test(base)?' ':'';let fin='';
-  rc.onresult=ev=>{let it='';for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];if(r.isFinal)fin+=r[0].transcript;else it+=r[0].transcript}
-    const t=$('#rdesc');if(!t)return;t.value=(base+sep+(fin+it).replace(/^\s+/,'')).slice(0,2000);t.dispatchEvent(new Event('input',{bubbles:true}))};
-  rc.onerror=ev=>{const c=ev&&ev.error;voiceMsg(c==='not-allowed'||c==='service-not-allowed'?'O microfone está bloqueado neste acesso. Libere nas permissões do navegador ou use o microfone do teclado.':c==='no-speech'?'Não ouvi nada. Fale perto do microfone e tente de novo.':'Não consegui transcrever agora. Tente de novo ou digite.');S.dictRec=null;const b=$('#dictbtn');if(b)b.textContent='🎤 Falar a descrição'};
-  rc.onend=()=>{if(S.dictRec===rc){S.dictRec=null;const b=$('#dictbtn');if(b)b.textContent='🎤 Falar a descrição';voiceMsg('Transcrição concluída. Confira e corrija o texto se precisar.')}};
-  try{rc.start();S.dictRec=rc;const b=$('#dictbtn');if(b)b.textContent='⏹ Parar de falar';voiceMsg('Ouvindo… fale a descrição do serviço.')}catch(e){voiceMsg('Não consegui ativar o microfone aqui. Use o microfone do teclado do celular.')}
+  if(!SR)return voiceMsg(/SamsungBrowser/i.test(navigator.userAgent)?'O navegador da Samsung não transcreve voz. Abra o Tasko no Google Chrome ou use o microfone do teclado.':/iPhone|iPad/i.test(navigator.userAgent)?'Neste iPhone, use o microfone do teclado para ditar (toque no campo e depois no 🎤 do teclado).':'Este navegador não transcreve a voz. Abra no Google Chrome ou use o microfone do teclado.');
+  const base0=ta.value;let fin='';S.dictWant=1;
+  const go1=()=>{let rc;try{rc=new SR()}catch(e){S.dictWant=0;return voiceMsg('Não consegui ativar o microfone aqui. Use o microfone do teclado do celular.')}
+   rc.lang='pt-BR';rc.continuous=false;rc.interimResults=true;rc.maxAlternatives=1;
+   rc.onresult=ev=>{let it='';for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];if(r.isFinal)fin+=(fin&&!/\s$/.test(fin)?' ':'')+r[0].transcript.trim();else it+=r[0].transcript}
+     const t=$('#rdesc');if(!t)return;const sep=base0&&!/\s$/.test(base0)?' ':'';t.value=(base0+sep+(fin+(it?' '+it:'')).trim()).slice(0,2000);t.dispatchEvent(new Event('input',{bubbles:true}))};
+   rc.onerror=ev=>{const c=ev&&ev.error;if(c==='no-speech'||c==='aborted')return;S.dictWant=0;voiceMsg(c==='not-allowed'||c==='service-not-allowed'?'O microfone está bloqueado. Toque no cadeado ao lado do endereço do site, em Permissões, e libere o Microfone. Depois tente de novo.':c==='network'?'A transcrição precisa de internet. Confira a conexão e tente de novo.':c==='audio-capture'?'Não achei o microfone do aparelho. Confira se outro app não está usando.':'Não consegui transcrever agora. Tente de novo ou digite.')};
+   rc.onend=()=>{if(S.dictRec!==rc)return;if(S.dictWant){try{rc.start();return}catch(_){try{return go1()}catch(__){}}}S.dictRec=null;const b=$('#dictbtn');if(b)b.textContent='🎤 Falar a descrição';if(fin)voiceMsg('Pronto. Confira e corrija o texto se precisar.')};
+   try{rc.start();S.dictRec=rc;const b=$('#dictbtn');if(b)b.textContent='⏹ Parar de falar';voiceMsg('Ouvindo… fale a descrição do serviço. Toque em Parar quando terminar.')}catch(e){S.dictWant=0;voiceMsg('Não consegui ativar o microfone aqui. Use o microfone do teclado do celular.')}};
+  /* pede a permissão do microfone antes (alguns celulares só mostram o pedido assim) */
+  const pm=navigator.mediaDevices&&navigator.mediaDevices.getUserMedia?navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{try{st.getTracks().forEach(t=>t.stop())}catch(_){}}):Promise.resolve();
+  voiceMsg('Liberando o microfone…');
+  pm.then(go1).catch(e=>{S.dictWant=0;voiceMsg(e&&/NotAllowed|Security/.test(e.name)?'O microfone está bloqueado. Toque no cadeado ao lado do endereço do site, em Permissões, e libere o Microfone. Depois tente de novo.':e&&/NotFound/.test(e.name)?'Não achei o microfone do aparelho.':'Não consegui ativar o microfone. Use o microfone do teclado.')})
 }
 function sayText(key,btn){
   const ss=window.speechSynthesis;if(!ss||!window.SpeechSynthesisUtterance){if(btn)btn.textContent='Áudio indisponível';return}
