@@ -194,13 +194,13 @@ const syUid=()=>{const u=syAU();return u?u.uid:''};
 const syEm=()=>{const u=syAU();return u&&!u.isAnonymous?String(u.email||'').toLowerCase():''};
 const syPub=(k,x)=>!!SYPUB[k]||(k==='ms_esc'&&x&&x.id==='cfg');
 function syEmails(x,out,d){if(x==null||d>3)return;if(typeof x==='string'){if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x))out.add(x.toLowerCase());return}if(Array.isArray(x)){x.forEach(y=>syEmails(y,out,d+1));return}if(typeof x==='object')for(const kk of Object.keys(x)){if(kk==='img'||kk==='video')continue;syEmails(x[kk],out,d+1)}}
-function syParts(k,x){const E=new Set();syEmails(x,E,0);const R=syRead('ms_requests'),P=syRead('ms_proposals');
-  const addReq=id=>{const q=R.find(r=>r&&String(r.id)===String(id));if(!q)return;if(q.email)E.add(String(q.email).toLowerCase());P.filter(p=>p&&String(p.reqId)===String(q.id)&&(String(q.acc||'')===String(p.id)||p.acc||p.ok)).forEach(p=>{if(p.email)E.add(String(p.email).toLowerCase())})};
-  const addProp=id=>{const p=P.find(y=>y&&String(y.id)===String(id));if(!p)return;if(p.email)E.add(String(p.email).toLowerCase());const q=R.find(r=>r&&String(r.id)===String(p.reqId));if(q&&q.email)E.add(String(q.email).toLowerCase())};
+function syParts(k,x){const E=new Set(),F=new Set();syEmails(x,E,0);if(x&&x.fu)F.add(x.fu);const R=syRead('ms_requests'),P=syRead('ms_proposals');
+  const addReq=id=>{const q=R.find(r=>r&&String(r.id)===String(id));if(!q)return;if(q.email)E.add(String(q.email).toLowerCase());if(q.fu)F.add(q.fu);P.filter(p=>p&&String(p.reqId)===String(q.id)&&(String(q.acc||'')===String(p.id)||p.acc||p.ok)).forEach(p=>{if(p.email)E.add(String(p.email).toLowerCase())})};
+  const addProp=id=>{const p=P.find(y=>y&&String(y.id)===String(id));if(!p)return;if(p.email)E.add(String(p.email).toLowerCase());if(p.fu)F.add(p.fu);const q=R.find(r=>r&&String(r.id)===String(p.reqId));if(q&&q.email)E.add(String(q.email).toLowerCase());if(q&&q.fu)F.add(q.fu)};
   if(x.reqId!=null)addReq(x.reqId);if(x.qid!=null)addReq(x.qid);if(x.pid!=null)addProp(x.pid);if(x.propId!=null)addProp(x.propId);
   if(k==='ms_proposals')addProp(x.id);
   if(k==='ms_esc'&&typeof x.id==='string'&&x.id.startsWith('pix:')){const pro=x.id.slice(4);syRead('ms_esc').filter(y=>y&&String(y.id).startsWith('pixok:')&&y.pro===pro).forEach(y=>addProp(y.pid))}
-  const U=syRead('ms_users'),ids=new Set();E.forEach(e=>{const u=U.find(z=>z&&(String(z.email||'').toLowerCase()===e||String(z.em2||'').toLowerCase()===e));if(u&&u.uid)ids.add(u.uid)});return ids}
+  const U=syRead('ms_users'),ids=new Set();E.forEach(e=>{const u=U.find(z=>z&&(String(z.email||'').toLowerCase()===e||String(z.em2||'').toLowerCase()===e));if(u&&u.uid)ids.add(u.uid)});F.forEach(f=>{if(typeof f==='string'&&f.length>5&&f.length<130)ids.add(f)});return ids}
 const sySig=(j,p)=>j+'|'+(p||[]).slice().sort().join(',');
 function syPush(k){if(!SY.db||!SYNCK[k])return;clearTimeout(SY.tm[k]);SY.tm[k]=setTimeout(()=>{SY.q=SY.q.then(async()=>{
   const me=syUid();if(!me)return;
@@ -208,6 +208,7 @@ function syPush(k){if(!SY.db||!SYNCK[k])return;clearTimeout(SY.tm[k]);SY.tm[k]=s
   for(const x of L){const id=syId(k,x),y=syStrip(k,x);ids[id]=1;
     if((k==='ms_users'||k==='ms_plans')&&String(x.email||'').toLowerCase()!==em&&!ADMINS.includes(em)){const m0=meta[id];if(!m0||m0.o!==me)continue}
     if(k==='ms_users'&&em&&String(x.email||'').toLowerCase()===em)y.uid=me;
+    if(em&&k!=='ms_users'&&String(x.email||'').toLowerCase()===em&&!x.fu){x.fu=me;y.fu=me}
     const j=JSON.stringify(y),m=meta[id]||{},ps=syParts(k,y);(m.p||[]).forEach(u=>ps.add(u));ps.add(me);
     const p=[...ps].sort().slice(0,20),sig=sySig(j,p);if(sent[id]===sig)continue;
     if(m.o&&m.o!==me&&!(m.p||[]).includes(me)){sent[id]=sig;continue}
