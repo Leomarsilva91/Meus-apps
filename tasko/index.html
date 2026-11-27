@@ -213,8 +213,8 @@ function syPush(k){if(!SY.db||!SYNCK[k])return;clearTimeout(SY.tm[k]);SY.tm[k]=s
     const p=[...ps].sort().slice(0,20),sig=sySig(j,p);if(sent[id]===sig)continue;
     if(m.o&&m.o!==me&&!(m.p||[]).includes(me)){sent[id]=sig;continue}
     const o=m.o||me;
-    try{await SY.db.doc('sync_'+k+'/'+id).set({j,t:Date.now(),o,p,pub:syPub(k,x)});meta[id]={o,p}}catch(e){}
-    sent[id]=sig}
+    try{await SY.db.doc('sync_'+k+'/'+id).set({j,t:Date.now(),o,p,pub:syPub(k,x)});meta[id]={o,p};sent[id]=sig}catch(e){SY.err=String(e&&e.code||e&&e.message||'erro');try{console.warn('Tasko nuvem',k,id,SY.err)}catch(_){}if(!SY.errShown&&/permission/i.test(SY.err)){SY.errShown=1;try{toast('Não consegui enviar uma informação para a nuvem ('+SY.err+'). Saia e entre de novo na conta.')}catch(_){}}}
+    }
   for(const id of Object.keys(sent)){if(ids[id])continue;delete sent[id];const m=meta[id]||{};if(m.o&&m.o!==me)continue;try{await SY.db.doc('sync_'+k+'/'+id).delete()}catch(e){}}
 },350)})}
 const store={getItem:k=>_store.getItem(k),removeItem:k=>_store.removeItem(k),setItem:(k,v)=>{try{_store.setItem(k,v)}catch(e){storeFull();throw e}if(SYNCK[k])syPush(k)}};
@@ -234,7 +234,7 @@ function syApply(k,snap){const sent=SY.sent[k]=SY.sent[k]||{};let L=syRead(k),ch
       else if(k==='ms_msgs')L[i]={...r,seen:[...new Set([...(r.seen||[]),...(o.seen||[])])]};
       else L[i]=r}
     ch=true}
-  if(ch){rawSet(k,JSON.stringify(L));SY.last=Date.now();syPush(k);if(typeof syncNotify==='function')syncNotify(k)}}
+  if(ch){rawSet(k,JSON.stringify(L));SY.last=Date.now();syPush(k);if(k==='ms_requests'||k==='ms_users'||k==='ms_proposals'){Object.keys(SYNCK).forEach(x=>{if(x!==k&&!SYPUB[x])syPush(x)})}if(typeof syncNotify==='function')syncNotify(k)}}
 function syListen(){const me=syUid();if(!SY.db||!me||SY.me===me)return;(SY.un||[]).forEach(f=>{try{f()}catch(_){}});SY.un=[];SY.me=me;SY.sent={};SY.meta={};
   for(const k of Object.keys(SYNCK)){delete SY['i'+k];const c=SY.db.collection('sync_'+k),on=sn=>{SY.on=true;syApply(k,sn);if(!SY['i'+k]){SY['i'+k]=1;syPush(k)}},er=()=>{};
     SY.un.push(c.where('pub','==',true).onSnapshot(on,er));SY.un.push(c.where('p','array-contains',me).onSnapshot(on,er));
@@ -294,6 +294,14 @@ setInterval(()=>{try{if(!S.user||!S.req)return;const k=rqKey();
   const r={...S.req};delete r.vf;delete r.busy;delete r._rest;delete r._chk;delete r.last;
   if(!String(r.desc||'').trim()&&!r.ai){if(rqLast){rqDel();rqLast=''}return}
   const j=JSON.stringify(r);if(j===rqLast)return;rqLast=j;store.setItem(k,JSON.stringify({t:Date.now(),r}))}catch(_){}},1500);
+
+/* aviso quando o app está logado mas a nuvem não (aí os pedidos não se comunicam) */
+let SYW=0;setInterval(()=>{try{const b=document.getElementById('sywarn');if(!S.user||!window.firebase||!firebase.apps||!firebase.apps.length||window.IA_SEM_NUVEM){SYW=0;if(b)b.remove();return}
+  const cu=firebase.auth().currentUser,ok=cu&&!cu.isAnonymous&&[String(S.user.email||'').toLowerCase(),String(S.user.em2||'').toLowerCase()].includes(String(cu.email||'').toLowerCase());
+  if(ok){SYW=0;if(b)b.remove();return}if(++SYW<3||b)return;
+  const d=document.createElement('div');d.id='sywarn';d.setAttribute('role','alert');d.style.cssText='position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 70px);z-index:70;max-width:560px;margin:0 auto;background:#7a2e0e;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:15px';
+  d.innerHTML='<b>Sua conta não está ligada à nuvem.</b> Pedidos, propostas e conversas não chegam aos outros aparelhos. <div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-act="logout" style="flex:1;min-height:40px;border-radius:10px;border:0;background:#fff;color:#7a2e0e;font-weight:700">Sair e entrar de novo</button><button type="button" id="sywx" style="min-height:40px;border-radius:10px;border:1px solid #fff;background:transparent;color:#fff;font-weight:700;padding:0 12px">Fechar</button></div>';
+  document.body.appendChild(d);d.querySelector('#sywx').onclick=()=>d.remove()}catch(_){}},4000);
 function faVerify(){try{const cu=firebase.auth().currentUser,k='tk_vf_'+(cu&&cu.uid);if(cu&&!cu.isAnonymous&&!cu.emailVerified&&!store.getItem(k)){store.setItem(k,'1');cu.sendEmailVerification().catch(()=>{})}}catch(_){}}
 function faStrip(email){try{const l=users(),x=l.find(y=>y.email===email);if(x&&(x.h||x.hk)){delete x.h;delete x.hk;saveUsers(l)}}catch(_){}}
 /* confere a senha: primeiro no Firebase; a conta antiga (senha guardada neste aparelho) é levada para o Firebase no primeiro login */
