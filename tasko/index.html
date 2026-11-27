@@ -1008,7 +1008,7 @@ const SMR=[
  [/cortina|persiana|var[aã]o/,[['Varão ou trilho',1,'un',70],['Suportes, buchas e parafusos',1,'kit',15]],1],
  [/prateleira|quadro na parede|pendurar/,[['Buchas e parafusos',1,'kit',10],['Suportes (mão-francesa)',2,'un',15]],1],
  [/ar.condicionado|split/,[['Kit de instalação (tubos de cobre, isolamento, cabo)',1,'kit',350],['Suporte para condensadora',1,'un',90],['Dreno',3,'m',4]],1],
- [/piscina/,[['Cloro granulado',300,'g',0.06],['Algicida',200,'mL',0.08],['Clarificante',100,'mL',0.1]],1],
+ [/piscina/,[['Cloro granulado',300,'g',0.06],['Algicida',200,'mL',0.08],['Clarificante',100,'mL',0.1]],1,/buraco|escava|cavar|constru|furar|abrir|fazer (uma )?piscina/],
  [/grama|jardim|\bpoda|\bro[cç]ar\b|ro[cç]agem/,[['Sacos de lixo para resíduos',10,'un',1.5],['Adubo',2,'kg',8]],1],
  [/dedetiz|cupim|barata|rato/,[['Inseticida/gel profissional',1,'kit',80]],1],
  [/vidro|janela|box/,[['Vidro (medir no local)',1,'m²',150],['Silicone',1,'un',25]],1],
@@ -1018,7 +1018,7 @@ const SMR=[
 ];
 function smartArea(t){const m=t.match(/(\d+(?:\.\d+)?)\s*(?:m|metros?)?\s*(?:x|por)\s*(\d+(?:\.\d+)?)/),a=(t.match(/(\d+(?:\.\d+)?)\s*(?:m²|m2|metros quadrados)/)||[])[1];return a?+a:m?(+m[1])*(+m[2]):0}
 function smartN(t,w){if(w===1)return 1;const re=new RegExp('(\\d+)\\s*(?:\\w+\\s){0,2}?(?:'+w+')');const m=t.normalize('NFD').replace(/[̀-ͯ]/g,'').match(re);const n=m?parseInt(m[1]):1;return Math.max(1,Math.min(50,n))}
-function smartMats(d){const t=String(d||'').toLowerCase().replace(/,/g,'.'),A=smartArea(t),out=[],seen=new Set();
+function smartMats(d){try{const t0=String(d||'').toLowerCase();if(CS_KEYS.some(k=>CALC_T[k]&&CALC_T[k].kw&&CALC_T[k].kw.test(t0)))return[]}catch(_){}const t=String(d||'').toLowerCase().replace(/,/g,'.'),A=smartArea(t),out=[],seen=new Set();
  SMR.forEach(([re,L,w,no])=>{if(!re.test(t)||(no&&no.test(t)))return;const isA=typeof w==='string'&&w.startsWith('area:'),k=isA?w.slice(5):'';let n=isA?1:smartN(t,w);
   L.forEach(([nm,q,u,p])=>{if(seen.has(nm))return;seen.add(nm);let qq=q;
    if(isA){const a=A||10;qq=k==='piso'?(/rejunte/i.test(nm)?Math.ceil(a*0.3):/argamassa/i.test(nm)?Math.ceil(a*5):Math.ceil(a*1.1)):k==='imp'?(/tela/i.test(nm)?Math.ceil(a):Math.ceil(a*2)):Math.ceil(a)}
@@ -1191,8 +1191,8 @@ function calcAll(){const c=S.req.calc||{},G={};Object.keys(CALC_T).forEach(k=>{c
 const CALC_RX=[['casa',/\b(casa|sobrado|kitnet|kitinete|ed[ií]cula|resid[eê]ncia)\b/],['muro',/\bmuro|muretas?\b/],['calcada',/cal[cç]ada|contrapiso|piso de concreto|concretar/],['reboco',/reboc|emboço|emboco|chapisco/],['piso',/\bpiso|porcelanato|revestimento|azulejo|cer[aâ]mica/],['pintura',/\bpint(ar|ura)\b/]];
 function calcDetectAll(d){const t=String(d||'').toLowerCase(),L=[];const add=k=>{if(k&&CALC_T[k]&&!L.includes(k))L.push(k)};
   const reb=/reboc|emboço|emboco|chapisco/.test(t),build=/constru|levantar|erguer|fazer (um |o )?muro|subir (um |o )?muro|novo muro|muro novo/.test(t);
-  if(reb&&!build)add('reboco');if(/pint(ar|ura)/.test(t)&&!build&&!/porta|port[aã]o|grade/.test(t))add('pintura');
-  for(const k of CS_KEYS){const T=CALC_T[k];if(T&&T.kw&&T.kw.test(t))add(k)}for(const k in CALC_X)if(CALC_X[k].kw.test(t))add(k);for(const [k,r] of CALC_RX)if(r.test(t))add(k);return L}
+  for(const k of CS_KEYS){const T=CALC_T[k];if(T&&T.kw&&T.kw.test(t))add(k)}
+  if(reb&&!build)add('reboco');if(/pint(ar|ura)/.test(t)&&!build&&!/porta|port[aã]o|grade/.test(t))add('pintura');for(const k in CALC_X)if(CALC_X[k].kw.test(t))add(k);for(const [k,r] of CALC_RX)if(r.test(t))add(k);return L}
 function calcDetect(d){return calcDetectAll(d)[0]||''}
 function anBox(){const r=S.req,c=r.calc||(r.calc={t:'',v:{},k:{}}),obra=!!c.t,feito=!!(r.ai&&(r.ai.calc||r.ai.src==='ia'));
   if(obra&&!feito){if(c.op!==false||!r.ai)c.op=true;return calcBox()}
@@ -1276,7 +1276,8 @@ function calcCore(c){const T=CALC_T[c.t],V=k=>cN(c.v[k]),K=k=>{const d=(T.ck.fin
   return {L,lab,dias,team,sum,cat,mt}}
 /* ===== Serviços criados pelo administrador (sem IA, sem código) ===== */
 let CS_KEYS=[];
-const csRx=s=>{const w=String(s||'').split(',').map(x=>x.trim().toLowerCase()).filter(x=>x.length>=3).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));return w.length?new RegExp(w.join('|')):null};
+const csEsc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const csRx=s=>{const w=String(s||'').split(',').map(x=>x.trim().toLowerCase()).filter(x=>x.length>=3).map(x=>x.includes('+')?'^'+x.split('+').map(y=>y.trim()).filter(Boolean).map(y=>'(?=[\\s\\S]*'+csEsc(y)+')').join(''):csEsc(x));return w.length?new RegExp(w.join('|')):null};
 let CS_DEF=null;function csDefPu(n){if(!CS_DEF){CS_DEF={};try{CALC_RAW=1;calcCatalog().M.forEach(x=>CS_DEF[x.k]=x.pu)}catch(_){}finally{CALC_RAW=0}}return CS_DEF[calcKey(n)]||0}
 function csBuild(D){const F=(D.f||[]).filter(x=>x&&x.l),C=(D.ck||[]).filter(x=>x&&x.l);
   return {n:(D.ic||'🛠️')+' '+D.n,cat:D.cat||'Outros serviços',kw:csRx(D.kw),min:+D.minv||100,cs:1,f:F.map((x,i)=>['f'+i,x.l,x.ph||'1']),ck:C.map((x,i)=>['o'+i,x.l,x.d?1:0]),opt:F.map((x,i)=>x.opt?'f'+i:null).filter(Boolean),
@@ -3533,7 +3534,8 @@ function ceSet(o,p,v){const ks=p.split('.');let a=o;for(let i=0;i<ks.length-1;i+
 function admCs(){const L=(calcOv().cs||[]),E=S.ce;
   const list=L.length?L.map(D=>`<div class="sum" style="align-items:center;gap:8px;margin-top:6px"><span style="flex:1;min-width:0">${esc((D.ic||'🛠️')+' '+D.n)}<br><span class="muted small">${esc(D.cat||'')} · ${(D.mats||[]).filter(m=>m&&m.n).length} materiais</span></span><button type="button" class="chip" data-ceed="${esc(D.id)}">Editar</button></div>`).join(''):'<p class="muted" style="margin:6px 0 0">Nenhum serviço criado ainda.</p>';
   return `<div class="card"><b>➕ Serviços criados por você (${L.length})</b><p class="muted" style="margin:4px 0 8px">Cadastre um serviço novo com perguntas, materiais, preços médios, mão de obra e deslocamento. Ele aparece na calculadora para todos, sem IA.</p>${list}
-  ${E?ceForm(E):'<button type="button" class="btn" style="margin-top:10px" data-ceadd="new">+ Novo serviço</button>'}</div>`}
+  ${E?ceForm(E):'<button type="button" class="btn" style="margin-top:10px" data-ceadd="new">+ Novo serviço</button>'}<details style="margin-top:12px"><summary style="cursor:pointer;min-height:40px;display:flex;align-items:center"><b>🧪 Testar como o app entende um pedido</b></summary><p class="muted" style="margin:4px 0 6px">Escreva um pedido como o cliente escreveria e veja qual serviço o app escolhe.</p><input data-cetest placeholder="Ex.: furar buraco para piscina de 4 x 8" style="width:100%;min-height:44px"><p id="cetestr" style="margin:8px 0 0" aria-live="polite"></p></details></div>`}
+document.addEventListener('input',e=>{const t=e.target;if(!t||!t.matches||!t.matches('[data-cetest]'))return;const r=document.getElementById('cetestr');if(!r)return;const v=t.value.trim();if(!v){r.textContent='';return}const L=calcDetectAll(v);r.innerHTML=L.length?'O app escolhe: <b>'+esc(CALC_T[L[0]].n)+'</b>'+(CALC_T[L[0]].cs?' (criado por você)':'')+(L.length>1?'<br><span class="muted">Também aparece como opção: '+L.slice(1,4).map(k=>esc(CALC_T[k].n)).join(', ')+'</span>':''):'Nenhum serviço da calculadora combina. Crie um serviço novo e coloque palavras desse pedido em "Palavras que o cliente usa".'});
 function ceForm(E){const F=(E.f||[]),C=(E.ck||[]),fo=(sel,inc1)=>`${inc1?`<option value="" ${!sel?'selected':''}>${inc1}</option>`:''}${F.map((x,i)=>x.l?`<option value="f${i}" ${sel==='f'+i?'selected':''}>${esc(x.l)}</option>`:'').join('')}`,co=sel=>`<option value="" ${!sel?'selected':''}>sempre</option>${C.map((x,i)=>x.l?`<option value="o${i}" ${sel==='o'+i?'selected':''}>se marcar: ${esc(x.l)}</option>`:'').join('')}`,
   I=(p,ph,w,im)=>`<input data-ce="${p}" value="${esc(String(ceGet(E,p)??''))}" placeholder="${esc(ph||'')}"${im?' inputmode="decimal"':''} style="${w?'width:'+w+';flex:none':'flex:1;min-width:0'}">`,
   Sel=(p,opts)=>`<select data-ce="${p}" style="flex:1;min-width:0">${opts}</select>`,H=t=>`<p style="margin:12px 0 4px;font-weight:700">${t}</p>`,X=(k,i)=>`<button type="button" class="chip" data-cedel="${k}:${i}" aria-label="Tirar" style="width:40px;padding:0;flex:none">✕</button>`;
@@ -3542,7 +3544,7 @@ function ceForm(E){const F=(E.f||[]),C=(E.ck||[]),fo=(sel,inc1)=>`${inc1?`<optio
   ${H(E.id?'Editar serviço':'Novo serviço')}
   <div class="row" style="gap:6px;flex-wrap:nowrap">${I('ic','🛠️','56px')}${I('n','Nome do serviço (ex.: Instalar portão eletrônico)')}</div>
   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:nowrap"><span class="muted small" style="width:80px;flex:none">Categoria</span>${Sel('cat',CATS.map(c=>`<option ${E.cat===c?'selected':''}>${c}</option>`).join(''))}</div>
-  <label class="muted small" style="display:block;margin-top:6px">Palavras que a pessoa pode escrever (separe por vírgula)</label>${I('kw','portão eletrônico, motor de portão')}
+  <label class="muted small" style="display:block;margin-top:6px">Palavras que a pessoa pode escrever (separe por vírgula; use + para exigir as duas, ex.: buraco+piscina)</label>${I('kw','portão eletrônico, motor de portão')}
   ${H('Perguntas para a pessoa responder')}${F.map((x,i)=>`<div class="row" style="gap:6px;flex-wrap:nowrap;margin-top:4px">${I('f.'+i+'.l','Pergunta (ex.: Área (m²), Quantos portões)')}${I('f.'+i+'.ph','Exemplo','76px',1)}${X('f',i)}</div>`).join('')}${F.length<4?'<button type="button" class="chip" data-ceadd="f">+ Pergunta</button>':''}
   ${H('Opções de marcar (sim ou não)')}${C.map((x,i)=>`<div class="row" style="gap:6px;flex-wrap:nowrap;margin-top:4px">${I('ck.'+i+'.l','Ex.: Com controle remoto extra')}${X('ck',i)}</div>`).join('')}${C.length<3?'<button type="button" class="chip" data-ceadd="ck">+ Opção</button>':''}
   ${H('Materiais')}<p class="muted small" style="margin:0 0 4px">Quantidade = número × a resposta escolhida (ou número fixo). Deixe o preço vazio para usar o preço da lista de materiais.</p>
