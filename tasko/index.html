@@ -275,6 +275,8 @@ const FA={
   async out(){try{if(await this.ready()){const au=this.au();if(au.currentUser&&!au.currentUser.isAnonymous){await au.signOut();await au.signInAnonymously().catch(()=>{})}}}catch(_){}},
   msg(e){const c=String(e&&e.code||'');return /too-many-requests/.test(c)?'Muitas tentativas. Espere alguns minutos ou use "Esqueci minha senha".':/network-request-failed/.test(c)?'Sem internet agora. Confira a conexão e tente de novo.':/operation-not-allowed/.test(c)?'O login por e-mail e senha ainda não foi ligado no Firebase (Authentication › Método de login › E-mail/senha).':/weak-password/.test(c)?'Senha fraca: use ao menos 8 caracteres, com letras e números.':''}
 };
+/* conta que existe no Firebase mas cujo cadastro foi apagado: refaz o cadastro com o mesmo e-mail */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-go="signup"]');if(!b||!S.fbNew)return;setTimeout(()=>{const i=document.getElementById('email');if(i&&!i.value){i.value=S.fbNew.email;try{i.dispatchEvent(new Event('input',{bubbles:true}))}catch(_){}}},250)},true);
 function faVerify(){try{const cu=firebase.auth().currentUser,k='tk_vf_'+(cu&&cu.uid);if(cu&&!cu.isAnonymous&&!cu.emailVerified&&!store.getItem(k)){store.setItem(k,'1');cu.sendEmailVerification().catch(()=>{})}}catch(_){}}
 function faStrip(email){try{const l=users(),x=l.find(y=>y.email===email);if(x&&(x.h||x.hk)){delete x.h;delete x.hk;saveUsers(l)}}catch(_){}}
 /* confere a senha: primeiro no Firebase; a conta antiga (senha guardada neste aparelho) é levada para o Firebase no primeiro login */
@@ -307,7 +309,7 @@ const head=(t,back)=>`<header class="top">${back?`<button class="back" data-act=
 const V={
 welcome:()=>`<div class="hero"><svg width="72" height="72" viewBox="0 0 64 64" role="img" aria-label="Logo do Tasko" style="display:block;margin-bottom:16px"><rect width="64" height="64" rx="18" fill="#FF6B35"/><path d="M17 22H47M32 22V43" stroke="#FFF7EC" stroke-width="10" stroke-linecap="round" fill="none"/><circle cx="46" cy="46" r="6.5" fill="#2EC4A6"/></svg><h1>tasko</h1><p style="margin:0">Encontre quem resolve ou ofereça o seu trabalho.</p></div>
 <main>
-<div class="card" style="border-color:var(--acc)"><b>Versão de demonstração</b><p class="muted" style="margin:6px 0 0">Os dados ficam só neste navegador, os pagamentos são simulados e a análise por IA pode pedir a sua permissão.</p><button class="link" data-act="wipe">Apagar dados de teste deste navegador</button></div>
+${S.fbNew?`<div class="card" style="border-color:var(--acc)"><b>✅ Senha certa: falta refazer o cadastro</b><p style="margin:6px 0 0">A conta <b>${esc(S.fbNew.email)}</b> existe, mas o cadastro dela foi apagado nos testes. Escolha o perfil abaixo, toque em <b>Criar conta</b> e use o <b>mesmo e-mail e a mesma senha</b>.</p></div>`:''}<div class="card" style="border-color:var(--acc)"><b>Versão de demonstração</b><p class="muted" style="margin:6px 0 0">Os dados ficam só neste navegador, os pagamentos são simulados e a análise por IA pode pedir a sua permissão.</p><button class="link" data-act="wipe">Apagar dados de teste deste navegador</button></div>
 <h2>Como você quer usar?</h2>
 <div class="rgrid"><div class="rcol"><h3>Contratantes</h3>
 <button class="pick" data-role="cli" aria-pressed="${S.role==='cli'}"><b>Contratante</b><span class="rtg"><i>Individual</i><i>Particular</i></span><span class="muted">Peça orçamentos e agende serviços</span></button>
@@ -3027,6 +3029,11 @@ async function login(){
   $('#go').disabled=true;
   const u=byLogin(email),lk=lkGet(),lr=u&&lk[u.email]||{n:0,t:0};
   if(u&&lr.n>=5&&Date.now()-lr.t<9e5){$('#go').disabled=false;$('#lerr').textContent='Muitas tentativas erradas. Por segurança, espere 15 minutos ou use "Esqueci minha senha".';return}
+  if(!u&&!isDoc&&email&&await FA.ready()){try{await FA.signIn(email,pw)}catch(e){$('#go').disabled=false;$('#lerr').textContent=FA.msg(e)||'E-mail ou senha incorretos.';return}
+    faVerify();let fu=null;for(let i=0;i<15&&!fu;i++){fu=byLogin(email)||users().find(x=>x&&x.email===email);if(!fu)await new Promise(r=>setTimeout(r,300))}
+    if(fu&&!fu.susp){poutSet(fu.email,[]);return enter(fu)}
+    if(fu&&fu.susp){$('#go').disabled=false;$('#lerr').textContent='Esta conta está suspensa. Fale com o administrador.';return}
+    S.fbNew={email};$('#go').disabled=false;return go('welcome')}
   const A=u?await authCheck(u,pw):{ok:false},okPw=A.ok;if(!okPw&&A.err){$('#go').disabled=false;$('#lerr').textContent=A.err;return}
   if(u&&!okPw){const m=lkGet(),r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m))}
   if(u&&okPw){const m=lkGet();if(m[u.email]){delete m[u.email];store.setItem('ms_lk',JSON.stringify(m))}}
