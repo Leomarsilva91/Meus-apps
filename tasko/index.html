@@ -277,6 +277,19 @@ const FA={
 };
 /* conta que existe no Firebase mas cujo cadastro foi apagado: refaz o cadastro com o mesmo e-mail */
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-go="signup"]');if(!b||!S.fbNew)return;setTimeout(()=>{const i=document.getElementById('email');if(i&&!i.value){i.value=S.fbNew.email;try{i.dispatchEvent(new Event('input',{bubbles:true}))}catch(_){}}},250)},true);
+
+/* rascunho do pedido: guarda o que foi preenchido e volta ao mesmo ponto ao tocar em pedir serviço ou reabrir o app */
+const rqKey=()=>S.user?'tk_rqd_'+S.user.email+'_'+(S.user.pk||S.user.role||''):'';
+function rqDel(){const k=rqKey();if(k)try{store.removeItem(k)}catch(_){}}
+function rqLoad(){const k=rqKey();if(!k)return null;try{const o=JSON.parse(store.getItem(k)||'null');if(!o||!o.r||Date.now()-o.t>30*864e5)return null;const r=Object.assign(newReq(),o.r,{busy:false,vf:null,_rest:1,_chk:1});return r}catch(_){return null}}
+let rqLast='';
+setInterval(()=>{try{if(!S.user||!S.req)return;const k=rqKey();
+  if(S.v==='sent'||S.v==='emsent'||S.req.last){rqDel();rqLast='';return}
+  if(S.v==='request'&&!S.req._chk){S.req._chk=1;if(!String(S.req.desc||'').trim()){const d=rqLoad();if(d){S.req=d;render();return}}}
+  if(S.v!=='request')return;const e=document.getElementById('rdesc');if(e&&e.value!==S.req.desc)S.req.desc=e.value;
+  const r={...S.req};delete r.vf;delete r.busy;delete r._rest;delete r._chk;delete r.last;
+  if(!String(r.desc||'').trim()&&!r.ai){if(rqLast){rqDel();rqLast=''}return}
+  const j=JSON.stringify(r);if(j===rqLast)return;rqLast=j;store.setItem(k,JSON.stringify({t:Date.now(),r}))}catch(_){}},1500);
 function faVerify(){try{const cu=firebase.auth().currentUser,k='tk_vf_'+(cu&&cu.uid);if(cu&&!cu.isAnonymous&&!cu.emailVerified&&!store.getItem(k)){store.setItem(k,'1');cu.sendEmailVerification().catch(()=>{})}}catch(_){}}
 function faStrip(email){try{const l=users(),x=l.find(y=>y.email===email);if(x&&(x.h||x.hk)){delete x.h;delete x.hk;saveUsers(l)}}catch(_){}}
 /* confere a senha: primeiro no Firebase; a conta antiga (senha guardada neste aparelho) é levada para o Firebase no primeiro login */
@@ -371,6 +384,7 @@ ${fld('lpw','Senha','type="password" name="password" autocomplete="current-passw
 <button class="link" data-act="forgot">Esqueci minha senha</button>
 <button class="btn ghost" data-go="welcome">Criar uma conta</button></main>`,
 request:()=>{const r=S.req,pd=pendEm();if(!r.city)r.city=lastCity();if(pd)return `${head('Descrição do serviço','home')}<main><div class="card"><h2>Antes de um novo pedido</h2><p style="margin:8px 0 0">Falta pagar a taxa do seu pedido de emergência. Leva um minuto e depois você pode pedir normalmente.</p><button class="btn" style="margin-top:12px" data-unlock="${pd.id}">Pagar a taxa pendente</button></div></main>`;return `${head('Descrição do serviço','home')}<main>
+${r._rest?`<div class="card" style="border-color:var(--acc)"><b>↩️ Continuando o pedido que você começou</b><p class="muted" style="margin:4px 0 8px">Tudo o que você já tinha preenchido está aqui.</p><button class="link" data-act="rqzero">Começar um pedido do zero</button></div>`:''}
 <div><label for="rdesc">O que você precisa?</label><textarea id="rdesc" aria-describedby="e-rdesc" maxlength="2000" placeholder="Pode ser um reparo ou uma obra. Ex.: o chuveiro não esquenta; ou: construir um muro de 20 m; ou: reformar a casa inteira, 120 m²">${esc(r.desc)}</textarea><div class="err" id="e-rdesc"></div><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button type="button" class="chip" id="dictbtn" data-act="dict">🎤 Falar a descrição</button><button type="button" class="chip" data-say="form">🔊 Ouvir</button></div><div class="muted" id="dictmsg" role="status" aria-live="polite" style="margin-top:4px"></div></div>
 <div id="emsug" aria-live="polite">${emSugHtml()}</div>
 <label class="card" style="display:flex;gap:10px;align-items:flex-start;margin:0;cursor:pointer"><input type="checkbox" id="rrep" style="width:24px;height:24px;flex:none;margin-top:2px"${r.rep?' checked':''}><span><b>🔁 É um serviço que vai se repetir</b><br><span class="muted" style="font-size:13px">Toda semana, a cada 15 dias ou todo mês (faxina, jardim, piscina, aulas…). A taxa do pedido fica ${window.repInfo?repInfo():'um pouco maior'} e já inclui o primeiro mês de agenda, lembretes, recibos e conversa pelo app com o profissional.</span></span></label>
@@ -3344,7 +3358,8 @@ document.addEventListener('click',e=>{
   if(D.act==='pdf')return saveFile('pdf');
   if(D.act==='csv')return saveFile('csv');
   if(D.act==='publish')return publishReq();
-  if(D.act==='newreq'){S.req=newReq();S.aid++;return go('request')}
+  if(D.act==='newreq'){S.req=(S.req&&String(S.req.desc||'').trim()&&!S.req.last?Object.assign(S.req,{_rest:1}):rqLoad())||newReq();S.aid++;return go('request')}
+  if(D.act==='rqzero'){rqDel();S.req=newReq();S.req._chk=1;S.aid++;go('request');const e=$('#rdesc');if(e)e.value='';const c=e&&e.closest('main')&&e.closest('main').querySelector('[data-act="rqzero"]');if(c)c.closest('.card').remove();const ai=$('#ai');if(ai)ai.innerHTML='';return}
   if(D.act==='signup')return signup();
   if(D.act==='login')return login();
   if(D.rate){const [pid,fl,v]=D.rate.split(':');S.rt=S.rt||{};const R=S.rt[+pid]=S.rt[+pid]||{svc:0,per:0,txt:''};R[fl]=+v;const b=$('#rtbox');if(b)b.innerHTML=ratePendHtml();return}
