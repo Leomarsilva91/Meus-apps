@@ -953,6 +953,53 @@ const KW={'Elétrica':['tomada','disjuntor','chuveiro','fio','lâmpada','lampada
 const BIG=['construir','construção','construcao','fundação','fundacao','laje','ampliação','ampliacao','casa inteira','casa nova','prédio','predio','galpão','galpao','estrutura','cobertura completa','telhado completo','obra completa','sobrado','edifício','edificio','loteamento'];
 const BASE={'Elétrica':180,'Hidráulica':200,'Limpeza':150,'Pintura':400,'Construção e reformas':900,'Outros serviços':250};
 const PROS={'Elétrica':'Eletricista residencial','Hidráulica':'Encanador','Limpeza':'Diarista ou faxineira','Pintura':'Pintor de paredes','Construção e reformas':'Pedreiro, mestre de obras, engenheiro ou arquiteto','Outros serviços':'Profissional da área do serviço'};
+/* materiais pela descrição, sem IA: regras por palavra-chave, com quantidade lida do texto (ex.: "3 tomadas", "20 m²", "4x5") */
+const SMR=[
+ [/chuveiro/,[['Chuveiro elétrico',1,'un',90],['Fita isolante',1,'un',8],['Conector de porcelana',2,'un',6]],1],
+ [/resist[eê]ncia/,[['Resistência para chuveiro',1,'un',35]],1],
+ [/tomada/,[['Tomada 10A com placa',1,'un',18],['Caixa 4x2',1,'un',4],['Fio flexível 2,5 mm²',5,'m',4.5]],'tomada'],
+ [/interruptor/,[['Interruptor com placa',1,'un',16],['Fio flexível 1,5 mm²',4,'m',3.2]],'interruptor'],
+ [/disjuntor/,[['Disjuntor',1,'un',28]],'disjuntor'],
+ [/l[aâ]mpada|lumin[aá]ria|plafon|spot/,[['Lâmpada LED',1,'un',12],['Luminária ou plafon',1,'un',45],['Conector de emenda',2,'un',2]],'lampada|luminaria|plafon|spot'],
+ [/ventilador de teto/,[['Kit de fixação para ventilador',1,'un',25],['Fio flexível 1,5 mm²',6,'m',3.2],['Conector de emenda',4,'un',2]],1],
+ [/quadro de (luz|energia|distribui)|fia[cç][aã]o|refazer a parte el[eé]trica/,[['Quadro de distribuição',1,'un',120],['Disjuntores',6,'un',28],['Fio flexível 2,5 mm²',50,'m',4.5],['Eletroduto corrugado',20,'m',2.5]],1],
+ [/torneira/,[['Torneira',1,'un',60],['Fita veda-rosca',1,'un',8],['Engate flexível',1,'un',18]],'torneira'],
+ [/descarga|caixa acoplada|vaso sanit|privada/,[['Kit de reparo para caixa acoplada',1,'un',45],['Anel de vedação do vaso',1,'un',15],['Engate flexível',1,'un',18]],1],
+ [/sif[aã]o|\bpia\b|\btanque\b|lavat[oó]rio/,[['Sifão',1,'un',25],['Válvula de escoamento',1,'un',20],['Fita veda-rosca',1,'un',8]],1,/torneira/],
+ [/entupi|desentup/,[['Desentupidor químico',1,'un',25],['Luvas de borracha',1,'par',12]],1],
+ [/vazamento|vazando|cano|tubo|encanamento/,[['Tubo PVC 25 mm',3,'m',9],['Conexões PVC (joelho, luva)',4,'un',5],['Cola para PVC',1,'un',18],['Fita veda-rosca',1,'un',8]],1,/torneira|descarga|caixa acoplada|chuveiro|registro/],
+ [/registro/,[['Registro de gaveta',1,'un',55],['Fita veda-rosca',1,'un',8]],'registro'],
+ [/caixa d.?[aá]gua/,[['Boia para caixa d\'água',1,'un',35],['Vedação/adaptador',2,'un',12],['Fita veda-rosca',1,'un',8]],1],
+ [/aquecedor|boiler/,[['Kit de conexões para aquecedor',1,'kit',90]],1],
+ [/porcelanato|piso|azulejo|cer[aâ]mica|revestimento/,[['Piso ou revestimento (+10% de perda)',0,'m²',55],['Argamassa AC-II',0,'kg',1.2],['Rejunte',0,'kg',9]],'area:piso'],
+ [/gesso|drywall|forro/,[['Placa de gesso/drywall',0,'m²',35],['Perfis e parafusos',0,'m²',18],['Massa e fita para junta',0,'m²',6]],'area:forro'],
+ [/telhado|telha|goteira|infiltra/,[['Telhas',10,'un',12],['Manta ou impermeabilizante',1,'L',45],['Pregos ou parafusos de telha',1,'kit',25]],1],
+ [/fechadura|ma[cç]aneta/,[['Fechadura',1,'un',90]],'fechadura|macaneta'],
+ [/porta/,[['Dobradiças',3,'un',12],['Parafusos e buchas',1,'kit',10]],1],
+ [/montar|montagem|m[oó]vel|arm[aá]rio|guarda.roupa/,[['Parafusos, buchas e cavilhas extras',1,'kit',20]],1],
+ [/suporte.*(tv|televis)|(tv|televis).*(parede|suporte)/,[['Suporte de TV para parede',1,'un',90],['Buchas e parafusos 10 mm',1,'kit',10]],1],
+ [/cortina|persiana|var[aã]o/,[['Varão ou trilho',1,'un',70],['Suportes, buchas e parafusos',1,'kit',15]],1],
+ [/prateleira|quadro na parede|pendurar/,[['Buchas e parafusos',1,'kit',10],['Suportes (mão-francesa)',2,'un',15]],1],
+ [/ar.condicionado|split/,[['Kit de instalação (tubos de cobre, isolamento, cabo)',1,'kit',350],['Suporte para condensadora',1,'un',90],['Dreno',3,'m',4]],1],
+ [/piscina/,[['Cloro granulado',300,'g',0.06],['Algicida',200,'mL',0.08],['Clarificante',100,'mL',0.1]],1],
+ [/grama|jardim|\bpoda|\bro[cç]ar\b|ro[cç]agem/,[['Sacos de lixo para resíduos',10,'un',1.5],['Adubo',2,'kg',8]],1],
+ [/dedetiz|cupim|barata|rato/,[['Inseticida/gel profissional',1,'kit',80]],1],
+ [/vidro|janela|box/,[['Vidro (medir no local)',1,'m²',150],['Silicone',1,'un',25]],1],
+ [/faxina|limpeza|limpar|diarista|higieniz/,[['Produtos de limpeza (multiuso, desinfetante, detergente)',1,'kit',45],['Panos, esponjas e luvas',1,'kit',25]],1],
+ [/p[oó]s.obra/,[['Removedor de cimento e tinta',1,'L',35],['Sacos de entulho',10,'un',2]],1],
+ [/impermeabiliz/,[['Impermeabilizante',0,'kg',12],['Tela de poliéster',0,'m²',4]],'area:imp']
+];
+function smartArea(t){const m=t.match(/(\d+(?:\.\d+)?)\s*(?:m|metros?)?\s*(?:x|por)\s*(\d+(?:\.\d+)?)/),a=(t.match(/(\d+(?:\.\d+)?)\s*(?:m²|m2|metros quadrados)/)||[])[1];return a?+a:m?(+m[1])*(+m[2]):0}
+function smartN(t,w){if(w===1)return 1;const re=new RegExp('(\\d+)\\s*(?:\\w+\\s){0,2}?(?:'+w+')');const m=t.normalize('NFD').replace(/[̀-ͯ]/g,'').match(re);const n=m?parseInt(m[1]):1;return Math.max(1,Math.min(50,n))}
+function smartMats(d){const t=String(d||'').toLowerCase().replace(/,/g,'.'),A=smartArea(t),out=[],seen=new Set();
+ SMR.forEach(([re,L,w,no])=>{if(!re.test(t)||(no&&no.test(t)))return;const isA=typeof w==='string'&&w.startsWith('area:'),k=isA?w.slice(5):'';let n=isA?1:smartN(t,w);
+  L.forEach(([nm,q,u,p])=>{if(seen.has(nm))return;seen.add(nm);let qq=q;
+   if(isA){const a=A||10;qq=k==='piso'?(/rejunte/i.test(nm)?Math.ceil(a*0.3):/argamassa/i.test(nm)?Math.ceil(a*5):Math.ceil(a*1.1)):k==='imp'?(/tela/i.test(nm)?Math.ceil(a):Math.ceil(a*2)):Math.ceil(a)}
+   else if(u==='un'||u==='par'||u==='m')qq=q*n;
+   const v=Math.round(qq*p);out.push({n:nm+(isA&&!A?' (estimado para 10 m²)':''),q:qq,u,v,ia:Math.round(p*100)/100})})});
+ if(/pint|tinta|repintar/.test(t)){const a=A?(/(parede|teto)/.test(t)?A:A*3):35,L=Math.ceil(a*2/10);
+  [['Tinta acrílica (2 demãos)',L,'L',28],['Massa corrida ou selador',Math.ceil(a/8),'kg',10],['Lixa, rolo, pincel e fita crepe',1,'kit',45],['Lona de proteção',1,'un',20]].forEach(([nm,q,u,p])=>out.push({n:nm+(A?'':' (estimado para um cômodo)'),q,u,v:Math.round(q*p),ia:p}))}
+ return out.slice(0,10)}
 function localAnalysis(d,urg){
   const t=d.toLowerCase(),sc=Object.entries(KW).map(([c,ws])=>[c,ws.filter(w=>t.includes(w)).length]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
   if(!sc.length&&d.trim().length<12)return{invalid:1,reason:'Descreva o serviço com mais detalhes (o que precisa, onde e para quando).'};
@@ -960,7 +1007,7 @@ function localAnalysis(d,urg){
   k=(1+Math.min(w,40)/20)*(1+(qty-1)*.15)*(urg==='hoje'?1.25:1),min=Math.round(BASE[cats[0]]*k/10)*10,max=Math.round(min*1.3/10)*10;
   const big=BIG.some(x=>t.includes(x)),am=(t.match(/(\d+(?:[.,]\d+)?)\s*(?:m²|m2|metros quadrados|m\b)/)||[])[1],area=am?Math.min(5000,Math.round(parseFloat(am.replace(',','.')))):0;
   if(big){const ref=/reform/.test(t)&&!/(construir|constru[cç][aã]o|casa nova|sobrado|edif)/.test(t),pm=ref?[350,650]:[700,1100],lo=area?area*pm[0]:(ref?8000:12000),hi=area?area*pm[1]:(ref?25000:40000);const ar=area||60,team=[{t:'Mestre de obras',n:1},{t:'Pedreiro',n:Math.max(2,Math.ceil(ar/25))},{t:'Servente',n:Math.max(2,Math.ceil(ar/20))},{t:'Engenheiro ou arquiteto (responsável técnico)',n:1}],maq=[{t:'Betoneira',n:Math.max(1,Math.ceil(ar/80))},{t:'Andaime (conjuntos)',n:Math.max(2,Math.ceil(ar/30))},{t:'Vibrador de concreto',n:1}];return{src:'local',team,maq,func:team.reduce((x,y)=>x+y.n,0),porte:'grande',lab:[lo,hi],mats:[],matTotal:0,min:lo,max:hi,days:'Vários meses, conforme o projeto',summary:'',cats:cats.includes('Construção e reformas')?cats:['Construção e reformas',...cats].slice(0,3),pros:['Engenheiro ou arquiteto','Mestre de obras','Pedreiro'],clarify:['Qual a área em m² e o tipo de construção?','Já existe projeto aprovado na prefeitura?','O terreno tem acesso para máquinas e materiais?','Quem fornece o material: você ou o profissional?']}}
-  const mats=localMats(cats[0],qty),mt=mats.reduce((a,m)=>a+m.v,0);return{src:'local',team:[{t:PROS[cats[0]]||'Profissional',n:1}],maq:[],func:1,lab:[min,max],mats,matTotal:mt,min:min+mt,max:max+mt,days:k<1.8?'1 dia útil':k<2.8?'1 a 2 dias úteis':'2 a 3 dias úteis',summary:'',cats,pros:cats.map(c=>PROS[c]),clarify:['Há fotos ou medidas que ajudem o profissional?','O local tem fácil acesso?']};
+  const sm=smartMats(d),mats=sm.length?sm:localMats(cats[0],qty),mt=mats.reduce((a,m)=>a+m.v,0);return{src:'local',team:[{t:PROS[cats[0]]||'Profissional',n:1}],maq:[],func:1,lab:[min,max],mats,matTotal:mt,min:min+mt,max:max+mt,days:k<1.8?'1 dia útil':k<2.8?'1 a 2 dias úteis':'2 a 3 dias úteis',summary:'',cats,pros:cats.map(c=>PROS[c]),clarify:['Há fotos ou medidas que ajudem o profissional?','O local tem fácil acesso?']};
 }
 function norm(o){
   if(!o||typeof o!=='object')return null;
@@ -1948,7 +1995,7 @@ const MATS={'Elétrica':['Fios e cabos','Tomadas e interruptores','Disjuntores']
 function localQ(q){
   const c=q.cats[0],w=q.desc.trim().split(/\s+/).length,qty=Math.min(10,Math.max(1,...(q.desc.match(/\d+/g)||[1]).map(Number))),
   h=Math.max(3,Math.round((1+Math.min(w,40)/20)*(1+(qty-1)*.15)*3)),pr=Math.max(1,Math.round(h*.25)),fi=Math.max(1,Math.round(h*.2)),ex=Math.max(1,h-pr-fi),
-  hours=pr+ex+fi,mats=localMats(c,qty),mt=mats.reduce((a,m)=>a+m.v,0),big=!!qVis(q)&&Number(qVis(q).max)>20000,lab=big?Math.round((Number(qVis(q).min)+Number(qVis(q).max))/2*.9/10)*10:Math.round(hours*(RATE[c]||45)*(q.urg==='hoje'?1.15:1)/10)*10,trav=Math.max(20,Math.round(lab*.1/10)*10),price=lab+mt+trav;
+  hours=pr+ex+fi,_sm=smartMats(q.desc),mats=_sm.length?_sm:localMats(c,qty),mt=mats.reduce((a,m)=>a+m.v,0),big=!!qVis(q)&&Number(qVis(q).max)>20000,lab=big?Math.round((Number(qVis(q).min)+Number(qVis(q).max))/2*.9/10)*10:Math.round(hours*(RATE[c]||45)*(q.urg==='hoje'?1.15:1)/10)*10,trav=Math.max(20,Math.round(lab*.1/10)*10),price=lab+mt+trav;
   return{src:'local',team:[{t:'Profissional da área',n:hours>16?2:1}],maq:[],equip:0,price,hours,steps:[['Preparação',pr],['Execução',ex],['Acabamento',fi]],summary:'',mats,matTotal:mt,lab,trav,days:daysFor(hours),tools:TOOLS[c]||[],crew:hours>16?2:1,warranty:'30 dias',tips:['Confirme medidas e acesso ao local antes de fechar o preço.']};
 }
 function normQ(o){
