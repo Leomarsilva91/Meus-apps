@@ -3034,10 +3034,13 @@ async function login(){
     if(fu&&!fu.susp){poutSet(fu.email,[]);return enter(fu)}
     if(fu&&fu.susp){$('#go').disabled=false;$('#lerr').textContent='Esta conta está suspensa. Fale com o administrador.';return}
     S.fbNew={email};$('#go').disabled=false;return go('welcome')}
-  const A=u?await authCheck(u,pw):{ok:false},okPw=A.ok;if(!okPw&&A.err){$('#go').disabled=false;$('#lerr').textContent=A.err;return}
+  let A=u?await authCheck(u,pw):{ok:false};
+  if(u&&!A.ok&&!isDoc&&email&&email!==u.email&&await FA.ready()){try{await FA.signIn(email,pw);faVerify();A={ok:true}}catch(_){}}
+  if(u&&!A.ok&&!A.err&&await FA.ready())A={ok:false,err:'Senha incorreta. Se você trocou a senha pelo link do e-mail, use a senha nova. Se não lembra, toque em "Esqueci minha senha" e use o link que chega no e-mail.'};
+  const okPw=A.ok;if(!okPw&&A.err){$('#go').disabled=false;$('#lerr').textContent=A.err;return}
   if(u&&!okPw){const m=lkGet(),r=m[u.email]&&Date.now()-m[u.email].t<9e5?m[u.email]:{n:0,t:0};m[u.email]={n:r.n+1,t:Date.now()};store.setItem('ms_lk',JSON.stringify(m))}
   if(u&&okPw){const m=lkGet();if(m[u.email]){delete m[u.email];store.setItem('ms_lk',JSON.stringify(m))}}
-  if(!u||!okPw){$('#go').disabled=false;$('#lerr').textContent=isDoc?'Documento ou senha incorretos.':'E-mail ou senha incorretos.';return}
+  if(!u||!okPw){$('#go').disabled=false;$('#lerr').textContent=isDoc&&!u?'Entre com o e-mail. O CPF só funciona depois que você entra uma vez neste aparelho.':isDoc?'Documento ou senha incorretos.':'E-mail ou senha incorretos.';return}
   if(u.susp){$('#go').disabled=false;$('#lerr').textContent='Esta conta está suspensa. Fale com o administrador.';return}
   poutSet(u.email,[]);enter(users().find(x=>x.email===u.email)||u);
 }
@@ -3047,9 +3050,9 @@ async function login(){
 const rsCode=()=>{try{const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+a[0]%900000)}catch(e){return String(Math.floor(100000+Math.random()*900000))}};
 const rsLim=k=>{let m={};try{m=JSON.parse(store.getItem('ms_rsl')||'{}')}catch(e){}const n=Date.now(),L=(m[k]||[]).filter(t=>n-t<36e5);if(L.length>=5)return 'Muitos pedidos de código. Tente de novo daqui a 1 hora.';if(L.length&&n-L[L.length-1]<6e4)return 'Espere 1 minuto para pedir outro código.';L.push(n);m[k]=L;store.setItem('ms_rsl',JSON.stringify(m));return ''};
 /* recuperação de senha de verdade: o Firebase manda o link para o e-mail da conta (o código na tela era só demonstração) */
-const faOn=()=>!!(window.firebase&&firebase.auth&&firebase.apps&&firebase.apps.length&&window.IA_NUVEM_UID&&!window.IA_SEM_NUVEM);
+const faOn=()=>!window.IA_SEM_NUVEM&&(/github\.io$/.test(location.hostname)||!!(window.firebase&&firebase.auth&&firebase.apps&&firebase.apps.length&&window.IA_NUVEM_UID&&!window.IA_SEM_NUVEM));
 {const _rv=V.reset;V.reset=()=>{const R=S.rs||{};if(!faOn())return _rv();
-  if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(R.email||'')&&!R.fbSent){R.fbSent=1;try{firebase.auth().sendPasswordResetEmail(R.email).catch(er=>{const c=String(er&&er.code||'');if(/user-not-found/.test(c))return;setTimeout(()=>{const x=document.getElementById('rerr');if(x)x.textContent=/invalid-email/.test(c)?'Este e-mail não parece válido. Confira se não tem acento ou ç e tente de novo.':/too-many/.test(c)?'Muitos pedidos agora. Espere alguns minutos e tente de novo.':'Não consegui enviar o link agora. Confira a internet e tente de novo.'},300)})}catch(_){}}
+  if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(R.email||'')&&!R.fbSent){R.fbSent=1;FA.ready().then(ok=>{if(!ok)throw {code:'net'};return firebase.auth().sendPasswordResetEmail(R.email)}).catch(er=>{const c=String(er&&er.code||'');if(/user-not-found/.test(c))return;setTimeout(()=>{const x=document.getElementById('rerr');if(x)x.textContent=/invalid-email/.test(c)?'Este e-mail não parece válido. Confira se não tem acento ou ç e tente de novo.':/too-many/.test(c)?'Muitos pedidos agora. Espere alguns minutos e tente de novo.':'Não consegui enviar o link agora. Confira a internet e tente de novo.'},300)})}
   return `${head('Recuperar senha','login')}<main><div class="card"><b>Confira o seu e-mail</b><p style="margin:8px 0 0">Se houver uma conta com <b>${esc(R.login||R.email||'')}</b>, enviamos um link para ${R.ok?'<b>'+esc(emMask(R.email))+'</b>':'esse e-mail'}.</p><ol style="margin:10px 0 0;padding-left:20px"><li>Abra o e-mail do Firebase (veja também o spam ou lixo eletrônico).</li><li>Toque no link e crie a nova senha.</li><li>Volte aqui e entre com a senha nova.</li></ol><p class="muted" style="margin:10px 0 0">O link vale por pouco tempo. O Tasko nunca pede senha nem código por telefone ou mensagem.</p></div>
 <button class="btn" data-go="login">Já criei a nova senha: entrar</button>
 <button class="btn ghost" data-act="rsfb">Não chegou? Enviar de novo</button><div class="alert" id="rerr" role="alert"></div></main>`}}
