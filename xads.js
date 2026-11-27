@@ -44,14 +44,35 @@
     },
     url: function (a) { return a.wa ? 'https://wa.me/' + a.wa + '?text=' + encodeURIComponent('Olá! Vi seu anúncio: ' + (a.tt || '')) : (ln(a.ln) || '#'); },
     card: function (a) {
-      var u = X.url(a), cta = a.wa ? 'Chamar no WhatsApp' : 'Abrir o link';
+      
       return '<div style="display:grid;gap:6px;padding:14px;border-radius:14px;background:var(--card,var(--surface,#fff));border:1.5px solid var(--line,#ddd);color:inherit">' +
         '<div style="display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fff3d6;color:#7a4a00">Patrocinado</span></div>' +
         '<b style="font-size:17px;line-height:1.25">' + E(a.tt) + '</b>' +
         '<span style="font-size:13.5px;opacity:.75">' + E(a.loja) + (a.cid ? ' · ' + E(a.cid) : '') + '</span>' +
         (a.pr ? '<b style="font-size:16px">' + E(a.pr) + '</b>' : '') +
         (a.tx ? '<span style="font-size:14.5px">' + E(a.tx) + '</span>' : '') +
-        '<a href="' + E(u) + '" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;background:var(--acc,var(--pri,#0B6B4C));color:#fff;font-weight:700;text-decoration:none;margin-top:4px">' + cta + '</a></div>';
+        X.btns(a) + '</div>';
+    },
+    /* botões do anúncio: site e WhatsApp, os dois quando houver */
+    btns: function (a) {
+      var B = 'display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;font-weight:700;text-decoration:none;margin-top:4px;padding:0 12px';
+      var h = '', l = ln(a.ln);
+      if (l) h += '<a href="' + E(l) + '" target="_blank" rel="noopener noreferrer" data-xadgo="ln" style="' + B + ';background:var(--acc,var(--pri,#0B6B4C));color:#fff">🌐 Abrir o site da empresa</a>';
+      if (a.wa) h += '<a href="' + E('https://wa.me/' + a.wa + '?text=' + encodeURIComponent('Olá! Vi seu anúncio: ' + (a.tt || ''))) + '" target="_blank" rel="noopener noreferrer" data-xadgo="wa" style="' + B + ';background:' + (l ? 'transparent;border:1.5px solid #25D366;color:inherit' : '#1f9d55;color:#fff') + '">💬 Chamar no WhatsApp</a>';
+      return h;
+    },
+    /* abre o anúncio completo numa janela que sobe de baixo */
+    open: function (a) {
+      if (!a) return;
+      var o = document.getElementById('xad-sh'); if (o) o.remove();
+      o = document.createElement('div'); o.id = 'xad-sh'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Anúncio');
+      o.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
+      o.innerHTML = '<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;box-sizing:border-box;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));background:var(--card,var(--surface,#fff));color:var(--ink,var(--fg,#111))">' +
+        X.card(a).replace('padding:14px;border-radius:14px;', 'padding:0;border:0!important;border-radius:0;') +
+        '<button type="button" data-xadx="1" style="width:100%;min-height:44px;margin-top:10px;border-radius:12px;border:1.5px solid var(--line,#ccc);background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer">Fechar</button></div>';
+      o.addEventListener('click', function (e) { if (e.target === o || (e.target.closest && e.target.closest('[data-xadx]'))) { e.preventDefault(); o.remove(); } });
+      document.body.appendChild(o);
+      try { var f = o.querySelector('[data-xadx]'); f && f.focus(); } catch (_) {}
     },
     /* envolve a configuração dos anúncios flutuantes (FADS) para incluir os dos outros apps */
     wrap: function (app, C) {
