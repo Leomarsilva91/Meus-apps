@@ -1154,7 +1154,7 @@ function gResumo(g,tot,T,it,meses,need,falta,av){
     if(r.modo)bits.push(r.modo==='carro'?'🚗 De carro':'✈️ De avião');
     bits.push('👥 '+G.pes+(G.pes===1?' pessoa':' pessoas')+(G.pesPag!==G.pes?' ('+G.pesPag+(G.pesPag===1?' paga)':' pagam)'):''));
     if(+r.noites>0)bits.push('🌙 '+r.noites+(+r.noites===1?' noite':' noites'));
-    trip=`<div class="grs-trip">${bits.map(b=>`<span>${b}</span>`).join('')}</div>${h&&h.G.rach>1&&r.escopo!=='minha'?`<p class="small" style="margin:0">Cada adulto pagante: <b class="num">${brl0(h.contrib)}</b></p>`:''}`}catch(_){}}
+    trip=`<div class="grs-trip">${bits.map(b=>`<span>${b}</span>`).join('')}</div>${r.dest?`<a class="btn ghost sm" style="justify-self:start" href="${XU('respiro','&onde='+encodeURIComponent(String(r.dest).slice(0,80)))}" target="_blank" rel="noopener">🌿 Passeios de natureza em ${esc(r.dest)} no Respiro</a>`:''}${h&&h.G.rach>1&&r.escopo!=='minha'?`<p class="small" style="margin:0">Cada adulto pagante: <b class="num">${brl0(h.contrib)}</b></p>`:''}`}catch(_){}}
   const fill=it.filter(x=>+x.v>0).sort((a,b)=>b.v-a.v),top=fill.slice(0,4),rest=fill.slice(4).reduce((a,x)=>a+(+x.v),0)+(T.imp||0),cols=['var(--meta)','var(--sky)','var(--mei)','var(--sun)','var(--plum)'],sub=top.reduce((a,x)=>a+(+x.v),0)+rest;
   const segs=top.map((x,i)=>({n:x.n,v:+x.v,c:cols[i]}));if(rest>0)segs.push({n:fill.length>4?'Outros e margem':'Margem para imprevistos',v:rest,c:cols[4]});
   const miss=it.length-T.n,sv=Math.max(10,Math.round((need>0?need:Math.max(50,falta/12))/10)*10),mx=Math.max(100,Math.ceil(sv*2.5/50)*50);
@@ -2509,6 +2509,8 @@ function estShort(){const e=cEst();return e&&e.saldo!=null?'<br><span class="sma
 function estPdf(){const e=cEst();if(!e)return [];const t=e.saldo==null?'Se continuar gastando assim, os gastos do mês chegam a cerca de '+brl0(e.proj)+'.':'Se continuar gastando assim (média dos últimos '+e.W+' dias), o mês fecha com '+(e.saldo<-0.5?'déficit':'crédito')+' de '+brl0(Math.abs(e.saldo))+' (gastos de '+brl0(e.proj+e.mins)+' para '+brl0(e.renda)+' disponíveis).';return[{t:'h',s:'Estimativa para o fim do mês'},{t:'p',s:t}]}
 function casaEntry(){const G=cD().gastos.filter(g=>cIn(g.d,MKEY)),t=G.reduce((a,g)=>a+g.v,0);
   return `<button class="entry casa" data-go="casa"><span class="blob b1"></span><span class="blob b2"></span><div><h2>Economia doméstica</h2><span class="sub">Orçamento do mês, fatura do cartão e compras de mercado.</span></div><div class="in"><span class="num"><b>${brl0(t)}</b> gastos ${cDia()===1?'em '+MES[M]:'no mês'}</span><span class="small">${G.length?G.length+(G.length>1?' lançamentos':' lançamento')+' no mês':'Importe um comprovante, uma fatura ou um cupom e comece.'}</span>${estShort()}</div></button>`}
+const XU=(a,p)=>'https://leomarsilva91.github.io/Meus-apps/'+a+'/?origem=prumo'+(p||'');
+function xLink(k){const m={alim:['achei-barato','&cat=mercado','🏷️ Ver promoções de mercado no Achei Barato'],transp:['achei-barato','&cat=posto','⛽ Ver o combustível mais barato no Achei Barato'],saude:['achei-barato','&cat=farmacia','💊 Ver promoções de farmácia no Achei Barato'],roupa:['achei-barato','&q=roupa','🏷️ Ver promoções de roupa no Achei Barato'],lazer:['respiro','','🌿 Passeios de natureza perto de você no Respiro']}[k];return m?`<a class="btn ghost sm" style="justify-self:start;margin-top:6px" href="${XU(m[0],m[1])}" target="_blank" rel="noopener">${m[2]}</a>`:''}
 const AS_C={alim:'var(--orange)',transp:'var(--sky)',roupa:'var(--plum)',lazer:'var(--meta)',moradia:'var(--debt)',contas:'var(--mei)',saude:'var(--ok)',outros:'var(--muted)'};
 const AS_I={alim:'🛒',transp:'⛽',roupa:'👕',lazer:'🎉',moradia:'🏠',contas:'💡',saude:'💊',outros:'📦'};
 const AS_D={
@@ -2531,7 +2533,7 @@ function assuntosCard(ym){
     return `<details class="card gbx" style="--bc:${cor}"><summary><span class="gbt"><b>${AS_I[k]} ${l}</b><span class="muted small">${brl0(gt)}${pn>0?' de '+brl0(pn):''} · ${it.length} ${it.length===1?'lançamento':'lançamentos'}</span></span></summary><div class="gbi">
      ${pn>0?`<div class="bar2"><i style="width:${pct.toFixed(1)}%;background:${over?'var(--bad)':cor}"></i></div>`:''}<span class="small">${st}</span>${prl}
      ${top.length?`<div class="list">${top.map(x=>`<div class="item"><div class="l"><b>${esc(x.t||'Gasto')}</b><span class="muted small">${x.d?fd(x.d):''}</span></div><b class="num r">${brl(x.v)}</b></div>`).join('')}</div>`:''}
-     <div class="tip"><b class="small">Dicas para gastar menos</b><ul class="steps small" style="margin:4px 0 0">${AS_D[k].map(t=>'<li>'+t+'</li>').join('')}</ul></div>
+     <div class="tip"><b class="small">Dicas para gastar menos</b><ul class="steps small" style="margin:4px 0 0">${AS_D[k].map(t=>'<li>'+t+'</li>').join('')}</ul></div>${xLink(k)}
      ${k==='lazer'||k==='roupa'?'':'<div class="row"><button class="btn ghost sm" data-cs="tab:orc">Mudar o planejado</button></div>'}</div></details>`}).join('');
   return `${comportCard(ym,L)}<div class="card" style="border:0;background:transparent;padding:4px 0"><h3>Por assunto</h3><p class="muted small">Toque em um assunto para ver só os gastos dele no mês, quanto ainda cabe, como fecha o mês se continuar assim e dicas para economizar.</p><button class="btn" data-cs="tab:lanc" style="margin-top:8px">➕ Lançar gasto</button></div>${box}`}
 function comportCard(ym,L){
@@ -4084,4 +4086,22 @@ try{NBADGE({key:'prumo',me:()=>PT.uid,posts:()=>window.cmPosts?cmPosts():[],onCo
 setInterval(()=>{const b=document.getElementById('pr-fbar'),on=b&&b.style.display==='flex'&&!b.style.transform,v=on?(b.offsetHeight+8)+'px':'0px';if(document.documentElement.style.getPropertyValue('--fbh')!==v)document.documentElement.style.setProperty('--fbh',v)},400);
 </script>
 <script>try{MOVER('prumo',['.navbar button','#pr-fmin','#pr-fbar','.savebar'])}catch(_){}</script>
+<script>
+/* Link do Achei Barato: ?guardar=valor leva a economia para uma meta */
+(function(){var v=0,de='';try{var u=new URLSearchParams(location.search);v=Math.round(parseFloat(String(u.get('guardar')||'').replace(',','.'))*100)/100;de=(u.get('origem')||'')}catch(_){}if(!(v>0&&v<1e6))return;
+ var n=0;(function go(){if(typeof S==='undefined'||!S||!Array.isArray(S.goals)||typeof render!=='function'){if(++n<40)setTimeout(go,250);return}
+  try{history.replaceState(null,'',location.pathname+location.hash)}catch(_){}
+  var vt=v.toFixed(2).replace('.',','),G=S.goals.filter(function(g){return g&&!g._sh}),o=document.createElement('div');
+  o.id='xguard';o.setAttribute('role','dialog');o.setAttribute('aria-label','Guardar a economia numa meta');
+  o.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
+  o.innerHTML='<div style="background:var(--card,#fff);color:inherit;width:100%;max-width:520px;max-height:85vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px;box-sizing:border-box">'+
+   '<h2 style="margin:0">💰 Guardar a sua economia</h2><p style="margin:0">Você economizou <b>R$ '+esc(vt)+'</b>'+(de==='achei'?' no Achei Barato':'')+'. Em qual meta quer guardar esse valor?</p>'+
+   (G.length?G.map(function(g){return '<button type="button" class="btn ghost" data-xg="'+esc(g.id)+'" style="text-align:left">🎯 '+esc(g.nome)+'</button>'}).join(''):'<p class="muted" style="margin:0">Você ainda não tem metas. Crie uma em Metas e depois lance o valor.</p>')+
+   '<button type="button" class="btn" data-xg="">Fechar</button></div>';
+  document.body.appendChild(o);
+  o.addEventListener('click',function(e){var b=e.target.closest('[data-xg]');if(!b&&e.target!==o)return;e.stopPropagation();var id=b?b.dataset.xg:'';o.remove();
+   if(!id){if(!G.length){try{UI.plan=null;UI.tab='metas';render(true)}catch(_){}}return}
+   try{UI.tab='metas';UI.plan=id;render(true)}catch(_){}
+   setTimeout(function(){var d=document.querySelector('[data-gr="dep"]');if(d){d.dataset.lbv=vt;d.click()}},350)})})()})();
+</script>
 </body></html>

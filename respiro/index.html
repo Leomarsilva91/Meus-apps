@@ -1598,4 +1598,12 @@ FADS((window.XADS?XADS.wrap:(a,c)=>c)('respiro',{key:'rs',list:()=>window.RS_ADS
 try{NBADGE({key:'rs',me:()=>UID,posts:()=>posts(),onCom:()=>S.v==='com',dm:()=>dmNovas(),targets:()=>[...document.querySelectorAll('#nav [data-go="com"]')]})}catch(_){}
 </script>
 <script>try{MOVER('rs',['#fad-m','#fad-b'])}catch(_){}</script>
+<script>
+/* Link de outro app: ?onde=Cidade abre a busca do lugar */
+(function(){var q='';try{q=(new URLSearchParams(location.search).get('onde')||'').replace(/[<>"`]/g,'').trim().slice(0,80)}catch(_){}if(q.length<3)return;var n=0;
+ (function go(){var i=document.getElementById('end_q'),f=document.getElementById('endf');if(!i||!f){if(++n<40)setTimeout(go,250);return}
+  var d=f.closest('details');if(d)d.open=true;i.value=q;try{i.dispatchEvent(new Event('input',{bubbles:true}))}catch(_){}
+  try{f.requestSubmit?f.requestSubmit():f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}))}catch(_){}
+  setTimeout(function(){try{f.scrollIntoView({block:'start',behavior:'smooth'})}catch(_){}},300)})()})();
+</script>
 </body></html>
