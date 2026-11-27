@@ -3020,7 +3020,9 @@ async function signup(){
   saveUsers(list);logC('termos',u.email);if(u.consent.mkt)logC('marketing',u.email);enter(u,S.role);
 }
 async function login(){
-  const raw=$('#lemail').value.trim(),dg=raw.replace(/\D/g,''),isDoc=!/@/.test(raw)&&(dg.length===11||dg.length===14),du=isDoc?byDoc(raw):null,email=isDoc?(du?loginOf(du):''):raw.toLowerCase(),pw=$('#lpw').value,E={};
+  const raw=$('#lemail').value.trim(),dg=raw.replace(/\D/g,''),isDoc=!/@/.test(raw)&&(dg.length===11||dg.length===14);let du=isDoc?byDoc(raw):null;
+  if(isDoc&&!du&&(dg.length===11?cpfOk(raw):cnpjOk(raw))&&await FA.ready()){const g=$('#go');if(g)g.disabled=true;for(let i=0;i<16&&!du;i++){await new Promise(r=>setTimeout(r,300));du=byDoc(raw)}if(g)g.disabled=false}
+  const email=isDoc?(du?loginOf(du):''):raw.toLowerCase(),pw=$('#lpw').value,E={};
   $('#lerr').textContent='';$('#lmsg').textContent='';
   if(isDoc){if(!(dg.length===11?cpfOk(raw):cnpjOk(raw)))E.lemail=dg.length===11?'Confira o CPF: os números não batem.':'Confira o CNPJ: os números não batem.'}
   else if(!EMAIL.test(email))E.lemail='Informe seu CPF, CNPJ ou e-mail.';
