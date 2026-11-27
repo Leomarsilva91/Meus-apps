@@ -186,11 +186,36 @@ const rawSet=(k,v)=>_store.setItem(k,v);
 const syId=(k,x)=>String(k==='ms_users'||k==='ms_plans'?x.email:x.id).replace(/[^A-Za-z0-9_\-.~:@+]/g,'_').slice(0,180);
 const syStrip=(k,x)=>{if(k!=='ms_users')return x;const y={...x};delete y.h;delete y.hk;delete y.cpf;return y};
 const syRead=k=>{try{const v=JSON.parse(_store.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}};
-function syPush(k){if(!SY.db||!SYNCK[k])return;clearTimeout(SY.tm[k]);SY.tm[k]=setTimeout(()=>{SY.q=SY.q.then(async()=>{try{
-  const L=syRead(k).filter(x=>x&&(k==='ms_users'||k==='ms_plans'?x.email:x.id!=null)&&!x.sample),sent=SY.sent[k]=SY.sent[k]||{},ids={};
-  for(const x of L){const id=syId(k,x),j=JSON.stringify(syStrip(k,x));ids[id]=1;if(sent[id]===j)continue;await SY.db.doc('sync_'+k+'/'+id).set({j,t:Date.now()});sent[id]=j}
-  for(const id of Object.keys(sent)){if(!ids[id]){delete sent[id];await SY.db.doc('sync_'+k+'/'+id).delete()}}
-SY.rt=0}catch(e){SY.rt=(SY.rt||0)+1;if(SY.rt<=6)setTimeout(()=>syPush(k),4000*SY.rt)}})},350)}
+/* Nuvem com dono: cada registro guarda quem criou (o) e quem pode ver e mexer (p). Público só o que precisa ser visto por todos. */
+const SYPUB={ms_users:1,ms_requests:1,ms_posts:1,ms_rates:1,ms_plans:1,ms_certs:1,ms_cfg:1,ms_calc:1,ms_adq:1};
+SY.meta={};
+const syAU=()=>{try{return firebase.auth().currentUser||null}catch(_){return null}};
+const syUid=()=>{const u=syAU();return u?u.uid:''};
+const syEm=()=>{const u=syAU();return u&&!u.isAnonymous?String(u.email||'').toLowerCase():''};
+const syPub=(k,x)=>!!SYPUB[k]||(k==='ms_esc'&&x&&x.id==='cfg');
+function syEmails(x,out,d){if(x==null||d>3)return;if(typeof x==='string'){if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x))out.add(x.toLowerCase());return}if(Array.isArray(x)){x.forEach(y=>syEmails(y,out,d+1));return}if(typeof x==='object')for(const kk of Object.keys(x)){if(kk==='img'||kk==='video')continue;syEmails(x[kk],out,d+1)}}
+function syParts(k,x){const E=new Set();syEmails(x,E,0);const R=syRead('ms_requests'),P=syRead('ms_proposals');
+  const addReq=id=>{const q=R.find(r=>r&&String(r.id)===String(id));if(!q)return;if(q.email)E.add(String(q.email).toLowerCase());P.filter(p=>p&&String(p.reqId)===String(q.id)&&(String(q.acc||'')===String(p.id)||p.acc||p.ok)).forEach(p=>{if(p.email)E.add(String(p.email).toLowerCase())})};
+  const addProp=id=>{const p=P.find(y=>y&&String(y.id)===String(id));if(!p)return;if(p.email)E.add(String(p.email).toLowerCase());const q=R.find(r=>r&&String(r.id)===String(p.reqId));if(q&&q.email)E.add(String(q.email).toLowerCase())};
+  if(x.reqId!=null)addReq(x.reqId);if(x.qid!=null)addReq(x.qid);if(x.pid!=null)addProp(x.pid);if(x.propId!=null)addProp(x.propId);
+  if(k==='ms_proposals')addProp(x.id);
+  if(k==='ms_esc'&&typeof x.id==='string'&&x.id.startsWith('pix:')){const pro=x.id.slice(4);syRead('ms_esc').filter(y=>y&&String(y.id).startsWith('pixok:')&&y.pro===pro).forEach(y=>addProp(y.pid))}
+  const U=syRead('ms_users'),ids=new Set();E.forEach(e=>{const u=U.find(z=>z&&(String(z.email||'').toLowerCase()===e||String(z.em2||'').toLowerCase()===e));if(u&&u.uid)ids.add(u.uid)});return ids}
+const sySig=(j,p)=>j+'|'+(p||[]).slice().sort().join(',');
+function syPush(k){if(!SY.db||!SYNCK[k])return;clearTimeout(SY.tm[k]);SY.tm[k]=setTimeout(()=>{SY.q=SY.q.then(async()=>{
+  const me=syUid();if(!me)return;
+  const L=syRead(k).filter(x=>x&&(k==='ms_users'||k==='ms_plans'?x.email:x.id!=null)&&!x.sample),sent=SY.sent[k]=SY.sent[k]||{},meta=SY.meta[k]=SY.meta[k]||{},ids={},em=syEm();
+  for(const x of L){const id=syId(k,x),y=syStrip(k,x);ids[id]=1;
+    if((k==='ms_users'||k==='ms_plans')&&String(x.email||'').toLowerCase()!==em&&!ADMINS.includes(em)){const m0=meta[id];if(!m0||m0.o!==me)continue}
+    if(k==='ms_users'&&em&&String(x.email||'').toLowerCase()===em)y.uid=me;
+    const j=JSON.stringify(y),m=meta[id]||{},ps=syParts(k,y);(m.p||[]).forEach(u=>ps.add(u));ps.add(me);
+    const p=[...ps].sort().slice(0,20),sig=sySig(j,p);if(sent[id]===sig)continue;
+    if(m.o&&m.o!==me&&!(m.p||[]).includes(me)){sent[id]=sig;continue}
+    const o=m.o||me;
+    try{await SY.db.doc('sync_'+k+'/'+id).set({j,t:Date.now(),o,p,pub:syPub(k,x)});meta[id]={o,p}}catch(e){}
+    sent[id]=sig}
+  for(const id of Object.keys(sent)){if(ids[id])continue;delete sent[id];const m=meta[id]||{};if(m.o&&m.o!==me)continue;try{await SY.db.doc('sync_'+k+'/'+id).delete()}catch(e){}}
+},350)})}
 const store={getItem:k=>_store.getItem(k),removeItem:k=>_store.removeItem(k),setItem:(k,v)=>{try{_store.setItem(k,v)}catch(e){storeFull();throw e}if(SYNCK[k])syPush(k)}};
 function storeFull(){if(document.getElementById('fullbar'))return;const d=document.createElement('div');d.id='fullbar';d.setAttribute('role','alert');d.style.cssText='position:fixed;left:12px;right:12px;bottom:12px;z-index:50;background:var(--bad);color:#fff;border-radius:14px;padding:12px 14px;font-size:15px;box-shadow:0 4px 16px rgba(0,0,0,.3)';d.innerHTML='<b>A memória do aparelho para o app está cheia.</b> Suas últimas alterações podem não ter sido salvas. Libere espaço apagando gastos, vídeos ou pedidos antigos, ou baixe seus dados em Privacidade e dados. <button type="button" style="margin-top:8px;display:block;background:#fff;color:#14213D;border:0;border-radius:10px;padding:8px 14px;font-weight:700">Entendi</button>';d.querySelector('button').onclick=()=>d.remove();document.body.appendChild(d)}
 function syApply(k,snap){const sent=SY.sent[k]=SY.sent[k]||{};let L=syRead(k),ch=false;
@@ -199,9 +224,9 @@ function syApply(k,snap){const sent=SY.sent[k]=SY.sent[k]||{};let L=syRead(k),ch
     if(c.doc.metadata&&c.doc.metadata.hasPendingWrites)continue;
     const id=c.doc.id;
     if(c.type==='removed'){const n=L.filter(x=>x&&keyOf(x)!==id);if(n.length!==L.length&&sent[id]!==undefined){L=n;ch=true}delete sent[id];continue}
-    const d=c.doc.data(),j=d&&d.j;if(!j||sent[id]===j)continue;
+    const d=c.doc.data(),j=d&&d.j;if(d){const mt=SY.meta[k]=SY.meta[k]||{};mt[id]={o:d.o||'',p:Array.isArray(d.p)?d.p:[]}}const sg=j&&sySig(j,d.p);if(!j||sent[id]===sg)continue;
     let r;try{r=JSON.parse(j)}catch(e){continue}
-    const i=L.findIndex(x=>x&&keyOf(x)===id);sent[id]=j;
+    const i=L.findIndex(x=>x&&keyOf(x)===id);sent[id]=sg;
     if(k==='ms_users'){delete r.h;delete r.hk}
     if(i<0){L.push(r)}else{const o=L[i];
       if(k==='ms_users'){delete r.h;delete r.hk;L[i]={...o,...r}}
@@ -209,8 +234,12 @@ function syApply(k,snap){const sent=SY.sent[k]=SY.sent[k]||{};let L=syRead(k),ch
       else L[i]=r}
     ch=true}
   if(ch){rawSet(k,JSON.stringify(L));SY.last=Date.now();syPush(k);if(typeof syncNotify==='function')syncNotify(k)}}
+function syListen(){const me=syUid();if(!SY.db||!me||SY.me===me)return;(SY.un||[]).forEach(f=>{try{f()}catch(_){}});SY.un=[];SY.me=me;SY.sent={};SY.meta={};
+  for(const k of Object.keys(SYNCK)){delete SY['i'+k];const c=SY.db.collection('sync_'+k),on=sn=>{SY.on=true;syApply(k,sn);if(!SY['i'+k]){SY['i'+k]=1;syPush(k)}},er=()=>{};
+    SY.un.push(c.where('pub','==',true).onSnapshot(on,er));SY.un.push(c.where('p','array-contains',me).onSnapshot(on,er));
+    if(syEm()&&ADMINS.includes(syEm()))SY.un.push(c.onSnapshot(on,er))}}
 async function syInit(){try{if(!window.claude||!claude.use)return;const db=await claude.use('db');if(!db)return;SY.db=db;
-  for(const k of Object.keys(SYNCK)){db.collection('sync_'+k).onSnapshot(sn=>{SY.on=true;syApply(k,sn);if(!SY['i'+k]){SY['i'+k]=1;syPush(k)}},()=>{SY.on=false})}
+  try{firebase.auth().onAuthStateChanged(u=>{if(u){SY.me=null;syListen()}})}catch(_){}syListen()
 }catch(e){}}
 const migrate=u=>{if(!u.roles)u={name:u.name,email:u.email,phone:u.phone,h:u.h,roles:u.role==='pro'?{pro:{cat:u.cat||'',city:u.city||''}}:{cli:1},last:u.role};const R=u.roles;
   if(R.cli&&typeof R.cli==='object'&&R.cli.emp){R.cliE={razao:R.cli.emp.razao,cnpj:R.cli.emp.cnpj};delete R.cli;if(u.last==='cli')u.last='cliE'}
@@ -244,11 +273,12 @@ const FA={
   async out(){try{if(await this.ready()){const au=this.au();if(au.currentUser&&!au.currentUser.isAnonymous){await au.signOut();await au.signInAnonymously().catch(()=>{})}}}catch(_){}},
   msg(e){const c=String(e&&e.code||'');return /too-many-requests/.test(c)?'Muitas tentativas. Espere alguns minutos ou use "Esqueci minha senha".':/network-request-failed/.test(c)?'Sem internet agora. Confira a conexão e tente de novo.':/operation-not-allowed/.test(c)?'O login por e-mail e senha ainda não foi ligado no Firebase (Authentication › Método de login › E-mail/senha).':/weak-password/.test(c)?'Senha fraca: use ao menos 8 caracteres, com letras e números.':''}
 };
+function faVerify(){try{const cu=firebase.auth().currentUser,k='tk_vf_'+(cu&&cu.uid);if(cu&&!cu.isAnonymous&&!cu.emailVerified&&!store.getItem(k)){store.setItem(k,'1');cu.sendEmailVerification().catch(()=>{})}}catch(_){}}
 function faStrip(email){try{const l=users(),x=l.find(y=>y.email===email);if(x&&(x.h||x.hk)){delete x.h;delete x.hk;saveUsers(l)}}catch(_){}}
 /* confere a senha: primeiro no Firebase; a conta antiga (senha guardada neste aparelho) é levada para o Firebase no primeiro login */
 async function authCheck(u,pw){if(!u||!pw)return{ok:false};
   if(!(await FA.ready()))return{ok:await pwOk(u,pw)};
-  try{await FA.signIn(u.email,pw);faStrip(u.email);return{ok:true}}catch(e){const m=FA.msg(e);if(m&&!/operation-not-allowed/.test(String(e.code)))return{ok:false,err:m};
+  try{await FA.signIn(u.email,pw);faStrip(u.email);faVerify();return{ok:true}}catch(e){const m=FA.msg(e);if(m&&!/operation-not-allowed/.test(String(e.code)))return{ok:false,err:m};
     if((u.h||u.hk)&&await pwOk(u,pw)){try{await FA.create(u.email,pw);faStrip(u.email);return{ok:true}}catch(e2){const c=String(e2&&e2.code||'');if(/email-already-in-use/.test(c))return{ok:false};return{ok:false,err:FA.msg(e2)||'Não foi possível entrar agora. Tente de novo.'}}}
     return{ok:false,err:m}}}
 const S={v:'welcome',role:null,user:null};
@@ -2974,7 +3004,7 @@ async function signup(){
     old.roles[S.role]=prof;old.last=S.role;u=old;
     if(sx){old.name=v('name');old.phone=v('phone').replace(/\D/g,'');if(email!==loginOf(old)){old.emHist=[...(old.emHist||[]),{de:loginOf(old),at:new Date().toISOString()}].slice(-10);old.em2=email===old.email?'':email}S.sx=null}
   }else{u={name:v('name'),email,phone:v('phone').replace(/\D/g,''),roles:{[S.role]:prof},last:S.role};
-    if(await FA.ready()){try{await FA.create(email,pw)}catch(e){$('#go').disabled=false;const c=String(e&&e.code||'');showErrors(/email-already-in-use/.test(c)?{email:'Este e-mail já tem conta. Toque em Voltar e entre com ele.'}:{pw:FA.msg(e)||'Não foi possível criar a conta agora. Tente de novo.'});return}}else{u.h=h;await pwSet(u,pw)}
+    if(await FA.ready()){try{await FA.create(email,pw)}catch(e){const c=String(e&&e.code||'');let ok=false;if(/email-already-in-use/.test(c)){try{await FA.signIn(email,pw);ok=true}catch(_){}}if(!ok){$('#go').disabled=false;showErrors(/email-already-in-use/.test(c)?{pw:'Este e-mail já tem conta no Tasko. Use a mesma senha dela (ou "Esqueci minha senha" na tela de entrar).'}:{pw:FA.msg(e)||'Não foi possível criar a conta agora. Tente de novo.'});return}}faVerify()}else{u.h=h;await pwSet(u,pw)}
     list.push(u);try{window.indOnSignup&&indOnSignup(email)}catch(e){}}
   if(isP||S.role==='cli')cpfProSet(u);
   u.consent={v:LEGAL_V,at:new Date().toISOString(),age18:true,mkt:$('#mkt').checked};
@@ -3530,7 +3560,17 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
  if(a==='rehire'){const q=jget('ms_requests').find(x=>x&&x.id===+t.dataset.qid&&x.email===S.user.email);if(!q)return;const p=jget('ms_proposals').find(x=>x&&x.id===q.acc);const r=newReq();r.desc=String(q.desc||'');r.city=q.city||'';r.sel=Array.isArray(q.cats)?q.cats.slice():[];r.pref=t.dataset.em||(p&&p.email)||'';r.prefName=(p&&p.name)||'';S.req=r;S.aid=(S.aid||0)+1;return go('request')}
 },true);
 V.admin=()=>{if(!isAdmin())return V.home();const t=S.adm||'geral',T=[['geral','Painel'],['users','Usuários'],['reqs','Pedidos'],['mod','Moderação'],['selos','Selos'],['pag','Pagamentos'],['adv','Divulgação'],['calc','Calculadora'],['cfg','Ajustes']];
-  return `${head('Administração','home')}<main><div class="row" role="tablist">${T.map(x=>`<button class="chip" role="tab" data-act="admtab" data-t="${x[0]}" aria-pressed="${t===x[0]}">${x[1]}</button>`).join('')}</div>${t==='geral'?admGeral():t==='users'?admUsers():t==='reqs'?admReqs():t==='mod'?admMod():t==='adv'?admAdv():t==='selos'?admSelos():t==='pag'?admPag():t==='calc'?admCalc():admCfg()}<p class="muted" style="margin:0;font-size:13px">Protótipo: a área de administração só é escondida na tela. Antes de lançar de verdade, o controle de acesso precisa ficar no servidor.</p></main>`};
+  return `${head('Administração','home')}<main><div class="row" role="tablist">${T.map(x=>`<button class="chip" role="tab" data-act="admtab" data-t="${x[0]}" aria-pressed="${t===x[0]}">${x[1]}</button>`).join('')}</div>${t==='geral'?admGeral():t==='users'?admUsers():t==='reqs'?admReqs():t==='mod'?admMod():t==='adv'?admAdv():t==='selos'?admSelos():t==='pag'?admPag():t==='calc'?admCalc():admCfg()+admWipe()}</main>`};
+function admWipe(){const st=S.wipe||{};return `<details class="card" style="border-color:var(--bad)"><summary><b>Apagar todos os dados de teste</b></summary><p style="margin:8px 0 0">Apaga da nuvem e deste aparelho: contas (perfis), pedidos, propostas, conversas, agenda, avaliações, anúncios e o resto. Ficam só os Ajustes e a Calculadora. As pessoas entram de novo criando a conta com o mesmo e-mail e senha.</p>
+<label style="margin-top:10px;display:block">Para confirmar, digite APAGAR<input id="wipeok" autocomplete="off"></label><button class="btn" style="background:var(--bad);margin-top:8px" data-act="admwipe" ${st.busy?'disabled':''}>${st.busy?'Apagando… '+(st.n||0):'Apagar tudo'}</button>${st.msg?`<p role="status" style="margin:8px 0 0"><b>${esc(st.msg)}</b></p>`:''}</details>`}
+async function admWipeRun(){if(!isAdmin()||(S.wipe&&S.wipe.busy))return;if((($('#wipeok')||{}).value||'').trim().toUpperCase()!=='APAGAR'){toast('Digite APAGAR para confirmar.');return}
+  S.wipe={busy:1,n:0};render();const KEEP={ms_cfg:1,ms_calc:1};let bad=0;
+  for(const k of Object.keys(SYNCK)){if(KEEP[k])continue;try{const sn=await SY.db.collection('sync_'+k).get();for(const d of sn.docs){try{await d.ref.delete();S.wipe.n++}catch(_){bad++}if(S.wipe.n%25===0)render()}}catch(_){bad++}
+    SY.sent[k]={};if(SY.meta)SY.meta[k]={};_store.setItem(k,'[]')}
+  ['ms_session','ms_lk','ms_pout'].forEach(x=>_store.removeItem(x));
+  S.wipe={msg:bad?'Parte não foi apagada ('+bad+'). Confira se as regras novas foram publicadas e se o seu e-mail de administrador está confirmado.':'Pronto: '+S.wipe.n+' registros apagados. Crie sua conta de novo.'};render();
+  if(!bad)setTimeout(()=>{S.user=null;S.wipe=null;FA.out();go('welcome')},2500)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act="admwipe"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();admWipeRun()},true);
 function admAct(D){
   if(!isAdmin())return;
   const conf=k=>{if(S.admc!==k){S.admc=k;render();return false}S.admc=null;return true};

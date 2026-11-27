@@ -62,15 +62,41 @@ service cloud.firestore {
         && request.resource.data.file is string && request.resource.data.file.size() <= 900000;
       allow delete: if entrou() && resource.data.ow == request.auth.uid;
     }
-    // Tasko (versão de teste): pedidos, propostas, conversas e agenda compartilhados entre os aparelhos.
+    // Tasko: cada registro guarda o dono (o), quem participa (p) e se é público (pub).
+    // Lê: público, quem participa ou o administrador. Muda: só quem participa, sem trocar o dono.
+    function tkAdm() { return entrou() && (adm() || (request.auth.token.email in ['leomargoncalvesdasilva@gmail.com', 'leomargoncalves@mpf.mp.br'] && request.auth.token.email_verified == true)); }
+    function tkPub(col) { return col in ['sync_ms_users', 'sync_ms_requests', 'sync_ms_posts', 'sync_ms_rates', 'sync_ms_plans', 'sync_ms_certs', 'sync_ms_cfg', 'sync_ms_calc', 'sync_ms_adq']; }
+    function tkLivre(col, id) {
+      return !(col in ['sync_ms_cfg', 'sync_ms_calc'])
+        && (!(col in ['sync_ms_users', 'sync_ms_plans']) || id == request.auth.token.email)
+        && (col != 'sync_ms_adq' || !request.resource.data.j.matches('.*"st":"No ar".*'))
+        && (col != 'sync_ms_certs' || !request.resource.data.j.matches('.*"st":"ok".*'));
+    }
     match /apps/{app}/{col}/{id} {
-      allow read, write: if entrou() && col.matches('sync_ms_.*');
+      allow read: if entrou() && col.matches('sync_ms_.*')
+        && (resource.data.pub == true || request.auth.uid in resource.data.p || tkAdm());
+      allow create: if entrou() && col.matches('sync_ms_.*') && (tkAdm() || (
+           request.resource.data.o == request.auth.uid
+        && request.resource.data.p is list && request.auth.uid in request.resource.data.p
+        && request.resource.data.p.size() <= 20
+        && request.resource.data.j is string && request.resource.data.j.size() <= 900000
+        && request.resource.data.pub == tkPub(col)
+        && tkLivre(col, id)));
+      allow update: if entrou() && col.matches('sync_ms_.*') && (tkAdm() || (
+           request.auth.uid in resource.data.p
+        && request.resource.data.o == resource.data.o
+        && request.resource.data.p is list && request.resource.data.p.hasAll(resource.data.p)
+        && request.resource.data.p.size() <= 20
+        && request.resource.data.j is string && request.resource.data.j.size() <= 900000
+        && request.resource.data.pub == resource.data.pub
+        && tkLivre(col, id)));
+      allow delete: if entrou() && col.matches('sync_ms_.*') && (tkAdm() || resource.data.o == request.auth.uid);
     }
     // Áreas que só o administrador lê por inteiro (cada pessoa vê só o seu).
     match /apps/{app}/{col}/{uid} {
-      allow read: if entrou() && (
+      allow read: if entrou() && !col.matches('sync_ms_.*') && (
         !(col in ['resg', 'interesse', 'contato', 'vis', 'mlj', 'sub', 'fb', 'adq', 'pts', 'cofs', 'ccs', 'ugr', 'cce', 'cpr', 'mscp', 'pofr', 'msct']) || request.auth.uid == uid || adm());
-      allow write: if entrou() && (
+      allow write: if entrou() && !col.matches('sync_ms_.*') && (
         (!(col in ['config', 'comx', 'pts', 'offers', 'pub', 'news', 'stores', 'ph', 'tips', 'ads', 'radok']) && request.auth.uid == uid) || adm());
     }
   }
