@@ -126,6 +126,42 @@ async function pagina(req, o, env) {
 }
 
 
+// Nota fiscal do consumidor (NFC-e): abre a página da SEFAZ do QR code e lê loja, data e itens. Sem IA.
+const brn = (v) => { const t = String(v || '').replace(/\s/g, ''); if (!t) return null; const n = /,\d{1,4}$/.test(t) ? Number(t.replace(/\./g, '').replace(',', '.')) : Number(t.replace(/,/g, '')); return isFinite(n) ? n : null; };
+function lerNfce(h) {
+  const TL = textoLimpo(h), T = TL.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+  const itens = [];
+  const rh = /<span[^>]*class="txtTit2?"[^>]*>([^<]{1,160})<\/span>\s*<span[^>]*class="RCod"[\s\S]{0,400}?Rqtd[\s\S]*?<\/strong>\s*([\d.,]+)[\s\S]{0,300}?RUN[\s\S]*?<\/strong>\s*([^<\s]+)[\s\S]{0,300}?RvlUnit[\s\S]*?<\/strong>(?:\s|&nbsp;)*([\d.,]+)[\s\S]{0,500}?class="valor"[^>]*>\s*([\d.,]+)/gi;
+  let m; while ((m = rh.exec(h)) && itens.length < 200) itens.push({ n: ent(m[1]).replace(/\s+/g, ' ').trim().slice(0, 120), q: brn(m[2]), un: m[3].toUpperCase().slice(0, 6), vu: brn(m[4]), vt: brn(m[5]) });
+  if (!itens.length) {
+    const rt = /([^\n()]{2,120}?)\s*\(\s*C[óo]d(?:igo)?\.?:?\s*[^)]*\)\s*Qtde\.?:?\s*([\d.,]+)\s*UN:?\s*([A-Za-z]{1,6})\s*Vl\.?\s*Unit\.?:?\s*([\d.,]+)\s*Vl\.?\s*Total\s*([\d.,]+)/gi;
+    while ((m = rt.exec(TL)) && itens.length < 200) itens.push({ n: m[1].trim().slice(0, 120), q: brn(m[2]), un: m[3].toUpperCase(), vu: brn(m[4]), vt: brn(m[5]) });
+  }
+  const em = /id="u20"[^>]*>([^<]{2,120})</i.exec(h) || /class="txtTopo"[^>]*>([^<]{2,120})</i.exec(h);
+  const cn = /CNPJ:?\s*([\d./-]{14,18})/i.exec(T);
+  const dt = /Emiss[ãa]o:?\s*(\d{2})\/(\d{2})\/(\d{4})/i.exec(T);
+  const tot = /Valor a pagar R\$:?\s*([\d.,]+)/i.exec(T) || /Valor total R\$:?\s*([\d.,]+)/i.exec(T);
+  const end = em ? (h.slice(em.index, em.index + 1500).match(/class="text"[^>]*>([^<]{5,200})</gi) || []).map(x => ent(x.replace(/^[^>]*>|<$/g, '')).replace(/\s+/g, ' ').trim()) : [];
+  return {
+    loja: em ? ent(em[1]).replace(/\s+/g, ' ').trim() : '', cnpj: cn ? cn[1].replace(/\D/g, '') : '',
+    end: end.filter(x => !/CNPJ/i.test(x)).join(' ').slice(0, 200),
+    dt: dt ? dt[3] + '-' + dt[2] + '-' + dt[1] : '', total: tot ? brn(tot[1]) : null, itens,
+  };
+}
+async function nfce(req, o, env) {
+  if (!ORIGENS.includes(o)) return resp({ erro: 'origem' }, 403, o);
+  const ip = req.headers.get('CF-Connecting-IP') || 'x';
+  if (!(await contar(env, 'nf:' + ip, 60))) return resp({ erro: 'limite' }, 429, o);
+  let u; try { u = new URL(new URL(req.url).searchParams.get('u') || ''); } catch (_) { return resp({ erro: 'link' }, 400, o); }
+  if (!/^https?:$/.test(u.protocol) || !/\.(gov\.br|fazenda\.\w+\.gov\.br)$/i.test(u.hostname)) return resp({ erro: 'naoSefaz' }, 400, o);
+  const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 20000);
+  let r; try { r = await fetch(u.toString(), { redirect: 'follow', signal: ac.signal, headers: { 'User-Agent': UA, 'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'pt-BR,pt;q=0.9' } }); }
+  catch (_) { clearTimeout(tm); return resp({ erro: 'rede' }, 502, o); }
+  clearTimeout(tm);
+  const h = (await r.text()).slice(0, 3_000_000), d = lerNfce(h);
+  return resp({ ok: d.itens.length > 0, url: r.url, ...d, ...(d.itens.length ? {} : { texto: textoLimpo(h).slice(0, 6000) }) }, 200, o);
+}
+
 // Lugares de natureza do OpenStreetMap (Overpass), pedidos pelo servidor e guardados por 1 dia.
 const OVP = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 async function osm(req, o, ctx) {
@@ -292,6 +328,9 @@ export default {
     }
     if (req.method === 'GET' && new URL(req.url).pathname === '/mp/status') {
       try { return await mpStatus(req, o, env); } catch (_) { return resp({ erro: 'mp' }, 502, o); }
+    }
+    if (req.method === 'GET' && pth === '/nfce') {
+      try { return await nfce(req, o, env); } catch (_) { return resp({ erro: 'nfce' }, 502, o); }
     }
     if (req.method === 'GET' && new URL(req.url).pathname === '/pagina') {
       try { return await pagina(req, o, env); } catch (_) { return resp({ erro: 'pagina' }, 502, o); }

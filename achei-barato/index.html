@@ -1167,9 +1167,44 @@ function merchV0(){
   </div>`}
 function tagMine(){const L=mine.map((o,k)=>({o,k})).filter(x=>x.o.src==='tag').reverse();if(!L.length)return '';
   return `<div class="box" data-nc="1" data-ins="1"><b>Seus envios (${L.length})</b>${L.map(({o,k},i)=>`<div class="line"><span>${i+1}. ${esc(o.n)} <span class="m">· ${esc(o.loja)} · ${brl(o.p)} · até ${fd(o.ate)}</span></span><button class="chip" data-del="${k}" type="button">Remover</button></div>`).join('')}</div>`}
+/* ---- Nota fiscal da compra (NFC-e): QR code → página da SEFAZ → preços no histórico. Sem IA. ---- */
+function nfBox(){const N=mem.nf||{},R2=n=>n==null?'':brl(n),dt=d=>d?d.split('-').reverse().join('/'):'';
+  let body='';
+  if(N.busy)body=`<p class="m" role="status" style="margin:6px 0 0">${esc(N.busy)}</p>`;
+  else if(N.d){const d=N.d;body=`<div style="display:grid;gap:4px;margin-top:8px"><b>${esc(d.loja||'Loja')}</b><span class="m">${dt(d.dt)} · ${d.itens.length} ${d.itens.length===1?'item':'itens'}${d.total?' · total '+R2(d.total):''}</span>
+<details><summary class="m" style="cursor:pointer;min-height:32px">Ver os itens</summary><div style="display:grid;gap:4px;margin-top:6px">${d.itens.map(i=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:14px"><span style="min-width:0">${esc(i.n)}${i.q&&i.q!==1?` <span class="m">(${String(i.q).replace('.',',')} ${esc(i.un||'')})</span>`:''}</span><b style="white-space:nowrap">${R2(i.vu)}${i.un&&i.un!=='UN'?'/'+esc(i.un.toLowerCase()):''}</b></div>`).join('')}</div></details>
+${UID&&DB?`<button class="btn" data-nf="send" style="margin-top:6px">Enviar os preços para o histórico</button>`:`<span class="m"><b>Entre na sua conta</b> (boneco no topo) para enviar.</span>`}<button class="chip" data-nf="clear" style="justify-self:start">Ler outra nota</button></div>`}
+  else body=`<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><label class="btn" style="width:auto;cursor:pointer">📷 Fotografar o QR code<input type="file" accept="image/*" capture="environment" data-nfimg="1" hidden></label></div>
+<details style="margin-top:6px"><summary class="m" style="cursor:pointer;min-height:32px">Ou colar o link do QR code</summary><div class="row" style="gap:6px;margin-top:6px"><input id="nfurl" inputmode="url" placeholder="https://…fazenda…gov.br/…" style="flex:1;min-width:0"><button class="chip" data-nf="url">Ler</button></div></details>`;
+  return `<div class="box"><b>🧾 Comprou? Mande a nota fiscal</b><span class="m">Fotografe o QR code do cupom fiscal. O app lê os preços direto na página da Receita (SEFAZ), sem digitar, e coloca cada produto no histórico de preço da loja.</span>${N.err?`<span class="m" role="alert" style="color:var(--bad,#b42318);margin-top:6px"><b>${esc(N.err)}</b></span>`:''}${body}</div>`}
+let JSQR=null;
+async function nfQR(file){const bmp=await createImageBitmap(file);
+  if('BarcodeDetector' in window){try{const bd=new BarcodeDetector({formats:['qr_code']}),r=await bd.detect(bmp);if(r&&r[0]&&r[0].rawValue)return r[0].rawValue}catch(_){}}
+  if(!JSQR){await new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});JSQR=window.jsQR}
+  for(const mx of [1600,1000,2400]){const sc=Math.min(1,mx/Math.max(bmp.width,bmp.height)),w=Math.round(bmp.width*sc),h=Math.round(bmp.height*sc),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(bmp,0,0,w,h);const im=c.getImageData(0,0,w,h),r=JSQR(im.data,w,h,{inversionAttempts:'attemptBoth'});if(r&&r.data)return r.data}
+  return ''}
+async function nfFetch(u){const res=await fetch(window.IA_URL+'/nfce?u='+encodeURIComponent(u));const j=await res.json().catch(()=>({}));if(res.status===429)throw new Error('Muitas notas hoje neste aparelho. Tente amanhã.');if(j.erro==='naoSefaz')throw new Error('Esse QR code não é de nota fiscal (o link precisa ser da SEFAZ, terminando em gov.br).');if(!j.ok)throw new Error('Não consegui ler os itens dessa nota na SEFAZ. Pode ser que o seu estado use outro formato: me avise pelo "Problema ou sugestão".');return j}
+async function nfLer(u){u=String(u||'').trim();mem.nf={busy:'Abrindo a nota na SEFAZ…'};render();
+  try{if(!/^https?:\/\/[^\s]+\.gov\.br\//i.test(u))throw new Error('Esse QR code não é de nota fiscal (o link precisa ser da SEFAZ, terminando em gov.br).');if(!window.IA_URL)throw new Error('Sem conexão com o servidor do app agora.');const d=await nfFetch(u);mem.nf={d,u}}catch(e){mem.nf={err:e.message||'Não consegui ler a nota.'}}render()}
+document.addEventListener('change',async e=>{const i=e.target.closest&&e.target.closest('[data-nfimg]');if(!i||!i.files||!i.files[0])return;mem.nf={busy:'Procurando o QR code na foto…'};render();
+  let u='';try{u=await nfQR(i.files[0])}catch(_){}if(!u){mem.nf={err:'Não achei o QR code na foto. Chegue mais perto, com boa luz, e deixe o QR code inteiro e reto na imagem.'};return render()}nfLer(u)});
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-nf]');if(!b)return;e.preventDefault();const a=b.dataset.nf,N=mem.nf||{};
+  if(a==='clear'){mem.nf={};return render()}
+  if(a==='url')return nfLer(($('#nfurl')||{}).value);
+  if(a==='send'&&N.d){if(mySubs().some(x=>x.k==='nf'&&x.u===N.u)){mem.nf={err:'Essa nota já foi enviada. Obrigado!'};return render()}
+    mem.nf={...N,busy:'Enviando…'};render();const d=N.d,ok=await submitPub({k:'nf',u:N.u,loja:(d.loja||'').slice(0,80),n:'Nota fiscal · '+d.itens.length+' itens',p:d.total||null,ni:d.itens.length,dt:d.dt||'',st:'Processando'});
+    mem.nf=ok?{}:{...N,busy:'',err:'Não deu para enviar agora. Tente de novo.'};render();if(ok)toast('Nota enviada! Os preços entram no histórico em instantes.')}});
+/* No aparelho do administrador: confere cada nota de novo na SEFAZ e grava os preços no histórico, na data da compra. */
+const NFW={};
+async function nfProc(){if(!adm||!DB||!window.IA_URL)return;for(const d of subAll){for(const it of (d.items||[])){if(it.k!=='nf'||it.st!=='Processando'||NFW[it.id])continue;NFW[it.id]=1;
+  try{const j=await nfFetch(it.u),dia=j.dt||it.dt||it.t,loja=j.loja||it.loja||'Loja';let n=0;
+    for(const x of j.itens){if(!(x.vu>0)||!x.n)continue;const id=phid({s:{n:loja},n:x.n}),cur=PHS[id]||{},h=(cur.h||[]).filter(e=>e.d!==dia);h.push({d:dia,p:x.vu});h.sort((a,b)=>a.d<b.d?-1:1);const nh=h.slice(-120);
+      await DB.collection('ph').doc(id).set({k:id,n:x.n,loja,h:nh,un:x.un||'UN',src:'nf',...(j.cnpj?{cnpj:j.cnpj}:{})});PHS[id]={...cur,k:id,n:x.n,loja,h:nh};n++}
+    await setSub(d.uid,it.id,{st:'Aprovado',ni:n,loja:loja.slice(0,80),dt:dia})}catch(e){await setSub(d.uid,it.id,{st:'Recusado',ob:String(e&&e.message||'Não consegui ler a nota.').slice(0,120)}).catch(()=>{})}}}}
+setInterval(()=>{nfProc().catch(()=>{})},20000);setTimeout(()=>{nfProc().catch(()=>{})},6000);
 function tagV(){
   const t=mem.tag,pl=mem.tgPlace||'';
-  return `<div style="display:grid;gap:12px">${hereBox()}${repBox()}<div class="box"><b>Achou um preço bom? Compartilhe</b><span class="m">Fotografe a etiqueta ou a placa de preço. A IA lê o produto e o valor, você confere e envia para outras pessoas verem.</span></div>
+  return `<div style="display:grid;gap:12px">${hereBox()}${repBox()}${nfBox()}<div class="box"><b>Achou um preço bom? Compartilhe</b><span class="m">Fotografe a etiqueta ou a placa de preço. A IA lê o produto e o valor, você confere e envia para outras pessoas verem.</span></div>
   <div class="box"><label for="tl">Onde você viu?<input id="tl" list="tls" value="${esc(pl)}" placeholder="Nome do mercado ou loja" autocomplete="off"></label><datalist id="tls">${S.map(x=>`<option value="${esc(x.n)}">`).join('')}</datalist>
   <div class="row">${pick('tfc','Tirar foto da etiqueta',1)}${pick('tf','Foto da galeria')}</div>${TAGF?`<span class="m">Foto escolhida: ${esc(TAGF.name||'foto')}</span>`:''}
   <button class="btn acc" data-tgread="1" type="button">Ler a foto</button>
