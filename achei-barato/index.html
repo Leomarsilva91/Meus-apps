@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=31"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=32"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 #v>div,#v .box,#v details>div{grid-template-columns:minmax(0,1fr)}#v .box,#v details,#v form{min-width:0;max-width:100%}#v input,#v select,#v textarea{max-width:100%;min-width:0;box-sizing:border-box}#v .row>*{min-width:0}#v .line>span{min-width:0;overflow-wrap:anywhere}
 details[data-stenc]>summary{cursor:pointer}
 </style><link rel="manifest" href="manifest.webmanifest?v=2"><meta name="theme-color" content="#E8590C"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon2-192.png"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="icon" href="icon2-192.png"><script src="../xads.js?v=4"></script>
@@ -1678,7 +1678,7 @@ function fuelBox(){const ks=Object.keys(UF),ov=Object.keys(FUo);
   <div class="err" id="fu_x" role="alert"></div><button class="btn acc" type="submit">Salvar preços</button>
   ${ov.length?`<b>Ajustes seus (${ov.length})</b>${ov.map(k=>{const o=FUo[k];return `<div class="line"><span>${esc(lab(k))} <span class="m">· ${o.gas?'G '+brl(o.gas):''}${o.eth?' E '+brl(o.eth):''}${o.die?' D '+brl(o.die):''} · ${o.at?fd(o.at):''}</span></span><button class="chip" data-fudel="${esc(k)}" type="button">Remover</button></div>`}).join('')}`:''}</form>`}
 function legalBox(){return `<details class="legal"><summary>Privacidade e termos de uso</summary><ul>
-<li><b>Modelo de texto.</b> Peça a um advogado para revisar antes de lançar de verdade.</li>
+<li><b><a href="../termos.html">Leia os termos de uso e a política de privacidade completos</a>.</b></li>
 <li><b>Dados que o app usa:</b> sua localização (só se você tocar em “usar minha localização”), fotos que você escolher enviar (lidas pela IA para extrair preços) e as promoções que você enviar. A localização é usada para calcular distâncias e não é enviada a outros usuários.</li>
 <li><b>Dados compartilhados:</b> promoções enviadas ficam em análise e, se aprovadas, aparecem para todos sem o seu nome. Você pode pedir a retirada de um envio seu.</li>
 <li><b>Preços:</b> mudam sem aviso. Confira no local. A oferta vale conforme o comerciante ou a loja que a anunciou.</li>
