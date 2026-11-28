@@ -180,11 +180,28 @@ function locCity(c){const P=locParts(c);return P.length?P[P.length-1]:''}
 
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const _store=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return localStorage}catch(e){const m={};return{getItem:k=>m[k]??null,setItem:(k,v)=>{m[k]=v},removeItem:k=>{delete m[k]}}}})();
-const SYNCK={ms_fotos:1,ms_gar:1,ms_recor:1,ms_certs:1,ms_ind:1,ms_esc:1,ms_posts:1,ms_fb:1,ms_requests:1,ms_proposals:1,ms_msgs:1,ms_users:1,ms_plans:1,ms_jobs:1,ms_rec:1,ms_lists:1,ms_rates:1,ms_cfg:1,ms_calc:1,ms_reports:1,ms_adq:1};
+const SYNCK={ms_fotos:1,ms_gar:1,ms_recor:1,ms_certs:1,ms_ind:1,ms_esc:1,ms_posts:1,ms_fb:1,ms_requests:1,ms_proposals:1,ms_msgs:1,ms_users:1,ms_plans:1,ms_jobs:1,ms_rec:1,ms_lists:1,ms_rates:1,ms_cfg:1,ms_calc:1,ms_reports:1,ms_adq:1,ms_priv:1};
 const SY={db:null,on:false,sent:{},q:Promise.resolve(),tm:{}};
 const rawSet=(k,v)=>_store.setItem(k,v);
 const syId=(k,x)=>String(k==='ms_users'||k==='ms_plans'?x.email:x.id).replace(/[^A-Za-z0-9_\-.~:@+]/g,'_').slice(0,180);
-const syStrip=(k,x)=>{if(k!=='ms_users')return x;const y={...x};delete y.h;delete y.hk;delete y.cpf;return y};
+/* Dados pessoais fora do registro público: vão num registro privado (ms_priv) que só o dono e quem negocia com ele leem. */
+const PRIV_U=['phone','cpf','cpfh','em2','emHist','pwAt','consent','h','hk'],PRIV_R=['phone','email','emailP','email2','email2P','addr'],PRIV_Q=['loc','contact'];
+function syPrivOf(k,x){if(!x)return null;const f={};if(k==='ms_users'){PRIV_U.forEach(a=>{if(x[a]!=null&&a!=='h'&&a!=='hk'&&a!=='cpf')f[a]=x[a]});const R=x.roles||{},fr={};Object.keys(R).forEach(r=>{const o=R[r];if(o&&typeof o==='object'){const z={};PRIV_R.forEach(a=>{if(o[a]!=null&&o[a]!=='')z[a]=o[a]});if(Object.keys(z).length)fr[r]=z}});if(Object.keys(fr).length)f.roles=fr}
+  else if(k==='ms_requests'){PRIV_Q.forEach(a=>{if(x[a]!=null)f[a]=x[a]})}return Object.keys(f).length?f:null}
+const syStrip=(k,x)=>{if(k==='ms_users'){const y={...x};PRIV_U.forEach(a=>delete y[a]);if(y.roles&&typeof y.roles==='object'){const R={};Object.keys(y.roles).forEach(r=>{const o=y.roles[r];if(o&&typeof o==='object'){const z={...o};PRIV_R.forEach(a=>delete z[a]);R[r]=z}else R[r]=o});y.roles=R}return y}
+  if(k==='ms_requests'){const y={...x};if(x.em){if(!y.contact){try{const u=syRead('ms_users').find(z=>z&&z.email===x.email);if(u&&u.phone)y.contact={name:x.cn||u.name,phone:u.phone}}catch(_){}}return y}PRIV_Q.forEach(a=>delete y[a]);return y}return x};
+/* quem pode ver os dados privados: o dono e quem está negociando com ele */
+function syPrivParts(k,x){const F=new Set(),R=syRead('ms_requests'),P=syRead('ms_proposals'),ok=(q,p)=>{try{return negP(q,p)||(q&&p&&q.acc===p.id)}catch(_){return false}};
+  const ofReq=q=>{P.forEach(p=>{if(p&&String(p.reqId)===String(q.id)&&ok(q,p)&&p.fu)F.add(p.fu)})};
+  if(k==='ms_requests')ofReq(x);
+  else if(k==='ms_users'){const em=String(x.email||'').toLowerCase();R.forEach(q=>{if(q&&String(q.email||'').toLowerCase()===em)ofReq(q)});P.forEach(p=>{if(p&&String(p.email||'').toLowerCase()===em){const q=R.find(r=>r&&String(r.id)===String(p.reqId));if(q&&ok(q,p)&&q.fu)F.add(q.fu)}})}
+  return [...F]}
+function syPrivBuild(){const em=syEm(),me=syUid();if(!em||!me)return;const L=syRead('ms_priv'),out=L.filter(x=>x&&x.o!==em);let ch=false;
+  [['ms_users',syRead('ms_users').filter(u=>u&&String(u.email||'').toLowerCase()===em)],['ms_requests',syRead('ms_requests').filter(q=>q&&String(q.email||'').toLowerCase()===em)]].forEach(([k,A])=>A.forEach(x=>{const f=syPrivOf(k,x);if(!f)return;const id=k+'~'+syId(k,x);out.push({id,k,rid:syId(k,x),o:em,f,pf:syPrivParts(k,x)})}));
+  const a=JSON.stringify(L.filter(x=>x&&x.o===em)),b=JSON.stringify(out.filter(x=>x&&x.o===em));if(a!==b)rawSet('ms_priv',JSON.stringify(out))}
+function syPrivMerge(){const em=syEm();const by={};syRead('ms_priv').forEach(r=>{if(r&&r.k&&r.rid&&r.f)(by[r.k]=by[r.k]||[]).push(r)});
+  Object.keys(by).forEach(k=>{const L=syRead(k);let ch=false;by[k].forEach(r=>{const i=L.findIndex(x=>x&&syId(k,x)===r.rid);if(i<0)return;const x=L[i],f=r.f,own=r.o===em;Object.keys(f).forEach(a=>{if(own&&a!=='roles'&&x[a]!=null)return;if(a==='roles'){x.roles=x.roles||{};Object.keys(f.roles).forEach(rr=>{if(x.roles[rr]&&typeof x.roles[rr]==='object'){const b=JSON.stringify(x.roles[rr]);Object.keys(f.roles[rr]).forEach(z=>{if(!(own&&x.roles[rr][z]!=null))x.roles[rr][z]=f.roles[rr][z]});if(JSON.stringify(x.roles[rr])!==b)ch=true}})}else if(JSON.stringify(x[a])!==JSON.stringify(f[a])){x[a]=f[a];ch=true}})});
+    if(ch){rawSet(k,JSON.stringify(L));if(typeof syncNotify==='function')syncNotify(k)}})}
 const syRead=k=>{try{const v=JSON.parse(_store.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}};
 /* Nuvem com dono: cada registro guarda quem criou (o) e quem pode ver e mexer (p). Público só o que precisa ser visto por todos. */
 const SYPUB={ms_users:1,ms_requests:1,ms_posts:1,ms_rates:1,ms_plans:1,ms_certs:1,ms_cfg:1,ms_calc:1,ms_adq:1};
@@ -194,7 +211,7 @@ const syUid=()=>{const u=syAU();return u?u.uid:''};
 const syEm=()=>{const u=syAU();return u&&!u.isAnonymous?String(u.email||'').toLowerCase():''};
 const syPub=(k,x)=>!!SYPUB[k]||(k==='ms_esc'&&x&&x.id==='cfg');
 function syEmails(x,out,d){if(x==null||d>3)return;if(typeof x==='string'){if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x))out.add(x.toLowerCase());return}if(Array.isArray(x)){x.forEach(y=>syEmails(y,out,d+1));return}if(typeof x==='object')for(const kk of Object.keys(x)){if(kk==='img'||kk==='video')continue;syEmails(x[kk],out,d+1)}}
-function syParts(k,x){const E=new Set(),F=new Set();syEmails(x,E,0);if(x&&x.fu)F.add(x.fu);const R=syRead('ms_requests'),P=syRead('ms_proposals');
+function syParts(k,x){const E=new Set(),F=new Set();if(k==='ms_priv'){const ids=new Set([syUid()]);(x.pf||[]).forEach(f=>{if(typeof f==='string'&&f.length>5&&f.length<130)ids.add(f)});return ids}syEmails(x,E,0);if(x&&x.fu)F.add(x.fu);const R=syRead('ms_requests'),P=syRead('ms_proposals');
   const addReq=id=>{const q=R.find(r=>r&&String(r.id)===String(id));if(!q)return;if(q.email)E.add(String(q.email).toLowerCase());if(q.fu)F.add(q.fu);P.filter(p=>p&&String(p.reqId)===String(q.id)&&(String(q.acc||'')===String(p.id)||p.acc||p.ok)).forEach(p=>{if(p.email)E.add(String(p.email).toLowerCase())})};
   const addProp=id=>{const p=P.find(y=>y&&String(y.id)===String(id));if(!p)return;if(p.email)E.add(String(p.email).toLowerCase());if(p.fu)F.add(p.fu);const q=R.find(r=>r&&String(r.id)===String(p.reqId));if(q&&q.email)E.add(String(q.email).toLowerCase());if(q&&q.fu)F.add(q.fu)};
   if(x.reqId!=null)addReq(x.reqId);if(x.qid!=null)addReq(x.qid);if(x.pid!=null)addProp(x.pid);if(x.propId!=null)addProp(x.propId);
@@ -202,8 +219,8 @@ function syParts(k,x){const E=new Set(),F=new Set();syEmails(x,E,0);if(x&&x.fu)F
   if(k==='ms_esc'&&typeof x.id==='string'&&x.id.startsWith('pix:')){const pro=x.id.slice(4);syRead('ms_esc').filter(y=>y&&String(y.id).startsWith('pixok:')&&y.pro===pro).forEach(y=>addProp(y.pid))}
   const U=syRead('ms_users'),ids=new Set();E.forEach(e=>{const u=U.find(z=>z&&(String(z.email||'').toLowerCase()===e||String(z.em2||'').toLowerCase()===e));if(u&&u.uid)ids.add(u.uid)});F.forEach(f=>{if(typeof f==='string'&&f.length>5&&f.length<130)ids.add(f)});return ids}
 const sySig=(j,p)=>j+'|'+(p||[]).slice().sort().join(',');
-function syPush(k){if(!SY.db||!SYNCK[k])return;clearTimeout(SY.tm[k]);SY.tm[k]=setTimeout(()=>{SY.q=SY.q.then(async()=>{
-  const me=syUid();if(!me)return;
+function syPush(k){if(!SY.db||!SYNCK[k])return;if(k==='ms_users'||k==='ms_requests'||k==='ms_proposals')setTimeout(()=>syPush('ms_priv'),50);clearTimeout(SY.tm[k]);SY.tm[k]=setTimeout(()=>{SY.q=SY.q.then(async()=>{
+  const me=syUid();if(!me)return;if(k==='ms_priv')try{syPrivBuild()}catch(_){}
   const L=syRead(k).filter(x=>x&&(k==='ms_users'||k==='ms_plans'?x.email:x.id!=null)&&!x.sample),sent=SY.sent[k]=SY.sent[k]||{},meta=SY.meta[k]=SY.meta[k]||{},ids={},em=syEm();
   for(const x of L){const id=syId(k,x),y=syStrip(k,x);ids[id]=1;
     if((k==='ms_users'||k==='ms_plans')&&String(x.email||'').toLowerCase()!==em&&!ADMINS.includes(em)){const m0=meta[id];if(!m0||m0.o!==me)continue}
@@ -232,9 +249,10 @@ function syApply(k,snap){const sent=SY.sent[k]=SY.sent[k]||{};let L=syRead(k),ch
     if(i<0){L.push(r)}else{const o=L[i];
       if(k==='ms_users'){delete r.h;delete r.hk;L[i]={...o,...r}}
       else if(k==='ms_msgs')L[i]={...r,seen:[...new Set([...(r.seen||[]),...(o.seen||[])])]};
+      else if(k==='ms_requests'){L[i]=r;PRIV_Q.forEach(a=>{if(r[a]==null&&o[a]!=null)L[i][a]=o[a]})}
       else L[i]=r}
     ch=true}
-  if(ch){rawSet(k,JSON.stringify(L));SY.last=Date.now();syPush(k);if(k==='ms_requests'||k==='ms_users'||k==='ms_proposals'){Object.keys(SYNCK).forEach(x=>{if(x!==k&&!SYPUB[x])syPush(x)})}if(typeof syncNotify==='function')syncNotify(k)}}
+  if(ch){rawSet(k,JSON.stringify(L));SY.last=Date.now();if(k==='ms_priv'||k==='ms_users'||k==='ms_requests')try{syPrivMerge()}catch(_){}syPush(k);if(k==='ms_requests'||k==='ms_users'||k==='ms_proposals'){Object.keys(SYNCK).forEach(x=>{if(x!==k&&!SYPUB[x])syPush(x)})}if(typeof syncNotify==='function')syncNotify(k)}}
 function syListen(){const me=syUid();if(!SY.db||!me||SY.me===me)return;(SY.un||[]).forEach(f=>{try{f()}catch(_){}});SY.un=[];SY.me=me;SY.sent={};SY.meta={};
   for(const k of Object.keys(SYNCK)){delete SY['i'+k];const c=SY.db.collection('sync_'+k),on=sn=>{SY.on=true;syApply(k,sn);if(!SY['i'+k]){SY['i'+k]=1;syPush(k)}},er=()=>{};
     SY.un.push(c.where('pub','==',true).onSnapshot(on,er));SY.un.push(c.where('p','array-contains',me).onSnapshot(on,er));
@@ -2848,7 +2866,7 @@ const cpfSave=d=>{const l=users(),u=l.find(x=>x.email===S.user.email);if(u&&!(u.
 const CPFFIX='O CPF não pode ser trocado depois do cadastro. Ele é a identidade da conta.';
 const cpfDupPro=(d,email)=>{const h=cpfH(d);return users().some(u=>u&&u.email!==email&&u.cpfh===h&&u.roles&&(u.roles.pro||u.roles.proE))};
 const cpfCliFld=()=>fld('pcpf','CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Seu CPF é a base da sua conta: com ele você encontra seu cadastro e recupera a senha. Fica protegido e não aparece para ninguém.</p><button type="button" class="link" data-act="findacc" style="justify-self:start">CPF já usado em outra conta? Encontrar minha conta</button>';
-const cpfProFld=(isE)=>fld('pcpf',isE?'CPF do responsável pela empresa':'CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Usado na análise de idoneidade de quem presta serviços na plataforma. Fica só neste aparelho e não aparece para ninguém.</p><button type="button" class="link" data-act="findacc" style="justify-self:start">CPF já usado em outra conta? Encontrar minha conta</button>';
+const cpfProFld=(isE)=>fld('pcpf',isE?'CPF do responsável pela empresa':'CPF','type="text" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')+'<p class="muted" style="margin:-6px 0 0;font-size:13px">Usado na análise de idoneidade de quem presta serviços na plataforma. Fica protegido: não aparece para outras pessoas.</p><button type="button" class="link" data-act="findacc" style="justify-self:start">CPF já usado em outra conta? Encontrar minha conta</button>';
 const telMask=t=>{const d=String(t||'').replace(/\D/g,'');return d.length>=4?'('+d.slice(0,2)+') *****-'+d.slice(-4):'seu celular'};
 const emMask=e=>{const[a,b]=String(e||'').split('@');return b?(a.slice(0,2)+'***@'+b):'outra conta'};
 const cpfDonoMsg=(d,email,f)=>{const h=cpfH(d),u=users().find(u=>u&&u.email!==email&&u.cpfh===h&&f(u));return u?CPFDUP+' Ele está na conta '+emMask(u.em2||u.email)+'. Entre nela para usar esse perfil, ou use outro CPF.':CPFDUP};
@@ -2857,7 +2875,7 @@ const cpfProSet=(u)=>{const i=$('#pcpf');if(i&&cpfOk(i.value)&&!(u.cpf&&cpfOk(u.
 const CPFDUP='Este CPF já está cadastrado em outro perfil. Cada pessoa usa um único cadastro.';
 const cpfBanner=()=>cpfNeed()&&!cpfCard()?`<div class="card" style="border-color:var(--acc)"><b>🪪 Cadastre seu CPF</b><p class="muted" style="margin:6px 0 0">O CPF é a base da sua conta: com ele você entra, encontra seu cadastro e recupera a senha.</p>${cpfFld('')}<button class="btn" data-act="cpfsave">Salvar CPF</button></div>`:'';
 const cpfNeed=()=>!!S.user&&!S.user.emp&&!cpfOk(meU().cpf)&&!meU().cpfh;
-const cpfFld=why=>`<div class="card" style="background:var(--bg)"><label for="paycpf"><b>Seu CPF</b></label><p class="muted" style="margin:4px 0 8px;font-size:13px">${why} Fica guardado só neste aparelho e não aparece para ninguém.</p><input id="paycpf" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"><p class="err" id="paycpferr" role="alert"></p></div>`;
+const cpfFld=why=>`<div class="card" style="background:var(--bg)"><label for="paycpf"><b>Seu CPF</b></label><p class="muted" style="margin:4px 0 8px;font-size:13px">${why} Fica protegido: não aparece para outras pessoas. Só você vê.</p><input id="paycpf" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"><p class="err" id="paycpferr" role="alert"></p></div>`;
 function cpfTake(){if(!cpfNeed())return true;const i=$('#paycpf'),e=$('#paycpferr');if(!i||!cpfOk(i.value)){if(e)e.textContent='Informe um CPF válido.';if(i)i.focus();return false}
   if(cpfDup(i.value)){if(e)e.textContent=cpfDonoMsg(i.value,S.user.email,u=>(u.roles||{})[S.user.role]);i.focus();return false}
   cpfSave(i.value);return true}
