@@ -504,7 +504,7 @@ function meiAlerts(){
 
 /* ---------- dívidas ---------- */
 const TIPOS={cartao:'Cartão de crédito',banco:'Banco ou empréstimo',loja:'Loja ou crediário',financiamento:'Financiamento (com bem)',conta:'Conta de consumo (luz, água, telefone)',outro:'Outra'};
-const eff=d=>d.acordo?{...d,saldo:d.acordo.total,juros:0,min:d.acordo.total/d.acordo.parc}:d;
+const eff=d=>d.acordo?{...d,saldo:d.acordo.total,juros:0,min:d.acordo.vparc||d.acordo.total/d.acordo.parc}:d;
 function order(debts,metodo){
   const L=debts.map(eff).filter(d=>d.saldo>0.005);
   const av=(a,b)=>b.juros-a.juros;
@@ -628,7 +628,7 @@ function vNegocio(){
 }
 
 function divTabs(){return `<div class="seg fit debt" style="grid-template-columns:repeat(4,minmax(0,1fr))" role="group" aria-label="Dívidas">${[['visao','Visão'],['lista','Minhas dívidas'],['plano','Plano'],['roteiro','Roteiro']].map(([k,l])=>`<button data-sub="${k}" aria-pressed="${UI.div===k}">${l}</button>`).join('')}</div>`}
-function debtRow(d){const e=eff(d);return `<div class="item"><div class="l"><b>${esc(d.cred)}</b><span class="muted small">${TIPOS[d.tipo]}${d.atraso?' · '+d.atraso+' dias de atraso':''}</span><div class="row" style="gap:6px;margin-top:4px">${d.neg?'<span class="pill bad">Negativada</span>':''}${d.ess?'<span class="pill warn">Essencial</span>':''}${d.acordo?'<span class="pill ok">Acordo: '+d.acordo.parc+'x de '+brl(d.acordo.total/d.acordo.parc)+'</span>':''}</div></div><div class="r"><b class="num">${brl(e.saldo)}</b><br><span class="muted small">${d.acordo?'':String(d.juros).replace('.',',')+'% ao mês'}</span></div></div>`}
+function debtRow(d){const e=eff(d);return `<div class="item"><div class="l"><b>${esc(d.cred)}</b><span class="muted small">${TIPOS[d.tipo]}${d.atraso?' · '+d.atraso+' dias de atraso':''}</span><div class="row" style="gap:6px;margin-top:4px">${d.neg?'<span class="pill bad">Negativada</span>':''}${d.ess?'<span class="pill warn">Essencial</span>':''}${d.acordo?'<span class="pill ok">Acordo: '+(d.acordo.ent?'entrada '+brl(d.acordo.ent)+' + ':'')+d.acordo.parc+'x de '+brl(d.acordo.vparc||d.acordo.total/d.acordo.parc)+'</span>':''}</div></div><div class="r"><b class="num">${brl(e.saldo)}</b><br><span class="muted small">${d.acordo?'':String(d.juros).replace('.',',')+'% ao mês'}</span></div></div>`}
 function vDividas(){
   const k=UI.div,tot=S.debts.reduce((a,d)=>a+eff(d).saldo,0),ord=order(S.debts,S.metodo);let b='';
   if(k==='visao'){
@@ -4103,5 +4103,65 @@ setInterval(()=>{const b=document.getElementById('pr-fbar'),on=b&&b.style.displa
    if(!id){if(!G.length){try{UI.plan=null;UI.tab='metas';render(true)}catch(_){}}return}
    try{UI.tab='metas';UI.plan=id;render(true)}catch(_){}
    setTimeout(function(){var d=document.querySelector('[data-gr="dep"]');if(d){d.dataset.lbv=vt;d.click()}},350)})})()})();
+</script>
+<script>
+/* ===== Avaliar proposta de acordo: compara a proposta com a dívida atual e com as outras propostas ===== */
+(function(){
+const N=v=>{if(typeof v==='number')return v;const s=String(v||'').replace(/[^\d,.-]/g,'');if(!s)return 0;const t=s.includes(',')?s.replace(/\./g,'').replace(',','.'):s;const n=parseFloat(t);return isFinite(n)?n:0};
+const R=v=>'R$ '+(Math.round(v*100)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const P=v=>(Math.round(v*100)/100).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%';
+/* taxa mensal embutida: valor de hoje = entrada + parcela × fator */
+function taxa(pv,ent,parc,n){const base=pv-ent;if(n<1||parc<=0||base<=0)return null;if(parc*n<=base+0.01)return 0;let lo=0,hi=1;for(let k=0;k<80;k++){const r=(lo+hi)/2,f=(1-Math.pow(1+r,-n))/r;if(parc*f>base)lo=r;else hi=r}return (lo+hi)/2*100}
+/* continuar como está: pagando o mesmo valor por mês, com os juros atuais */
+function semAcordo(saldo,j,pag){let b=saldo,m=0,tot=0;if(pag<=saldo*j/100)return{nunca:true};while(b>0.005&&m<600){m++;b+=b*j/100;const p=Math.min(b,pag);b-=p;tot+=p}return{m,tot}}
+function folga(d){try{const outros=S.debts.filter(x=>x.id!==d.id).map(eff).reduce((a,x)=>a+(x.min||0),0);return (S.budget||0)>0?(S.budget||0)-outros:null}catch(_){return null}}
+function analisa(d,p){const saldo=d.saldo,ent=p.ent||0,n=Math.max(1,p.n||1),parc=p.parc||(p.tot?(p.tot-ent)/n:0),tot=ent+parc*n,base=p.vista>0?p.vista:saldo,tx=taxa(base,ent,parc,n),desc=saldo-tot,cont=semAcordo(saldo,d.juros||0,parc+(n?ent/n:0)),f=folga(d);
+  const A=[],B=[];let nota=0;
+  if(desc>0){A.push('Você paga '+R(tot)+' no total, '+R(desc)+' a menos do que deve hoje ('+P(desc/saldo*100)+' de desconto).');nota+=2}
+  else if(desc<0){B.push('Você paga '+R(-desc)+' a mais do que deve hoje ('+R(tot)+' no total).');nota-=1}
+  if(tx!=null){if(tx===0)A.push('Sem juros no parcelamento.');else{const vs=(d.juros||0)>0?(tx<d.juros?' Menor que os '+P(d.juros)+' ao mês da dívida atual.':' Maior ou igual aos '+P(d.juros)+' ao mês da dívida atual.'):'';(tx<=2?A:B).push('Juros embutidos de '+P(tx)+' ao mês.'+vs);if(tx<(d.juros||0))nota+=2;if(tx>2)nota-=1;if(tx>4)nota-=1}}
+  if(p.juros>0&&tx!=null&&Math.abs(p.juros-tx)>0.3)B.push('O credor informou '+P(p.juros)+' ao mês, mas pela conta das parcelas os juros saem '+P(tx)+'. Peça o valor exato por escrito.');
+  if(cont.nunca)A.push('Sem acordo, pagando o mesmo por mês, a dívida não acabaria: os juros são maiores que o pagamento.');
+  else if(cont.tot){const ec=cont.tot-tot;if(ec>1){A.push('Sem acordo, pagando o mesmo por mês, você levaria '+cont.m+' meses e pagaria '+R(cont.tot)+'. O acordo economiza '+R(ec)+'.');nota+=1}else B.push('Continuar pagando a dívida como está sairia '+R(-ec)+' mais barato do que este acordo.')}
+  if(f!=null){if(parc>f)B.push('A parcela de '+R(parc)+' passa do que sobra no seu orçamento para esta dívida ('+R(Math.max(0,f))+'). Acordo que não cabe no bolso costuma quebrar.');else{A.push('A parcela cabe no que sobra do seu orçamento para dívidas.');nota+=1}}
+  if(ent>0&&ent>saldo*0.5)B.push('A entrada é alta: '+R(ent)+'. Confirme se você tem esse valor sem atrasar contas essenciais.');
+  return{tot,parc,tx,desc,cont,nota,A,B}}
+const card=(d,p,i,best)=>{const a=analisa(d,p),v=a.nota>=3?['ok','Boa proposta']:a.nota>=1?['warn','Dá para aceitar, mas tente melhorar']:['bad','Não compensa assim'];
+  return `<div class="card" style="gap:6px;${best?'border:2px solid var(--ok,#1f9d55)':''}"><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(p.nome||'Proposta '+(i+1))}</b><span class="pill ${v[0]}">${best?'⭐ Melhor · ':''}${v[1]}</span></div>
+  <p class="muted small" style="margin:0">${p.ent?'Entrada '+R(p.ent)+' + ':''}${p.n}x de ${R(a.parc)} · total ${R(a.tot)}${p.ini?' · 1ª em '+esc(p.ini):''}</p>
+  ${a.A.length?`<ul style="margin:4px 0 0;padding-left:20px">${a.A.map(x=>'<li>✅ '+esc(x)+'</li>').join('')}</ul>`:''}${a.B.length?`<ul style="margin:4px 0 0;padding-left:20px">${a.B.map(x=>'<li>⚠️ '+esc(x)+'</li>').join('')}</ul>`:''}
+  <div class="row" style="gap:6px;margin-top:6px"><button class="btn debt sm" type="button" data-avok="${i}">Fechar este acordo</button><button class="btn ghost sm" type="button" data-avdel="${i}">Tirar</button></div></div>`};
+function vAval(d){const L=d.props||[];let bi=-1,bv=-1e9;L.forEach((p,i)=>{const a=analisa(d,p),sc=a.nota*1000-a.tot;if(sc>bv){bv=sc;bi=i}});
+  return `<div class="card" id="f-aval-w" style="gap:8px"><h3 style="margin:0">Avaliar proposta de acordo · ${esc(d.cred)}</h3>
+  <p class="muted small" style="margin:0">Dívida hoje: <b>${R(d.saldo)}</b>${d.juros?' com '+P(d.juros)+' ao mês':''}. Coloque os números que o credor ofereceu. Pode lançar mais de uma proposta para comparar.</p>
+  <form id="f-aval" class="grid2" style="gap:8px">
+   <label style="grid-column:1/-1">Nome da proposta (opcional)<input id="av-nome" placeholder="Ex.: Feirão Serasa, app do banco"></label>
+   <label>Entrada (R$)<input id="av-ent" inputmode="decimal" placeholder="0"></label>
+   <label>Número de parcelas<input id="av-n" inputmode="numeric" value="1"></label>
+   <label>Valor de cada parcela (R$)<input id="av-parc" inputmode="decimal"></label>
+   <label>ou Valor total (R$)<input id="av-tot" inputmode="decimal"></label>
+   <label>Juros que o credor informou (% ao mês, opcional)<input id="av-j" inputmode="decimal"></label>
+   <label>Valor para pagar à vista, se oferecido (R$, opcional)<input id="av-vista" inputmode="decimal"></label>
+   <label style="grid-column:1/-1">Data da 1ª parcela (opcional)<input id="av-ini" type="date"></label>
+   <div class="note" id="av-e" hidden style="grid-column:1/-1"></div>
+   <div class="row" style="grid-column:1/-1"><button class="btn debt" type="submit">Avaliar</button><button class="btn ghost" type="button" data-avx="1">Fechar</button></div>
+  </form>
+  ${L.length?`<h3 style="margin:8px 0 0">Propostas (${L.length})</h3>${L.map((p,i)=>card(d,p,i,L.length>1&&i===bi)).join('')}`:''}
+  ${d.neg?'<p class="small" style="margin:0">ℹ️ Quando a dívida é paga, o credor tem até 5 dias úteis para tirar seu nome dos cadastros de inadimplentes. Em acordo parcelado, pergunte ao credor quando ele vai pedir a retirada (muitos fazem depois da 1ª parcela) e peça isso por escrito.</p>':''}<p class="muted small" style="margin:0">É uma conta de apoio, não consultoria. Antes de pagar, confirme a proposta no canal oficial do credor e guarde o acordo por escrito. Desconfie de quem pede pagamento adiantado para "limpar o nome".</p></div>`}
+const _v=VIEWS.dividas;VIEWS.dividas=function(){let h=_v();if(UI.aval&&UI.div==='lista'){const d=S.debts.find(x=>x.id===UI.aval);if(d)h=h.replace('<div class="card"><h3>Suas dívidas',vAval(d)+'<div class="card"><h3>Suas dívidas')}
+  return h.replace(/<button class="btn ghost sm" data-acordo="([^"]+)">Registrar acordo<\/button>/g,'<button class="btn ghost sm" data-aval="$1">Avaliar proposta</button><button class="btn ghost sm" data-acordo="$1">Registrar acordo</button>')};
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-aval],[data-avx],[data-avok],[data-avdel]');if(!t)return;e.preventDefault();e.stopPropagation();
+  if(t.dataset.aval){UI.aval=t.dataset.aval;UI.acordo=null;render(true);setTimeout(()=>{const w=document.getElementById('f-aval-w');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
+  if(t.dataset.avx){UI.aval=null;return render(true)}
+  const d=S.debts.find(x=>x.id===UI.aval);if(!d)return;const L=d.props=d.props||[];
+  if(t.dataset.avdel!=null){L.splice(+t.dataset.avdel,1);save();return render(true)}
+  if(t.dataset.avok!=null){const p=L[+t.dataset.avok];if(!p)return;const a=analisa(d,p);d.acordo={total:Math.round(a.tot*100)/100,parc:p.n,ent:p.ent||0,vparc:Math.round(a.parc*100)/100,juros:a.tx!=null?Math.round(a.tx*100)/100:null,ini:p.ini||'',nome:p.nome||''};UI.aval=null;save();toast('Acordo registrado. Guarde o comprovante.');return render(true)}
+},true);
+document.addEventListener('submit',e=>{if(!e.target||e.target.id!=='f-aval')return;e.preventDefault();e.stopPropagation();const d=S.debts.find(x=>x.id===UI.aval);if(!d)return;
+  const v=id=>(document.getElementById(id)||{}).value||'',p={nome:v('av-nome').trim().slice(0,40),ent:N(v('av-ent')),n:parseInt(v('av-n'),10)||1,parc:N(v('av-parc')),tot:N(v('av-tot')),juros:N(v('av-j')),vista:N(v('av-vista')),ini:v('av-ini')?v('av-ini').split('-').reverse().join('/'):''};
+  const er=document.getElementById('av-e');if(!(p.parc>0)&&!(p.tot>0)){if(er){er.hidden=false;er.textContent='Informe o valor da parcela ou o valor total.'}return}
+  if(!(p.parc>0))p.parc=Math.max(0,(p.tot-p.ent)/p.n);d.props=d.props||[];d.props.push(p);if(d.props.length>8)d.props.shift();save();render(true);
+  setTimeout(()=>{const w=document.getElementById('f-aval-w');if(w)w.scrollIntoView({behavior:'smooth',block:'end'})},60)},true);
+})();
 </script>
 </body></html>
