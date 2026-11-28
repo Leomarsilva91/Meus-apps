@@ -30,7 +30,7 @@
     var xa = (Array.isArray(a.xa) ? a.xa : Object.keys(APPS)).filter(function (k) { return APPS[k] && k !== app; });
     return { k: app, sid: String(a.sid || '').slice(0, 60), tt: String(a.tt || '').slice(0, 60), loja: String(a.loja || '').slice(0, 60),
       cid: String(a.cid || '').slice(0, 40), tx: String(a.tx || '').slice(0, 200), pr: String(a.pr || '').slice(0, 40),
-      wa: wa(a.wa), ln: ln(a.ln), from: dt(a.from), to: dt(a.to), xa: xa };
+      wa: wa(a.wa), tel: String(a.tel || '').replace(/\D/g, '').slice(0, 13), ln: ln(a.ln), from: dt(a.from), to: dt(a.to), xa: xa };
   }
   function sig(x) { return JSON.stringify([x.k, x.sid, x.tt, x.loja, x.cid, x.tx, x.pr, x.wa, x.ln, x.from, x.to, (x.xa || []).slice().sort()]); }
 
@@ -59,6 +59,7 @@
       var h = '', l = ln(a.ln);
       if (l) h += '<a href="' + E(l) + '" target="_blank" rel="noopener noreferrer" data-xadgo="ln" style="' + B + ';background:var(--acc,var(--pri,#0B6B4C));color:#fff">🌐 Abrir o site da empresa</a>';
       if (a.wa) h += '<a href="' + E('https://wa.me/' + a.wa + '?text=' + encodeURIComponent('Olá! Vi seu anúncio: ' + (a.tt || ''))) + '" target="_blank" rel="noopener noreferrer" data-xadgo="wa" style="' + B + ';background:' + (l ? 'transparent;border:1.5px solid #25D366;color:inherit' : '#1f9d55;color:#fff') + '">💬 Chamar no WhatsApp</a>';
+      if (a.tel && a.tel.length >= 8) h += '<a href="tel:' + E(a.tel) + '" data-xadgo="tel" style="' + B + ';background:transparent;border:1.5px solid var(--line,#ccc);color:inherit">📞 Ligar</a>';
       return h;
     },
     /* abre o anúncio completo numa janela que sobe de baixo */
