@@ -32,14 +32,14 @@
       cid: String(a.cid || '').slice(0, 40), tx: String(a.tx || '').slice(0, 200), pr: String(a.pr || '').slice(0, 40),
       wa: wa(a.wa), tel: String(a.tel || '').replace(/\D/g, '').slice(0, 13), ln: ln(a.ln), from: dt(a.from), to: dt(a.to), xa: xa };
   }
-  function sig(x) { return JSON.stringify([x.k, x.sid, x.tt, x.loja, x.cid, x.tx, x.pr, x.wa, x.ln, x.from, x.to, (x.xa || []).slice().sort()]); }
+  function sig(x) { return JSON.stringify([x.k, x.sid, x.tt, x.loja, x.cid, x.tx, x.pr, x.wa, x.tel || '', x.ln, x.from, x.to, (x.xa || []).slice().sort()]); }
 
   var X = {
     APPS: APPS,
     /* anúncios de outros apps que escolheram aparecer neste */
     list: function (app) {
       var t = hj();
-      return L.filter(function (a) { return a.k !== app && Array.isArray(a.xa) && a.xa.indexOf(app) >= 0 && a.tt && (!a.from || a.from <= t) && a.to && a.to >= t && (a.wa || a.ln); })
+      return L.filter(function (a) { return a.k !== app && Array.isArray(a.xa) && a.xa.indexOf(app) >= 0 && a.tt && (!a.from || a.from <= t) && a.to && a.to >= t && (a.wa || a.ln || (a.tel && a.tel.length >= 8)); })
         .map(function (a) { var y = {}; for (var k in a) y[k] = a[k]; y._x = 1; return y; });
     },
     url: function (a) { return a.wa ? 'https://wa.me/' + a.wa + '?text=' + encodeURIComponent('Olá! Vi seu anúncio: ' + (a.tt || '')) : (ln(a.ln) || '#'); },
@@ -106,7 +106,7 @@
     sync: function (app, items) {
       if (!got || busy || !window.firebase) return;
       var t = hj(), want = {}, cur = {}, ops = [];
-      (items || []).forEach(function (a) { var x = norm(app, a); if (x.sid && x.tt && x.to >= t && x.xa.length && (x.wa || x.ln)) want[app + '_' + x.sid.replace(/[^\w-]/g, '')] = x; });
+      (items || []).forEach(function (a) { var x = norm(app, a); if (x.sid && x.tt && x.to >= t && x.xa.length && (x.wa || x.ln || x.tel.length >= 8)) want[app + '_' + x.sid.replace(/[^\w-]/g, '')] = x; });
       L.forEach(function (a) { if (a.k === app) cur[a.id] = a; });
       Object.keys(want).forEach(function (id) { if (!cur[id] || sig(cur[id]) !== sig(want[id])) ops.push(col().doc(id).set(want[id])); });
       Object.keys(cur).forEach(function (id) { if (!want[id]) ops.push(col().doc(id).delete()); });
