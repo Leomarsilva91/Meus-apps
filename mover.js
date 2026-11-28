@@ -12,7 +12,7 @@
     function clampAll() {
       sels.forEach(function (s) {
         Array.prototype.forEach.call(document.querySelectorAll(s), function (el) {
-          if (el.style.touchAction !== 'none') el.style.touchAction = 'none'; if (!el.dataset.mvok) { el.dataset.mvok = '1'; el.title = el.title || 'Segure e arraste para mudar de lugar'; }
+          if (el.style.touchAction !== 'none') el.style.touchAction = 'none'; if (!el.dataset.mvmark) { el.dataset.mvmark = '1'; el.title = el.title || 'Segure e arraste para mudar de lugar'; }
           var p = P[idOf(el, s)];
           if (!p) { if (el.style.translate) el.style.translate = ''; return; }
           var want = p.x + 'px ' + p.y + 'px';
