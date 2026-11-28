@@ -204,8 +204,9 @@
     if (document.getElementById('ia-admlink')) return;
     var a = document.createElement('div'); a.id = 'ia-admlink';
     a.style.cssText = 'text-align:center;padding:18px 12px 90px;font:13px system-ui,sans-serif';
-    a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '<a href="#entrar" id="ia-ent" style="color:inherit;font-weight:700">Você está como visitante. Entrar</a>') + '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a>'+'<br><br>'+(ls('g','ia_google')==='1'?'<span style="opacity:.7">✔ Dados guardados na conta Google'+(ls('g','ia_email')?' ('+ls('g','ia_email').replace(/[<>"&]/g,'')+')':'')+'</span>':'<a href="#google" data-iagoogle="1" style="color:inherit;font-weight:700">🔐 Entrar com Google para não perder seus dados</a>')+'<br><br><a href="#memoria" data-lsmem="1" style="color:inherit;opacity:.6">Memória do app neste aparelho</a>';
-    var q = a.querySelector('a'); q.onclick = function (ev) { ev.preventDefault(); logado() ? sair() : entrar(); };
+    var _ad=false;try{if(/adm/.test(location.hash))localStorage.setItem('ia_admhint','1');_ad=isAdm()||localStorage.getItem('ia_admhint')==='1'}catch(_){_ad=isAdm()}
+    a.innerHTML = (logado() ? '<a href="#sair" id="ia-sair" style="color:inherit;opacity:.6">Sair da conta (voltar a visitante)</a>' : '') + (_ad ? '<br><br><a href="#admin" style="color:inherit;opacity:.6">' + (isAdm() ? 'Administrador (ativo): sair' : 'Sou administrador') + '</a><br><br><a href="#memoria" data-lsmem="1" style="color:inherit;opacity:.6">Memória do app neste aparelho</a>' : '');
+    var q = a.querySelector('#ia-sair'); if (q) q.onclick = function (ev) { ev.preventDefault(); sair(); };
     document.body.appendChild(a);
   }
   addEventListener('load', function () { setTimeout(rodape, 800); });

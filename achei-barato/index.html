@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=30"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=31"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 #v>div,#v .box,#v details>div{grid-template-columns:minmax(0,1fr)}#v .box,#v details,#v form{min-width:0;max-width:100%}#v input,#v select,#v textarea{max-width:100%;min-width:0;box-sizing:border-box}#v .row>*{min-width:0}#v .line>span{min-width:0;overflow-wrap:anywhere}
 details[data-stenc]>summary{cursor:pointer}
 </style><link rel="manifest" href="manifest.webmanifest?v=2"><meta name="theme-color" content="#e08a00"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Achei Barato"><link rel="apple-touch-icon" href="icon2-192.png"><link rel="icon" href="logo.svg" type="image/svg+xml"><link rel="icon" href="icon2-192.png"><script src="../xads.js?v=4"></script>
@@ -213,12 +213,7 @@ header.top>*{position:relative;z-index:1}
 <main id="v"></main>
 <div id="lg"></div>
 <div id="fblk" style="margin-top:18px"></div><div data-stlk></div>
-<details class="legal"><summary>Antes de lançar de verdade</summary><ul>
-<li>De onde vêm os preços: comerciantes cadastrando as próprias promoções, leitura de encartes por IA, e avisos de clientes com foto da etiqueta. Preço desatualizado é o maior risco do app. Cada oferta precisa ter data de validade e um aviso “confira no local”.</li>
-<li>Oferta publicada vincula quem anunciou (Código de Defesa do Consumidor). Defina regras para o comerciante corrigir ou retirar uma oferta com erro de preço.</li>
-<li>O roteiro só compensa se a economia for maior que o custo de ir a mais de um lugar. O app já desconta o deslocamento, e o cliente ajusta o custo por quilômetro.</li>
-<li>Rota real exige mapa e cálculo de trajeto por ruas (hoje o protótipo usa distância em linha reta com acréscimo).</li>
-<li>Como ganhar dinheiro: destaque pago pelos comércios, anúncios locais ou comissão por visita. Termos de uso e LGPD para a localização do cliente.</li></ul></details>
+
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 <div id="mdl"></div>
@@ -438,8 +433,8 @@ let mem={tab:'plan',cat:'',q:'',ord:'off',open:null,err:'',lt:(()=>{try{return l
 try{const _u=new URLSearchParams(location.search),_c=(_u.get("cat")||"").toLowerCase().replace(/[^a-z]/g,"").slice(0,20),_q=(_u.get("q")||"").replace(/[<>"`]/g,"").trim().slice(0,60);if(_c||_q){mem.tab="promo";mem.cat=_c;mem.q=_q}}catch(_){}
 document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='lt'){mem.lt=t.value;try{localStorage.setItem('ab_lt',t.value)}catch(_){}}},true);
 const LKT={plan:['Roteiro de economia','Montar roteiro e salvar a sua lista de compras'],com:['Comunidade','Participar da comunidade'],tag:['Achei uma promoção','Enviar preços e promoções'],merch:['Sou comerciante','Cadastrar promoção e divulgar a sua loja']};
-const guestV=()=>AR&&!UID&&LKT[mem.tab]?`<div class="box" data-nc="1"><b>${LKT[mem.tab][0]}</b><span class="m">${LKT[mem.tab][1]} é só para quem entrou. Como visitante, você vê as promoções e pode mandar sugestão ou crítica.</span><button class="btn acc" type="button" data-entrar="1">Entrar</button></div>`:'';
-const guestBan=()=>AR&&!UID?`<div class="box" data-nc="1"><b>Você está como visitante</b><span class="m">Dá para ver as promoções e mandar sugestão ou crítica. Roteiro, lista de compras, comunidade e cadastro de comércio pedem login.</span><button class="btn acc" type="button" data-entrar="1">Entrar</button></div>`:'';
+const guestV=()=>AR&&!UID&&LKT[mem.tab]?`<div class="box" data-nc="1"><b>${LKT[mem.tab][0]}</b><span class="m">${LKT[mem.tab][1]} é só para quem entrou. Como visitante, você vê as promoções e pode mandar sugestão ou crítica.</span> <span class="m" style="display:block;margin-top:6px">Para entrar, toque no 👤 no topo da tela.</span></div>`:'';
+const guestBan=()=>AR&&!UID?`<div class="box" data-nc="1"><b>Você está como visitante</b><span class="m">Dá para ver as promoções e mandar sugestão ou crítica. Roteiro, lista de compras, comunidade e cadastro de comércio pedem login.</span> <span class="m" style="display:block;margin-top:6px">Para entrar, toque no 👤 no topo da tela.</span></div>`:'';
 const UF={RO:['Rondônia',7.392],RR:['Roraima',7.560],AM:['Amazonas',7.643],AC:['Acre',7.750],PA:['Pará',6.822],TO:['Tocantins',6.894],AP:['Amapá',6.465],MA:['Maranhão',6.686],PI:['Piauí',6.593],CE:['Ceará',6.905],RN:['Rio Grande do Norte',6.805],PB:['Paraíba',6.385],PE:['Pernambuco',6.807],AL:['Alagoas',6.806],SE:['Sergipe',6.925],BA:['Bahia',6.810],MG:['Minas Gerais',6.295],ES:['Espírito Santo',6.540],RJ:['Rio de Janeiro',6.697],SP:['São Paulo',6.385],RS:['Rio Grande do Sul',6.291],SC:['Santa Catarina',6.378],PR:['Paraná',6.500],MT:['Mato Grosso',6.779],MS:['Mato Grosso do Sul',6.632],GO:['Goiás',6.393],DF:['Distrito Federal',6.390]};
 const NAC={eth:4.14,die:7.36},FT={gas:'Gasolina',eth:'Etanol',die:'Diesel S10'},WEAR=0.10;
 /* Fonte: ANP. Gasolina por estado, semana de 18 a 24/10/2026. Etanol e diesel: média nacional, semana de 4 a 10/10/2026. */

@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=30"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
+<!doctype html><html lang="pt-BR"><head><script src="../config.js?v=5"></script><script>window.IA_SEM_CHIP=1</script><script src="../claude-shim.js?v=31"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}
 .seg.fit.casa{grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px;gap:4px}
 .seg.fit.casa button{border:0;background:transparent;font-size:13px;font-weight:700;padding:6px 2px;min-height:42px;border-radius:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg.fit.casa button[aria-pressed=true]{background:var(--mei);color:var(--on-mei)}
@@ -1707,7 +1707,7 @@ function dreamSheet(){
 function dreamToggle(){const t=$('#dr-t');if(!t)return;const v=t.value==='viagem',e=$('#dr-trip'),w=$('#dr-val'),m=$('#dr-mw'),n=$('#dr-n');if(e)e.hidden=!v;if(w)w.style.display=v?'none':'grid';if(m)m.style.display=v?'none':'';if(n&&!n.dataset.touched){const ph={viagem:'Ex.: Férias em família',reserva:'Reserva de emergência',procedimento:'Ex.: Procedimento planejado',negocio:'Ex.: Ferramenta nova',casa:'Ex.: Entrada do apartamento',carro:'Ex.: Carro novo',invest:'Ex.: Meu primeiro investimento',outro:'Ex.: Curso, presente, festa'}[t.value];n.placeholder=ph}}
 function injectDream(){
   const old=$('#dream');if(old)old.remove();const oc=$('#dreamcard');if(oc)oc.remove();
-  const v=$('#v');if(v&&!UI.plan&&(['inicio','negocio','dividas'].includes(UI.tab)||(UI.tab==='casa'&&UI.cs==='orc')))v.insertAdjacentHTML('beforeend',dreamCard());
+  const v=$('#v');if(v&&!UI.plan&&(['negocio','dividas'].includes(UI.tab)||(UI.tab==='casa'&&UI.cs==='orc')))v.insertAdjacentHTML('beforeend',dreamCard());
   const h=dreamSheet();document.body.style.overflow=h?'hidden':'';
   if(h){document.body.insertAdjacentHTML('beforeend',h);dreamToggle();if(UI.dream&&!UI.dream.done&&!UI.dream.f){UI.dream.f=1;const n=$('#dr-n');if(n)setTimeout(()=>n.focus(),60)}}
 }
@@ -1772,7 +1772,7 @@ function invSheet(){
 function invCard(){return `<div class="dreamcard invcard" id="invcard"><span class="ico" aria-hidden="true">📈</span><h3 style="margin:0">Quer fazer o dinheiro render?</h3><p class="muted small" style="margin:0">Compare os investimentos com as taxas de hoje e simule quanto rende.</p><div class="row"><button class="btn ghost sm" data-act="inv">Ver opções de investimento</button></div></div>`}
 function injectInv(){
   const old=$('#inv');const keep=old&&old.querySelector('.sheet-p')?old.querySelector('.sheet-p').scrollTop:0;if(old)old.remove();const oc=$('#invcard');if(oc)oc.remove();
-  const v=$('#v');if(v&&!UI.plan&&(['inicio','negocio','dividas'].includes(UI.tab)||(UI.tab==='casa'&&UI.cs==='orc')))v.insertAdjacentHTML('beforeend',invCard());
+  const v=$('#v');if(v&&!UI.plan&&(['negocio','dividas'].includes(UI.tab)||(UI.tab==='casa'&&UI.cs==='orc')))v.insertAdjacentHTML('beforeend',invCard());
   const h=invSheet();document.body.style.overflow=(h||UI.dream)?'hidden':'';
   if(h){document.body.insertAdjacentHTML('beforeend',h);const p=$('#inv .sheet-p');if(p&&keep)p.scrollTop=keep}
 }
@@ -1803,7 +1803,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||el.tagName!=='IN
   maskEl(el)});
 function render(keepScroll){
   cycSync();const y=scrollY;
-  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}"${k==='casa'?' aria-label="Economia doméstica" title="Economia doméstica"':''} ${UI.tab===k?'aria-current="page"':''}>${ico(k)}<span>${l}</span></button>`).join('')+(window.IA_AUTH&&!IA_AUTH.logado()?`<button type="button" data-iaauth="1" aria-label="${IA_AUTH.logado()?'Sair da conta':'Entrar na conta'}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>${IA_AUTH.logado()?'Sair':'Entrar'}</span></button>`:'');
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}"${k==='casa'?' aria-label="Economia doméstica" title="Economia doméstica"':''} ${UI.tab===k?'aria-current="page"':''}>${ico(k)}<span>${l}</span></button>`).join('');
   $('#who').textContent=S.demo?'Exemplo':SYNC.label();
   const sg=[UI.tab,UI.neg,UI.div,UI.met,UI.cs,UI.sel].join('|'),same=sg===window.__psg;window.__psg=sg;if(same)keepScroll=true;
   $('#v').className=keepScroll?'wrap noanim':'wrap';
@@ -3516,8 +3516,8 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 <script>
 /* ---- visitante: só olha e simula; nada é salvo; comunidade e pontos pedem login ---- */
 (function(){if(!GUEST)return;
-const lock=(t,x)=>`<div class="card"><h3>${t}</h3><p class="muted">${x}</p><button class="btn" type="button" data-entrar="1">Entrar</button></div>`;
-const ban=`<div class="card" style="gap:8px"><h3>Você está como visitante</h3><p class="muted small">Dá para ver as propostas dos parceiros, simular tudo e mandar sugestão ou crítica, mas nada do que você digitar fica guardado. Comunidade, pontos e resposta no app pedem login.</p><button class="btn" type="button" data-entrar="1">Entrar</button></div>`;
+const lock=(t,x)=>`<div class="card"><h3>${t}</h3><p class="muted">${x}</p><p class="muted small" style="margin:0">Para entrar, toque no 👤 no topo da tela.</p></div>`;
+const ban=`<div class="card" style="gap:8px"><h3>Você está como visitante</h3><p class="muted small">Dá para ver as propostas dos parceiros, simular tudo e mandar sugestão ou crítica, mas nada do que você digitar fica guardado. Comunidade, pontos e resposta no app pedem login.</p><p class="muted small" style="margin:0">Para entrar, toque no 👤 no topo da tela.</p></div>`;
 const W=(k,f)=>{const o=VIEWS[k];if(o)VIEWS[k]=()=>f(o)};
 W('comunidade',()=>lock('Comunidade','Participar da comunidade é só para quem entrou.'));
 W('pontos',()=>lock('Pontos','O programa de pontos é só para quem entrou.'));

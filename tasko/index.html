@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
-<head><script src="../config.js?v=5"></script><script>window.IA_LOGIN_PROPRIO=1</script><script src="../claude-shim.js?v=30"></script>
+<head><script src="../config.js?v=5"></script><script>window.IA_LOGIN_PROPRIO=1</script><script src="../claude-shim.js?v=31"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tasko</title>
@@ -2873,7 +2873,7 @@ const cpfDonoMsg=(d,email,f)=>{const h=cpfH(d),u=users().find(u=>u&&u.email!==em
 const cpfProChk=(E,email)=>{const i=$('#pcpf');if(!i)return;if(!cpfOk(i.value))E.pcpf='Informe um CPF válido.';else if(users().some(u=>u&&u.email!==email&&u.cpfh===cpfH(i.value)))E.pcpf=cpfDonoMsg(i.value,email,()=>true)};
 const cpfProSet=(u)=>{const i=$('#pcpf');if(i&&cpfOk(i.value)&&!(u.cpf&&cpfOk(u.cpf))){u.cpf=cpfDig(i.value);u.cpfh=cpfH(i.value)}};
 const CPFDUP='Este CPF já está cadastrado em outro perfil. Cada pessoa usa um único cadastro.';
-const cpfBanner=()=>cpfNeed()&&!cpfCard()?`<div class="card" style="border-color:var(--acc)"><b>🪪 Cadastre seu CPF</b><p class="muted" style="margin:6px 0 0">O CPF é a base da sua conta: com ele você entra, encontra seu cadastro e recupera a senha.</p>${cpfFld('')}<button class="btn" data-act="cpfsave">Salvar CPF</button></div>`:'';
+const cpfBanner=()=>cpfNeed()&&!cpfCard()?`<details class="card" style="border-color:var(--acc)"><summary style="cursor:pointer;min-height:40px;display:flex;align-items:center"><b>🪪 Falta cadastrar seu CPF</b></summary><p class="muted" style="margin:6px 0 0">O CPF confirma quem você é para quem vai negociar com você, e também serve para entrar no app.</p>${cpfFld('')}<button class="btn" data-act="cpfsave">Salvar CPF</button></details>`:'';
 const cpfNeed=()=>!!S.user&&!S.user.emp&&!cpfOk(meU().cpf)&&!meU().cpfh;
 const cpfFld=why=>`<div class="card" style="background:var(--bg)"><label for="paycpf"><b>Seu CPF</b></label><p class="muted" style="margin:4px 0 8px;font-size:13px">${why} Fica protegido: não aparece para outras pessoas. Só você vê.</p><input id="paycpf" inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"><p class="err" id="paycpferr" role="alert"></p></div>`;
 function cpfTake(){if(!cpfNeed())return true;const i=$('#paycpf'),e=$('#paycpferr');if(!i||!cpfOk(i.value)){if(e)e.textContent='Informe um CPF válido.';if(i)i.focus();return false}
