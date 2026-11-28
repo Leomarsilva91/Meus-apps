@@ -3412,4 +3412,24 @@ try{NBADGE({key:'ab',me:()=>UID,posts:()=>comPosts(),onCom:()=>mem.tab==='com',d
 </style>
 <style>.barx>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:40px;font-weight:700;font-size:14px;color:var(--ink)}.barx>summary::-webkit-details-marker{display:none}.barx>summary::after{content:"+";font-size:20px;font-weight:800;margin-left:8px}.barx[open]>summary::after{content:"−"}</style>
 <script>document.addEventListener('toggle',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('barx')){try{mem.barOpen=e.target.open}catch(_){}}},true)</script>
+<script>
+/* "O que você pesquisou" dentro do roteiro: adicionar à lista de compras (um ou todos) e tirar da lista de pesquisas */
+(function(){
+const nz=t=>{try{return norm(t)}catch(_){return String(t||'').toLowerCase()}};
+const inList=t=>String(mem.lt||'').split('\n').some(l=>nz(l).includes(nz(t)));
+function srBox(){const T=(typeof PREF!=='undefined'&&PREF.srch)||[];if(!T.length)return '';
+  const rows=T.map(t=>{let b=null;try{b=srchMatch(t)[0]||null}catch(_){}const on=inList(t);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)"><span style="flex:1;min-width:0"><b style="font-size:14.5px">${esc(t)}</b><br><span class="m">${b?'A partir de '+brl(b.x.p)+' · '+esc(b.online?'online':b.x.s.n):'Sem promoção agora'}</span></span>${on?'<span class="tag ok">Na lista</span>':`<button class="chip" type="button" data-sradd="${esc(t)}">+ Lista</button>`}<button type="button" class="chip" data-srx="${esc(t)}" aria-label="Tirar ${esc(t)} das pesquisas" style="width:40px;padding:0">×</button></div>`}).join('');
+  const falta=T.filter(t=>!inList(t)).length;
+  return `<div style="display:grid;gap:2px;margin-top:8px"><b style="font-size:14.5px">🔎 O que você pesquisou</b>${rows}${falta>1?`<button class="btn acc" type="button" data-sradd="*" style="margin-top:6px">➕ Adicionar os ${falta} à lista de compras</button>`:''}<span class="m" style="margin-top:4px">Depois toque em Analisar e montar rota para ver onde sai mais barato.</span></div>`}
+const K='Não encontrei preços para a sua lista</b>';
+try{const _p=planV;planV=function(){let h=_p.apply(this,arguments);const i=h.indexOf(K);if(i<0)return h;const j=h.indexOf('</div>',i);if(j<0)return h;return h.slice(0,j)+srBox()+h.slice(j)}}catch(_){}
+/* no Roteiro, o quadro de avisos separado some (ele aparece dentro do "Não encontrei") */
+try{const _a=alrV;alrV=function(){try{if(mem.tab==='plan'&&!mem.tabPick)return ''}catch(_){}return _a.apply(this,arguments)}}catch(_){}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-sradd]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  const T=(PREF.srch||[]),add=b.dataset.sradd==='*'?T.filter(t=>!inList(t)):[b.dataset.sradd].filter(t=>!inList(t));if(!add.length)return;
+  const L=String(mem.lt||'').split('\n').map(x=>x.trim()).filter(Boolean).concat(add);mem.lt=L.join('\n');try{localStorage.setItem('ab_lt',mem.lt)}catch(_){}
+  try{toast(add.length>1?add.length+' produtos foram para a sua lista.':'"'+add[0]+'" foi para a sua lista.')}catch(_){}render()},true);
+})();
+</script>
 </body></html>
